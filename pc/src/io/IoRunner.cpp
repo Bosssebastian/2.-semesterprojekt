@@ -3,6 +3,8 @@
 #include <atomic>
 using namespace std;
 
+// Plan is to use asio to handle io
+
 class IO {
 public:
     void start() {

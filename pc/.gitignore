@@ -1,0 +1,23 @@
+# CMake build output (pc project only)
+/build/
+/build-*/
+/CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+Makefile
+
+# Visual Studio / MSBuild artifacts
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.sln
+*.dir/
+
+# Binaries and debug artifacts
+*.obj
+*.pdb
+*.ilk
+*.exe
+*.dll
+*.lib

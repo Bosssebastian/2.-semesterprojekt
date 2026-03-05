@@ -1,0 +1,39 @@
+cmake_minimum_required(VERSION 3.16)
+
+project(pc LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+set(SHARED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../shared")
+
+file(GLOB_RECURSE SHARED_SOURCES CONFIGURE_DEPENDS
+    "${SHARED_DIR}/*.c"
+    "${SHARED_DIR}/*.cc"
+    "${SHARED_DIR}/*.cpp"
+    "${SHARED_DIR}/*.cxx"
+)
+
+add_executable(pc
+    src/app/main.cpp
+    src/io/IoRunner.cpp
+    src/vision/VisionRunner.cpp
+    src/orchestrator/Orchestrator.cpp
+    ${SHARED_SOURCES}
+)
+
+target_include_directories(pc PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/core
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/io
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/vision
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/orchestrator
+    ${SHARED_DIR}
+)
+
+if(MSVC)
+    target_compile_options(pc PRIVATE /W4)
+else()
+    target_compile_options(pc PRIVATE -Wall -Wextra -Wpedantic)
+endif()
