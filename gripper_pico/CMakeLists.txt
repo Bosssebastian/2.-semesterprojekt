@@ -35,7 +35,14 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(gripper_pico gripper_pico.cpp )
+add_executable(gripper_pico
+        src/Main.cpp
+        src/Gripper.cpp
+        src/PwmOutput.cpp
+        src/TMC2209Driver.cpp
+        src/StepperAxis.cpp
+        src/temp.cpp
+)
 
 pico_set_program_name(gripper_pico "gripper_pico")
 pico_set_program_version(gripper_pico "0.1")
@@ -46,7 +53,13 @@ pico_enable_stdio_usb(gripper_pico 1)
 
 # Add the standard library to the build
 target_link_libraries(gripper_pico
-        pico_stdlib)
+        pico_stdlib
+        hardware_uart
+        hardware_gpio
+        hardware_pwm
+        hardware_clocks
+        hardware_irq
+)
 
 # Add the standard include files to the build
 target_include_directories(gripper_pico PRIVATE
