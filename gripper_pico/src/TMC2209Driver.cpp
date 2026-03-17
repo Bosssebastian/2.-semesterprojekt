@@ -20,6 +20,8 @@ void TMC2209Driver::begin() {
 }
 
 bool TMC2209Driver::testConnection() {
+    static constexpr uint32_t TestStepDelayUs = 1000;
+
     uint8_t writeCounterBefore = 0;
     uint8_t writeCounterAfter = 0;
     uint32_t gconf = 0;
@@ -36,19 +38,23 @@ bool TMC2209Driver::testConnection() {
             return false;
         }
 
+        sleep_us(TestStepDelayUs);
         if (!getWriteCounter(writeCounterBefore)) {
             return false;
         }
     }
 
+    sleep_us(TestStepDelayUs);
     if (!readRegister(TMC2209Reg::GCONF, gconf)) {
         return false;
     }
 
+    sleep_us(TestStepDelayUs);
     if (!writeRegister(TMC2209Reg::GCONF, gconf)) {
         return false;
     }
 
+    sleep_us(TestStepDelayUs);
     if (!getWriteCounter(writeCounterAfter)) {
         return false;
     }

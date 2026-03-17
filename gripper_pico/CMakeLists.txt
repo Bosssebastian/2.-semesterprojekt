@@ -41,7 +41,7 @@ add_executable(gripper_pico
         src/PwmOutput.cpp
         src/TMC2209Driver.cpp
         src/StepperAxis.cpp
-        src/temp.cpp
+        src/TestInterface.cpp
 )
 
 pico_set_program_name(gripper_pico "gripper_pico")

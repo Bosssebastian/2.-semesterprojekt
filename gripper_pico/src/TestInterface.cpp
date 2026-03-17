@@ -1,28 +1,28 @@
-#include "temp.h"
+#include "TestInterface.h"
 
 #include <stdio.h>
 
-#include "TMC2209Registers.h"
 #include "pico/stdlib.h"
 
-TempHarness::TempHarness(TMC2209Driver& driver, StepperAxis& axis, Gripper& gripper)
+TestInterface::TestInterface(TMC2209Driver& driver, StepperAxis& axis, Gripper& gripper)
     : mDriver(driver),
       mAxis(axis),
       mGripper(gripper),
       mPreviousGripperBusy(gripper.isBusy()) {}
 
-void TempHarness::begin(bool driverConfigured) {
+void TestInterface::begin(bool driverConfigured) {
+    mDriverConfigured = driverConfigured;
     sleep_ms(UsbStartupDelayMs);
-
-    printf("\nGripper Pico test harness\n");
-    printf("Driver configuration: %s\n", driverConfigured ? "ok" : "failed");
-    printHelp();
-    printDriverDiagnostics();
 }
 
-void TempHarness::update() {
+void TestInterface::update() {
     handleUsbConsole();
     updateAutoCycle();
+
+    if (!mConsoleActive) {
+        mPreviousGripperBusy = mGripper.isBusy();
+        return;
+    }
 
     const bool currentGripperBusy = mGripper.isBusy();
     if (mPreviousGripperBusy && !currentGripperBusy) {
@@ -37,7 +37,7 @@ void TempHarness::update() {
     mPreviousGripperBusy = currentGripperBusy;
 }
 
-const char* TempHarness::toString(AxisMoveResult result) {
+const char* TestInterface::toString(AxisMoveResult result) {
     switch (result) {
         case AxisMoveResult::None: return "none";
         case AxisMoveResult::Done: return "done";
@@ -48,7 +48,7 @@ const char* TempHarness::toString(AxisMoveResult result) {
     return "unknown";
 }
 
-const char* TempHarness::toString(GripperResult result) {
+const char* TestInterface::toString(GripperResult result) {
     switch (result) {
         case GripperResult::None: return "none";
         case GripperResult::Done: return "done";
@@ -60,7 +60,18 @@ const char* TempHarness::toString(GripperResult result) {
     return "unknown";
 }
 
-void TempHarness::printHelp() const {
+void TestInterface::activateConsole() {
+    if (mConsoleActive) {
+        return;
+    }
+
+    mConsoleActive = true;
+    printf("\nGripper Pico test interface\n");
+    printf("Driver configuration: %s\n", mDriverConfigured ? "ok" : "failed");
+    printHelp();
+}
+
+void TestInterface::printHelp() const {
     printf("\nUSB test console commands:\n");
     printf("  h : show this help\n");
     printf("  i : print axis/gripper status\n");
@@ -74,7 +85,7 @@ void TempHarness::printHelp() const {
     printf("  a : toggle automatic close/open cycle\n\n");
 }
 
-void TempHarness::printStatus() const {
+void TestInterface::printStatus() const {
     printf("Status: axisBusy=%s axisResult=%s gripperBusy=%s gripperResult=%s autoCycle=%s\n",
            mAxis.isBusy() ? "yes" : "no",
            toString(mAxis.getLastMoveResult()),
@@ -83,74 +94,11 @@ void TempHarness::printStatus() const {
            mAutoCycle.enabled ? "on" : "off");
 }
 
-void TempHarness::testDriverConnection() const {
-    printf("Driver connection test:\n");
-    printf("  Note: write status only confirms the frame was sent by the Pico.\n");
-    printf("  A real UART link is only confirmed once IFCNT or a register read succeeds.\n");
-
-    uint8_t writeCounterBefore = 0;
-    uint8_t writeCounterAfter = 0;
-    uint32_t gconf = 0;
-
-    bool primedUart = false;
-    if (!mDriver.getWriteCounter(writeCounterBefore)) {
-        printf("  IFCNT read before: failed\n");
-
-        const uint32_t uartEnableGconf =
-            TMC2209Bits::GCONF::I_SCALE_ANALOG |
-            TMC2209Bits::GCONF::PDN_DISABLE |
-            TMC2209Bits::GCONF::MULTISTEP_FILT;
-
-        const bool primeWriteOk = mDriver.writeRegister(TMC2209Reg::GCONF, uartEnableGconf);
-        printf("  GCONF prime write frame: %s\n", primeWriteOk ? "sent" : "failed");
-        if (!primeWriteOk) {
-            printf("  Result: failed\n");
-            return;
-        }
-
-        primedUart = true;
-        if (!mDriver.getWriteCounter(writeCounterBefore)) {
-            printf("  IFCNT read after prime: failed\n");
-            printf("  Likely cause: TMC2209 is not replying on RX.\n");
-            printf("  Check PDN_UART wiring, TX/RX coupling for single-wire UART, common GND, and address/MS pins.\n");
-            printf("  Result: failed\n");
-            return;
-        }
-    }
-
-    printf("  IFCNT before: %u%s\n", writeCounterBefore, primedUart ? " (after prime)" : "");
-
-    if (!mDriver.readRegister(TMC2209Reg::GCONF, gconf)) {
-        printf("  GCONF read: failed\n");
-        printf("  Likely cause: write-only TX path works, but the read reply is not reaching the Pico RX pin.\n");
-        printf("  Result: failed\n");
-        return;
-    }
-
-    printf("  GCONF read: ok (0x%08lx)\n", static_cast<unsigned long>(gconf));
-
-    if (!mDriver.writeRegister(TMC2209Reg::GCONF, gconf)) {
-        printf("  GCONF write-back: failed\n");
-        printf("  Result: failed\n");
-        return;
-    }
-
-    printf("  GCONF write-back frame: sent\n");
-
-    if (!mDriver.getWriteCounter(writeCounterAfter)) {
-        printf("  IFCNT read after write: failed\n");
-        printf("  Result: failed\n");
-        return;
-    }
-
-    printf("  IFCNT after: %u\n", writeCounterAfter);
-
-    const bool counterIncrementOk = static_cast<uint8_t>(writeCounterBefore + 1u) == writeCounterAfter;
-    printf("  IFCNT increment: %s\n", counterIncrementOk ? "ok" : "failed");
-    printf("  Result: %s\n", counterIncrementOk ? "ok" : "failed");
+void TestInterface::testDriverConnection() const {
+    printf("Driver connection: %s\n", mDriver.testConnection() ? "ok" : "failed");
 }
 
-void TempHarness::printDriverDiagnostics() const {
+void TestInterface::printDriverDiagnostics() const {
     testDriverConnection();
 
     uint8_t writeCounter = 0;
@@ -182,17 +130,29 @@ void TempHarness::printDriverDiagnostics() const {
     }
 }
 
-void TempHarness::scheduleAutoCycle(uint32_t delayMs) {
+void TestInterface::scheduleAutoCycle(uint32_t delayMs) {
     mAutoCycle.actionScheduled = true;
     mAutoCycle.nextActionAt = make_timeout_time_ms(delayMs);
 }
 
-void TempHarness::handleUsbConsole() {
+void TestInterface::handleUsbConsole() {
     const int input = getchar_timeout_us(0);
     if (input == PICO_ERROR_TIMEOUT) {
         return;
     }
 
+    if (!mConsoleActive) {
+        if (input == '\r' || input == '\n') {
+            return;
+        }
+
+        activateConsole();
+    }
+
+    handleConsoleCommand(input);
+}
+
+void TestInterface::handleConsoleCommand(int input) {
     switch (input) {
         case '\r':
         case '\n':
@@ -264,7 +224,7 @@ void TempHarness::handleUsbConsole() {
     }
 }
 
-void TempHarness::updateAutoCycle() {
+void TestInterface::updateAutoCycle() {
     if (!mAutoCycle.enabled || !mAutoCycle.actionScheduled || mGripper.isBusy()) {
         return;
     }
@@ -277,11 +237,16 @@ void TempHarness::updateAutoCycle() {
     if (!started) {
         mAutoCycle.enabled = false;
         mAutoCycle.actionScheduled = false;
-        printf("Automatic cycle aborted\n");
+        if (mConsoleActive) {
+            printf("Automatic cycle aborted\n");
+        }
         return;
     }
 
-    printf("Automatic cycle: %s\n", mAutoCycle.nextCommandIsClose ? "close" : "open");
+    if (mConsoleActive) {
+        printf("Automatic cycle: %s\n", mAutoCycle.nextCommandIsClose ? "close" : "open");
+    }
+
     mAutoCycle.nextCommandIsClose = !mAutoCycle.nextCommandIsClose;
     mAutoCycle.actionScheduled = false;
 }

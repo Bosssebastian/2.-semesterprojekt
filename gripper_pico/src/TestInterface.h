@@ -6,9 +6,9 @@
 
 #include "pico/time.h"
 
-class TempHarness {
+class TestInterface {
 public:
-    TempHarness(TMC2209Driver& driver, StepperAxis& axis, Gripper& gripper);
+    TestInterface(TMC2209Driver& driver, StepperAxis& axis, Gripper& gripper);
 
     void begin(bool driverConfigured);
     void update();
@@ -29,15 +29,19 @@ private:
     Gripper& mGripper;
     AutoCycleState mAutoCycle;
     bool mPreviousGripperBusy = false;
+    bool mConsoleActive = false;
+    bool mDriverConfigured = false;
 
     static const char* toString(AxisMoveResult result);
     static const char* toString(GripperResult result);
 
+    void activateConsole();
     void printHelp() const;
     void printStatus() const;
     void testDriverConnection() const;
     void printDriverDiagnostics() const;
     void scheduleAutoCycle(uint32_t delayMs);
     void handleUsbConsole();
+    void handleConsoleCommand(int input);
     void updateAutoCycle();
 };

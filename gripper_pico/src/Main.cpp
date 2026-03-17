@@ -5,7 +5,7 @@
 #include "PinConfig.h"
 #include "StepperAxis.h"
 #include "TMC2209Driver.h"
-#include "temp.h"
+#include "TestInterface.h"
 
 #include "pico/stdlib.h"
 
@@ -27,13 +27,13 @@ int main() {
     Gripper gripper(axis);
     gripper.begin();
 
-    TempHarness temp(driver, axis, gripper);
-    temp.begin(driverConfigured);
+    TestInterface testInterface(driver, axis, gripper);
+    testInterface.begin(driverConfigured);
 
     while (true) {
         axis.update();
         gripper.update();
-        temp.update();
+        testInterface.update();
 
         tight_loop_contents();
     }
