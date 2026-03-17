@@ -18,7 +18,7 @@ bool Gripper::open() {
 
     mLastResult = GripperResult::None;
     mIsBusy = true;
-    return startMoveStep(MoveStep::OpenRelease, -ParameterConfig::GRIPPER_OPEN_RELEASE_STEPS, false);
+    return startMoveStep(MoveStep::Open, -ParameterConfig::GRIPPER_OPEN_STEPS, false);
 }
 
 bool Gripper::close() {
@@ -58,43 +58,11 @@ void Gripper::update() {
             }
             return;
 
-        case MoveStep::OpenRelease:
-            if (axisResult == AxisMoveResult::Done) {
-                if (!startMoveStep(MoveStep::OpenHome, -ParameterConfig::GRIPPER_OPEN_HOME_STEPS, true)) {
-                    endMove(GripperResult::Error, false);
-                }
-            } else {
-                endMove(GripperResult::Stopped, false);
-            }
-            return;
-
-        case MoveStep::OpenHome:
+        case MoveStep::Open:
             if (axisResult == AxisMoveResult::Stalled) {
                 endMove(GripperResult::Stalled, false);
             } else if (axisResult == AxisMoveResult::Done) {
-                if (!startMoveStep(MoveStep::OpenRetryRelease, ParameterConfig::GRIPPER_OPEN_RETRY_RELEASE_STEPS, false)) {
-                    endMove(GripperResult::Error, false);
-                }
-            } else {
-                endMove(GripperResult::Stopped, false);
-            }
-            return;
-
-        case MoveStep::OpenRetryRelease:
-            if (axisResult == AxisMoveResult::Done) {
-                if (!startMoveStep(MoveStep::OpenRetryHome, -ParameterConfig::GRIPPER_OPEN_RETRY_HOME_STEPS, true)) {
-                    endMove(GripperResult::Error, false);
-                }
-            } else {
-                endMove(GripperResult::Stopped, false);
-            }
-            return;
-
-        case MoveStep::OpenRetryHome:
-            if (axisResult == AxisMoveResult::Stalled) {
-                endMove(GripperResult::Stalled, false);
-            } else if (axisResult == AxisMoveResult::Done) {
-                endMove(GripperResult::Error, false);
+                endMove(GripperResult::Done, false);
             } else {
                 endMove(GripperResult::Stopped, false);
             }

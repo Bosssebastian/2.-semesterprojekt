@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 
+#include "TMC2209Registers.h"
 #include "pico/stdlib.h"
 
 TempHarness::TempHarness(TMC2209Driver& driver, StepperAxis& axis, Gripper& gripper)
@@ -63,6 +64,7 @@ void TempHarness::printHelp() const {
     printf("\nUSB test console commands:\n");
     printf("  h : show this help\n");
     printf("  i : print axis/gripper status\n");
+    printf("  t : run driver connection test\n");
     printf("  d : read driver diagnostics\n");
     printf("  c : close gripper\n");
     printf("  o : open gripper\n");
@@ -81,9 +83,75 @@ void TempHarness::printStatus() const {
            mAutoCycle.enabled ? "on" : "off");
 }
 
+void TempHarness::testDriverConnection() const {
+    printf("Driver connection test:\n");
+    printf("  Note: write status only confirms the frame was sent by the Pico.\n");
+    printf("  A real UART link is only confirmed once IFCNT or a register read succeeds.\n");
+
+    uint8_t writeCounterBefore = 0;
+    uint8_t writeCounterAfter = 0;
+    uint32_t gconf = 0;
+
+    bool primedUart = false;
+    if (!mDriver.getWriteCounter(writeCounterBefore)) {
+        printf("  IFCNT read before: failed\n");
+
+        const uint32_t uartEnableGconf =
+            TMC2209Bits::GCONF::I_SCALE_ANALOG |
+            TMC2209Bits::GCONF::PDN_DISABLE |
+            TMC2209Bits::GCONF::MULTISTEP_FILT;
+
+        const bool primeWriteOk = mDriver.writeRegister(TMC2209Reg::GCONF, uartEnableGconf);
+        printf("  GCONF prime write frame: %s\n", primeWriteOk ? "sent" : "failed");
+        if (!primeWriteOk) {
+            printf("  Result: failed\n");
+            return;
+        }
+
+        primedUart = true;
+        if (!mDriver.getWriteCounter(writeCounterBefore)) {
+            printf("  IFCNT read after prime: failed\n");
+            printf("  Likely cause: TMC2209 is not replying on RX.\n");
+            printf("  Check PDN_UART wiring, TX/RX coupling for single-wire UART, common GND, and address/MS pins.\n");
+            printf("  Result: failed\n");
+            return;
+        }
+    }
+
+    printf("  IFCNT before: %u%s\n", writeCounterBefore, primedUart ? " (after prime)" : "");
+
+    if (!mDriver.readRegister(TMC2209Reg::GCONF, gconf)) {
+        printf("  GCONF read: failed\n");
+        printf("  Likely cause: write-only TX path works, but the read reply is not reaching the Pico RX pin.\n");
+        printf("  Result: failed\n");
+        return;
+    }
+
+    printf("  GCONF read: ok (0x%08lx)\n", static_cast<unsigned long>(gconf));
+
+    if (!mDriver.writeRegister(TMC2209Reg::GCONF, gconf)) {
+        printf("  GCONF write-back: failed\n");
+        printf("  Result: failed\n");
+        return;
+    }
+
+    printf("  GCONF write-back frame: sent\n");
+
+    if (!mDriver.getWriteCounter(writeCounterAfter)) {
+        printf("  IFCNT read after write: failed\n");
+        printf("  Result: failed\n");
+        return;
+    }
+
+    printf("  IFCNT after: %u\n", writeCounterAfter);
+
+    const bool counterIncrementOk = static_cast<uint8_t>(writeCounterBefore + 1u) == writeCounterAfter;
+    printf("  IFCNT increment: %s\n", counterIncrementOk ? "ok" : "failed");
+    printf("  Result: %s\n", counterIncrementOk ? "ok" : "failed");
+}
+
 void TempHarness::printDriverDiagnostics() const {
-    const bool connectionOk = mDriver.testConnection();
-    printf("Driver connection: %s\n", connectionOk ? "ok" : "failed");
+    testDriverConnection();
 
     uint8_t writeCounter = 0;
     if (mDriver.getWriteCounter(writeCounter)) {
@@ -137,6 +205,10 @@ void TempHarness::handleUsbConsole() {
 
         case 'i':
             printStatus();
+            return;
+
+        case 't':
+            testDriverConnection();
             return;
 
         case 'd':

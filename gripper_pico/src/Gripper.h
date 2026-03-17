@@ -20,7 +20,7 @@ public:
     GripperResult getLastResult() const;
 
 private:
-    enum class MoveStep : uint8_t {Idle, Close, OpenRelease, OpenHome, OpenRetryRelease, OpenRetryHome};
+    enum class MoveStep : uint8_t {Idle, Close, Open};
 
     StepperAxis& mAxis;
     MoveStep mMoveStep = MoveStep::Idle;

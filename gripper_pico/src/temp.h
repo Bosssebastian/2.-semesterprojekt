@@ -35,6 +35,7 @@ private:
 
     void printHelp() const;
     void printStatus() const;
+    void testDriverConnection() const;
     void printDriverDiagnostics() const;
     void scheduleAutoCycle(uint32_t delayMs);
     void handleUsbConsole();

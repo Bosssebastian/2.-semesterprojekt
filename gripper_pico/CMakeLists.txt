@@ -68,3 +68,15 @@ target_include_directories(gripper_pico PRIVATE
 
 pico_add_extra_outputs(gripper_pico)
 
+find_program(PICOTOOL_EXECUTABLE picotool)
+
+if(PICOTOOL_EXECUTABLE)
+    add_custom_command(TARGET gripper_pico POST_BUILD
+        COMMAND ${PICOTOOL_EXECUTABLE} reboot -f -u
+        COMMENT "Rebooting Pico into USB boot mode with picotool"
+        VERBATIM
+    )
+else()
+    message(WARNING "picotool not found in PATH; automatic 'picotool reboot -f -u' is disabled.")
+endif()
+

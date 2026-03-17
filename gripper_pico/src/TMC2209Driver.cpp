@@ -25,7 +25,20 @@ bool TMC2209Driver::testConnection() {
     uint32_t gconf = 0;
 
     if (!getWriteCounter(writeCounterBefore)) {
-        return false;
+        // TMC2208 single-wire UART often needs a first write to GCONF with
+        // PDN_DISABLE set before read access becomes usable.
+        const uint32_t uartEnableGconf =
+            TMC2209Bits::GCONF::I_SCALE_ANALOG |
+            TMC2209Bits::GCONF::PDN_DISABLE |
+            TMC2209Bits::GCONF::MULTISTEP_FILT;
+
+        if (!writeRegister(TMC2209Reg::GCONF, uartEnableGconf)) {
+            return false;
+        }
+
+        if (!getWriteCounter(writeCounterBefore)) {
+            return false;
+        }
     }
 
     if (!readRegister(TMC2209Reg::GCONF, gconf)) {
@@ -53,6 +66,16 @@ bool TMC2209Driver::setCurrent(uint8_t ihold, uint8_t irun, uint8_t iholddelay) 
 }
 
 bool TMC2209Driver::setMicrosteps(uint16_t microsteps) {
+    uint32_t gconf = 0;
+    if (!readRegister(TMC2209Reg::GCONF, gconf)) {
+        return false;
+    }
+
+    gconf |= TMC2209Bits::GCONF::MSTEP_REG_SELECT;
+    if (!writeRegister(TMC2209Reg::GCONF, gconf)) {
+        return false;
+    }
+
     uint32_t chopconf = 0;
     if (!readRegister(TMC2209Reg::CHOPCONF, chopconf)) {
         return false;
@@ -173,26 +196,44 @@ bool TMC2209Driver::readRegister(uint8_t reg, uint32_t& value) {
     flushRx();
     uart_write_blocking(mUartPort, request, sizeof(request));
 
-    // Expected reply frame:
-    // sync, slave, reg, data[4], crc
-    uint8_t reply[8] = {0};
+    // On the TMC2208 single-wire UART, RX often sees the 4-byte request echo
+    // before the 8-byte read reply. Scan the received stream for a valid reply.
+    uint8_t rx[16] = {0};
+    size_t rxLen = 0;
+    const absolute_time_t deadline = make_timeout_time_us(10000);
 
-    if (!readExact(reply, sizeof(reply), 5000)) {
-        return false;
+    while (absolute_time_diff_us(get_absolute_time(), deadline) > 0 && rxLen < sizeof(rx)) {
+        if (!uart_is_readable(mUartPort)) {
+            continue;
+        }
+
+        rx[rxLen++] = uart_getc(mUartPort);
+
+        if (rxLen < 8) {
+            continue;
+        }
+
+        for (size_t start = 0; start <= rxLen - 8; ++start) {
+            const uint8_t* reply = &rx[start];
+            if (reply[0] != Sync || reply[1] != 0xFF || reply[2] != reg) {
+                continue;
+            }
+
+            const uint8_t crc = calcCRC(reply, 7);
+            if (crc != reply[7]) {
+                continue;
+            }
+
+            value = 0;
+            value |= static_cast<uint32_t>(reply[3]) << 24;
+            value |= static_cast<uint32_t>(reply[4]) << 16;
+            value |= static_cast<uint32_t>(reply[5]) << 8;
+            value |= static_cast<uint32_t>(reply[6]) << 0;
+            return true;
+        }
     }
 
-    const uint8_t crc = calcCRC(reply, 7);
-    if (crc != reply[7]) {
-        return false;
-    }
-
-    value = 0;
-    value |= static_cast<uint32_t>(reply[3]) << 24;
-    value |= static_cast<uint32_t>(reply[4]) << 16;
-    value |= static_cast<uint32_t>(reply[5]) << 8;
-    value |= static_cast<uint32_t>(reply[6]) << 0;
-
-    return true;
+    return false;
 }
 
 uint8_t TMC2209Driver::calcCRC(const uint8_t* data, size_t len) {
