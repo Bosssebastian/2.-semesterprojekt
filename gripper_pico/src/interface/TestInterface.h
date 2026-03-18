@@ -2,7 +2,7 @@
 
 #include "Gripper.h"
 #include "StepperAxis.h"
-#include "TMC2209Driver.h"
+#include "drivers/TMC2209Driver.h"
 
 #include "pico/time.h"
 

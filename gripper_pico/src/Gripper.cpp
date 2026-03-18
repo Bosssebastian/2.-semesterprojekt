@@ -1,5 +1,5 @@
 #include "Gripper.h"
-#include "ParameterConfig.h"
+#include "config/ParameterConfig.h"
 
 Gripper::Gripper(StepperAxis& axis)
     : mAxis(axis) {}
@@ -11,24 +11,24 @@ void Gripper::begin() {
     mAxis.setEnabled(false);
 }
 
-bool Gripper::open() {
+bool Gripper::open(bool stopOnStall) {
     if (mIsBusy) {
         return false;
     }
 
     mLastResult = GripperResult::None;
     mIsBusy = true;
-    return startMoveStep(MoveStep::Open, -ParameterConfig::GRIPPER_OPEN_STEPS, false);
+    return startMoveStep(MoveStep::Open, -ParameterConfig::GRIPPER_OPEN_STEPS, stopOnStall);
 }
 
-bool Gripper::close() {
+bool Gripper::close(bool stopOnStall) {
     if (mIsBusy) {
         return false;
     }
 
     mLastResult = GripperResult::None;
     mIsBusy = true;
-    return startMoveStep(MoveStep::Close, ParameterConfig::GRIPPER_CLOSE_STEPS, true);
+    return startMoveStep(MoveStep::Close, ParameterConfig::GRIPPER_CLOSE_STEPS, stopOnStall);
 }
 
 void Gripper::stop() {

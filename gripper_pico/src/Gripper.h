@@ -11,8 +11,8 @@ public:
     explicit Gripper(StepperAxis& axis);
 
     void begin();
-    bool open();
-    bool close();
+    bool open(bool stopOnStall = false);
+    bool close(bool stopOnStall = false);
     void stop();
     void update();
 

@@ -1,11 +1,11 @@
 #include <stdio.h>
 
 #include "Gripper.h"
-#include "ParameterConfig.h"
-#include "PinConfig.h"
+#include "config/ParameterConfig.h"
+#include "config/PinConfig.h"
 #include "StepperAxis.h"
-#include "TMC2209Driver.h"
-#include "TestInterface.h"
+#include "drivers/TMC2209Driver.h"
+#include "interface/TestInterface.h"
 
 #include "pico/stdlib.h"
 

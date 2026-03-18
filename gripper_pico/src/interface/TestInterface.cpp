@@ -95,8 +95,13 @@ void TestInterface::printStatus() const {
 }
 
 void TestInterface::testDriverConnection() const {
-    printf("Driver connection: %s\n", mDriver.testConnection() ? "ok" : "failed");
+    if (mDriver.testConnection()) {
+        printf("Driver connection: ok\n");
+    } else {
+        printf("Driver connection: failed\n");
+    }
 }
+
 
 void TestInterface::printDriverDiagnostics() const {
     testDriverConnection();
@@ -178,13 +183,13 @@ void TestInterface::handleConsoleCommand(int input) {
         case 'c':
             mAutoCycle.enabled = false;
             mAutoCycle.actionScheduled = false;
-            printf(mGripper.close() ? "Close started\n" : "Close rejected\n");
+            printf(mGripper.close(true) ? "Close started\n" : "Close rejected\n");
             return;
 
         case 'o':
             mAutoCycle.enabled = false;
             mAutoCycle.actionScheduled = false;
-            printf(mGripper.open() ? "Open started\n" : "Open rejected\n");
+            printf(mGripper.open(true) ? "Open started\n" : "Open rejected\n");
             return;
 
         case 's':
@@ -233,7 +238,7 @@ void TestInterface::updateAutoCycle() {
         return;
     }
 
-    const bool started = mAutoCycle.nextCommandIsClose ? mGripper.close() : mGripper.open();
+    const bool started = mAutoCycle.nextCommandIsClose ? mGripper.close(true) : mGripper.open(true);
     if (!started) {
         mAutoCycle.enabled = false;
         mAutoCycle.actionScheduled = false;
