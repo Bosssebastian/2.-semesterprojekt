@@ -24,6 +24,19 @@ constexpr uint DIAG_PIN = 17;
 
 // Stall detection configuration
 enum class StallDetectionMode : uint8_t { None, Uart, DiagInterrupt };
+
+inline const char* toString(StallDetectionMode mode) {
+    switch (mode) {
+        case StallDetectionMode::None:
+            return "None";
+        case StallDetectionMode::Uart:
+            return "Uart";
+        case StallDetectionMode::DiagInterrupt:
+            return "DiagInterrupt";
+    }
+
+    return "Unknown";
+}
 constexpr StallDetectionMode STALL_DETECTION_MODE = StallDetectionMode::DiagInterrupt;
 constexpr uint32_t DIAG_IRQ_EVENT_MASK = GPIO_IRQ_EDGE_RISE;
 

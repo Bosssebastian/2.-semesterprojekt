@@ -31,5 +31,5 @@ void Interface::sendStatistics() {
 
 }
 
-void Interface::sendEvent(CmdType cmd, EventType type, const std::string& reason) {
+void Interface::sendEvent(CmdType cmd, EventType type, EventReason reason) {
 }

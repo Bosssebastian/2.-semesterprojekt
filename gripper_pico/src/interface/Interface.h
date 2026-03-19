@@ -15,7 +15,7 @@ public:
 	void sendResponse(CmdType, ResponseType, const std::string& reason = "");   // Sends OK / ERR back
     void sendStatus();			//Maybe easier to have its own function?
     void sendStatistics();		//Maybe easier to have its own function?
-	void sendEvent(CmdType, EventType, const std::string& reason = "");
+	void sendEvent(CmdType, EventType, EventReason reason = EventReason::NONE);
 
 private:
 	Uart uart;

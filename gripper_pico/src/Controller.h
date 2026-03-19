@@ -16,5 +16,6 @@ private:
 
     void openCommand();
     void closeCommand();
+    void sendMoveCompletionEvent(const GripperMoveEvent& moveEvent);
 
 };

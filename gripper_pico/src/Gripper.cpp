@@ -16,8 +16,11 @@ void Gripper::setup() {
 
     mAxis.setup();
     mMoveStep = MoveStep::Idle;
+    mActiveCommand = CmdType::NONE;
     mIsBusy = false;
-    mLastResult = GripperResult::None;
+    mLastResult = GripperMoveResult::None;
+    mHasMoveEvent = false;
+    mMoveEvent = {};
     mAxis.setEnabled(false);
 }
 
@@ -26,7 +29,8 @@ bool Gripper::open(bool stopOnStall) {
         return false;
     }
 
-    mLastResult = GripperResult::None;
+    mLastResult = GripperMoveResult::None;
+    mActiveCommand = CmdType::OPEN;
     mIsBusy = true;
     return startMoveStep(MoveStep::Open, -ParameterConfig::GRIPPER_OPEN_STEPS, stopOnStall);
 }
@@ -36,7 +40,8 @@ bool Gripper::close(bool stopOnStall) {
         return false;
     }
 
-    mLastResult = GripperResult::None;
+    mLastResult = GripperMoveResult::None;
+    mActiveCommand = CmdType::CLOSE;
     mIsBusy = true;
     return startMoveStep(MoveStep::Close, ParameterConfig::GRIPPER_CLOSE_STEPS, stopOnStall);
 }
@@ -47,7 +52,7 @@ void Gripper::stop() {
     }
 
     mAxis.stop();
-    endMove(GripperResult::Stopped, false);
+    endMove(GripperMoveResult::Stopped, false);
 }
 
 void Gripper::update() {
@@ -62,21 +67,21 @@ void Gripper::update() {
     switch (mMoveStep) {
         case MoveStep::Close:
             if (axisResult == AxisMoveResult::Stalled) {
-                endMove(GripperResult::Stalled, true);
+                endMove(GripperMoveResult::Stalled, true);
             } else if (axisResult == AxisMoveResult::Done) {
-                endMove(GripperResult::Done, true);
+                endMove(GripperMoveResult::Done, true);
             } else {
-                endMove(GripperResult::Stopped, false);
+                endMove(GripperMoveResult::Stopped, false);
             }
             return;
 
         case MoveStep::Open:
             if (axisResult == AxisMoveResult::Stalled) {
-                endMove(GripperResult::Stalled, false);
+                endMove(GripperMoveResult::Stalled, false);
             } else if (axisResult == AxisMoveResult::Done) {
-                endMove(GripperResult::Done, false);
+                endMove(GripperMoveResult::Done, false);
             } else {
-                endMove(GripperResult::Stopped, false);
+                endMove(GripperMoveResult::Stopped, false);
             }
             return;
 
@@ -105,8 +110,23 @@ bool Gripper::isBusy() const {
     return mIsBusy;
 }
 
-GripperResult Gripper::getLastResult() const {
+GripperMoveResult Gripper::getLastResult() const {
     return mLastResult;
+}
+
+bool Gripper::hasMoveEvent() const {
+    return mHasMoveEvent;
+}
+
+GripperMoveEvent Gripper::getMoveEvent() {
+    if (!mHasMoveEvent) {
+        return {};
+    }
+
+    mHasMoveEvent = false;
+    const GripperMoveEvent event = mMoveEvent;
+    mMoveEvent = {};
+    return event;
 }
 
 bool Gripper::startMoveStep(MoveStep moveStep, int32_t steps, bool stopOnStall) {
@@ -114,12 +134,14 @@ bool Gripper::startMoveStep(MoveStep moveStep, int32_t steps, bool stopOnStall) 
 
     if (steps == 0) {
         mMoveStep = MoveStep::Idle;
+        mActiveCommand = CmdType::NONE;
         mIsBusy = false;
         return false;
     }
 
     if (!mAxis.move(steps, stopOnStall)) {
         mMoveStep = MoveStep::Idle;
+        mActiveCommand = CmdType::NONE;
         mIsBusy = false;
         return false;
     }
@@ -127,10 +149,18 @@ bool Gripper::startMoveStep(MoveStep moveStep, int32_t steps, bool stopOnStall) 
     return true;
 }
 
-void Gripper::endMove(GripperResult result, bool keepMotorEnabled) {
+void Gripper::endMove(GripperMoveResult result, bool keepMotorEnabled) {
+    const CmdType completedCommand = mActiveCommand;
+
     mMoveStep = MoveStep::Idle;
+    mActiveCommand = CmdType::NONE;
     mIsBusy = false;
     mLastResult = result;
+    if (completedCommand == CmdType::OPEN || completedCommand == CmdType::CLOSE) {
+        mMoveEvent.cmd = completedCommand;
+        mMoveEvent.result = result;
+        mHasMoveEvent = true;
+    }
 
     if (!keepMotorEnabled) {
         mAxis.setEnabled(false);

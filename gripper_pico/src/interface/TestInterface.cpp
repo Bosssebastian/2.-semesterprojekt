@@ -30,39 +30,44 @@ CmdType TestInterface::getCommand() {
     if (!commandQueue.empty()) {
         CmdType cmd = commandQueue.front();
         commandQueue.pop();
-        printf("Get Command: %d\n", static_cast<int>(cmd));
         return cmd;
     }
     return CmdType::NONE;
 }
 
 void TestInterface::sendResponse(CmdType cmd, ResponseType response, const std::string& reason) {
-    printf("Cmd: %d, Response: %d, Reason: %s\n", static_cast<int>(cmd), static_cast<int>(response), reason.c_str());
+    printf("%s cmd=%s reason=%s\n",
+           toString(response),
+           toString(cmd),
+           reason.c_str());
 }
 
-void TestInterface::sendEvent(CmdType cmd, EventType type, const std::string& reason) {
-    // ToDo
+void TestInterface::sendEvent(CmdType cmd, EventType type, EventReason reason) {
+    printf("EVENT cmd=%s type=%s reason=%s\n",
+           toString(cmd),
+           toString(type),
+           toString(reason));
 }
 
 void TestInterface::parseCommand(const std::string& line) {
     if (line == "p") {
-        printf("PING\n");
+        printf("CMD PING\n");
         commandQueue.push(CmdType::PING);
     }
     else if (line == "o") {
-        printf("OPEN\n");
+        printf("CMD OPEN\n");
         commandQueue.push(CmdType::OPEN);
     }
     else if (line == "c") {
-        printf("CLOSE\n");
+        printf("CMD CLOSE\n");
         commandQueue.push(CmdType::CLOSE);
     }
     else if (line == "s") {
-        printf("STOP\n");
+        printf("CMD STOP\n");
         commandQueue.push(CmdType::STOP);
     }
     else {
-        printf("NONE\n");
+        printf("CMD NONE\n");
         commandQueue.push(CmdType::NONE);
     }
 }
