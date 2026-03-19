@@ -1,6 +1,6 @@
-#include "TMC2209Driver.h"
+#include "stepper/TMC2209Driver.h"
 #include "config/PinConfig.h"
-#include "drivers/TMC2209Registers.h"
+#include "stepper/TMC2209Registers.h"
 
 #include "pico/time.h"
 
@@ -9,7 +9,7 @@ TMC2209Driver::TMC2209Driver(uart_inst_t* uartPort, uint32_t baudrate, uint8_t s
       mBaudrate(baudrate),
       mSlaveAddress(slaveAddress) {}
 
-void TMC2209Driver::begin() {
+void TMC2209Driver::setup() {
     gpio_set_function(PinConfig::TMC_UART_TX_PIN, GPIO_FUNC_UART);
     gpio_set_function(PinConfig::TMC_UART_RX_PIN, GPIO_FUNC_UART);
 

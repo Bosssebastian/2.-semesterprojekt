@@ -1,14 +1,15 @@
-#include "StepperAxis.h"
+#include "stepper/StepperAxis.h"
 #include "config/ParameterConfig.h"
-#include "drivers/TMC2209Driver.h"
+#include "stepper/TMC2209Driver.h"
 #include <cmath>
 #include "hardware/gpio.h"
 
 StepperAxis* StepperAxis::mDiagOwners[StepperAxis::MaxGpioCount] = {};
 
-StepperAxis::StepperAxis(TMC2209Driver* driver): mDriver(driver) {}
+StepperAxis::StepperAxis(TMC2209Driver& driver)
+    : mDriver(driver) {}
 
-void StepperAxis::begin() {
+void StepperAxis::setup() {
     gpio_init(PinConfig::DIR_PIN);
     gpio_set_dir(PinConfig::DIR_PIN, GPIO_OUT);
     gpio_put(PinConfig::DIR_PIN, 0);
@@ -17,7 +18,7 @@ void StepperAxis::begin() {
     gpio_set_dir(PinConfig::EN_PIN, GPIO_OUT);
     gpio_put(PinConfig::EN_PIN, 1);
     
-    mPWM.begin(PinConfig::STEP_PIN);
+    mPWM.setup(PinConfig::STEP_PIN);
     mPWM.setFrequency(ParameterConfig::AXIS_START_SPEED_SPS);
 
     if (PinConfig::STALL_DETECTION_MODE == PinConfig::StallDetectionMode::DiagInterrupt) {
@@ -165,7 +166,7 @@ bool StepperAxis::checkStall() {
             uint16_t sgResult = 0;
             uint8_t threshold = 0;
             bool triggered = false;
-            if (!mDriver->readStallGuardStatus(sgResult, threshold, triggered)) {
+            if (!mDriver.readStallGuardStatus(sgResult, threshold, triggered)) {
                 mConsecutiveUartStallSamples = 0;
                 return false;
             }

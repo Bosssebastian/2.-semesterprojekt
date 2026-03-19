@@ -6,7 +6,7 @@ class PwmOutput {
 public:
     PwmOutput() = default;
 
-    void begin(uint pin);
+    void setup(uint pin);
     void setFrequency(float frequencyHz);
     void start();
     void stop();

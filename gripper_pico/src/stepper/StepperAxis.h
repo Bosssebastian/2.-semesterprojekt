@@ -2,9 +2,9 @@
 #include <cstdint>
 #include "config/PinConfig.h"
 #include "pico/time.h"
-#include "drivers/PwmOutput.h"
+#include "stepper/PwmOutput.h"
 #include "pico/types.h"
-#include "drivers/TMC2209Driver.h"
+#include "stepper/TMC2209Driver.h"
 
 enum class AxisMoveResult : uint8_t {
     None,
@@ -15,12 +15,12 @@ enum class AxisMoveResult : uint8_t {
 
 class StepperAxis {
 public:
-    explicit StepperAxis(TMC2209Driver* driver);
+    explicit StepperAxis(TMC2209Driver& driver);
+    void setup();
+    void update();
 
-    void begin();
     bool move(int32_t steps, bool stopOnStall);
     void stop();
-    void update();
     void setEnabled(bool enabled);
 
     bool isBusy() const;
@@ -28,7 +28,7 @@ public:
 
 private:
     PwmOutput mPWM;
-    TMC2209Driver* mDriver = nullptr;
+    TMC2209Driver& mDriver;
 
     volatile bool mIsBusy = false;
     bool mStopOnStall = false;

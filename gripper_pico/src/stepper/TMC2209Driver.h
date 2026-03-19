@@ -7,7 +7,7 @@ class TMC2209Driver {
 public:
     TMC2209Driver(uart_inst_t* uartPort, uint32_t baudrate, uint8_t slaveAddress);
 
-    void begin();
+    void setup();
 
     bool testConnection();
     bool writeRegister(uint8_t reg, uint32_t value);

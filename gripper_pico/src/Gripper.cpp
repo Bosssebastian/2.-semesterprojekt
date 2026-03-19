@@ -1,14 +1,26 @@
 #include "Gripper.h"
 #include "config/ParameterConfig.h"
+#include "config/PinConfig.h"
 
-Gripper::Gripper(StepperAxis& axis)
-    : mAxis(axis) {}
+Gripper::Gripper()
+    : mDriver(PinConfig::TMC_UART_PORT, PinConfig::TMC_UART_BAUD, PinConfig::TMC_ADDRESS),
+      mAxis(mDriver) {}
 
-void Gripper::begin() {
+bool Gripper::setup() {
+    mDriver.setup();
+    const bool driverConfigured =
+        mDriver.setCurrent(ParameterConfig::DRIVER_HOLD_CURRENT, ParameterConfig::DRIVER_RUN_CURRENT, ParameterConfig::DRIVER_HOLD_DELAY) &&
+        mDriver.setMicrosteps(ParameterConfig::DRIVER_MICROSTEPS) &&
+        mDriver.enableSpreadCycle(ParameterConfig::DRIVER_SPREAD_CYCLE_ENABLED) &&
+        mDriver.setPwmThreshold(ParameterConfig::DRIVER_PWM_THRESHOLD) &&
+        mDriver.configureStallGuard(ParameterConfig::DRIVER_COOL_THRESHOLD, ParameterConfig::DRIVER_STALL_THRESHOLD);
+
+    mAxis.setup();
     mMoveStep = MoveStep::Idle;
     mIsBusy = false;
     mLastResult = GripperResult::None;
     mAxis.setEnabled(false);
+    return driverConfigured;
 }
 
 bool Gripper::open(bool stopOnStall) {
@@ -41,6 +53,8 @@ void Gripper::stop() {
 }
 
 void Gripper::update() {
+    mAxis.update();
+
     if (!mIsBusy || mAxis.isBusy()) {
         return;
     }
@@ -71,6 +85,22 @@ void Gripper::update() {
         case MoveStep::Idle:
             return;
     }
+}
+
+TMC2209Driver& Gripper::driver() {
+    return mDriver;
+}
+
+const TMC2209Driver& Gripper::driver() const {
+    return mDriver;
+}
+
+StepperAxis& Gripper::axis() {
+    return mAxis;
+}
+
+const StepperAxis& Gripper::axis() const {
+    return mAxis;
 }
 
 bool Gripper::isBusy() const {

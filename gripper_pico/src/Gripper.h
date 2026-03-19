@@ -2,19 +2,24 @@
 
 #include <cstdint>
 
-#include "StepperAxis.h"
+#include "stepper/StepperAxis.h"
+#include "stepper/TMC2209Driver.h"
 
 enum class GripperResult : uint8_t {None, Done, Stalled, Stopped, Error};
 
 class Gripper {
 public:
-    explicit Gripper(StepperAxis& axis);
+    Gripper();
+    bool setup();
+    void update();
 
-    void begin();
     bool open(bool stopOnStall = false);
     bool close(bool stopOnStall = false);
     void stop();
-    void update();
+    TMC2209Driver& driver();
+    const TMC2209Driver& driver() const;
+    StepperAxis& axis();
+    const StepperAxis& axis() const;
 
     bool isBusy() const;
     GripperResult getLastResult() const;
@@ -22,7 +27,8 @@ public:
 private:
     enum class MoveStep : uint8_t {Idle, Close, Open};
 
-    StepperAxis& mAxis;
+    TMC2209Driver mDriver;
+    StepperAxis mAxis;
     MoveStep mMoveStep = MoveStep::Idle;
     bool mIsBusy = false;
     GripperResult mLastResult = GripperResult::None;

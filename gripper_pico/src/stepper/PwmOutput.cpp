@@ -1,4 +1,4 @@
-#include "PwmOutput.h"
+#include "stepper/PwmOutput.h"
 #include "hardware/clocks.h"
 #include "hardware/gpio.h"
 #include "hardware/irq.h"
@@ -18,7 +18,7 @@ constexpr float MaxPwmClockDiv = 255.0f;
 PwmOutput* PwmOutput::mOwners[PwmOutput::MaxPwmSliceCount] = {};
 bool PwmOutput::mIrqInstalled = false;
 
-void PwmOutput::begin(uint pin) {
+void PwmOutput::setup(uint pin) {
     mPin = pin;
 
     gpio_init(mPin);

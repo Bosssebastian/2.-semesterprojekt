@@ -19,5 +19,6 @@ public:
 	void sendEvent(EventType, Event);           // Sends event
 
 private:
+	Uart uart;
 
 };

@@ -1,10 +1,8 @@
 #include <stdio.h>
 
+#include "Controller.h"
 #include "Gripper.h"
-#include "config/ParameterConfig.h"
-#include "config/PinConfig.h"
-#include "StepperAxis.h"
-#include "drivers/TMC2209Driver.h"
+#include "interface/Interface.h"
 #include "interface/TestInterface.h"
 
 #include "pico/stdlib.h"
@@ -12,27 +10,18 @@
 int main() {
     stdio_init_all();
 
-    TMC2209Driver driver(PinConfig::TMC_UART_PORT, PinConfig::TMC_UART_BAUD, PinConfig::TMC_ADDRESS);
-    driver.begin();
-    const bool driverConfigured =
-        driver.setCurrent(ParameterConfig::DRIVER_HOLD_CURRENT, ParameterConfig::DRIVER_RUN_CURRENT, ParameterConfig::DRIVER_HOLD_DELAY) &&
-        driver.setMicrosteps(ParameterConfig::DRIVER_MICROSTEPS) &&
-        driver.enableSpreadCycle(ParameterConfig::DRIVER_SPREAD_CYCLE_ENABLED) &&
-        driver.setPwmThreshold(ParameterConfig::DRIVER_PWM_THRESHOLD) &&
-        driver.configureStallGuard(ParameterConfig::DRIVER_COOL_THRESHOLD, ParameterConfig::DRIVER_STALL_THRESHOLD);
+    Gripper gripper;
+    const bool driver = gripper.setup();
 
-    StepperAxis axis(&driver);
-    axis.begin();
+    Interface interface;
+    interface.setup();
 
-    Gripper gripper(axis);
-    gripper.begin();
-
-    TestInterface testInterface(driver, axis, gripper);
-    testInterface.begin(driverConfigured);
+    TestInterface testInterface(gripper);
+    testInterface.setup(driver);
 
     while (true) {
-        axis.update();
         gripper.update();
+        interface.update();
         testInterface.update();
 
         tight_loop_contents();

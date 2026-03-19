@@ -1,9 +1,13 @@
 #include "Interface.h"
+#include "Uart.h"
 
 void Interface::setup() {
+    uart.setup();
 }
 
 void Interface::update() {
+    uart.update();
+    // loop code
 }
 
 bool Interface::hasCommand() {
