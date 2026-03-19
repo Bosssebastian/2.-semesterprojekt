@@ -4,13 +4,11 @@
 
 #include "pico/stdlib.h"
 
-TestInterface::TestInterface(TMC2209Driver& driver, StepperAxis& axis, Gripper& gripper)
-    : mDriver(driver),
-      mAxis(axis),
-      mGripper(gripper),
+TestInterface::TestInterface(Gripper& gripper)
+    : mGripper(gripper),
       mPreviousGripperBusy(gripper.isBusy()) {}
 
-void TestInterface::begin(bool driverConfigured) {
+void TestInterface::setup(bool driverConfigured) {
     mDriverConfigured = driverConfigured;
     sleep_ms(UsbStartupDelayMs);
 }
@@ -28,7 +26,7 @@ void TestInterface::update() {
     if (mPreviousGripperBusy && !currentGripperBusy) {
         printf("Move complete: gripper=%s axis=%s\n",
                toString(mGripper.getLastResult()),
-               toString(mAxis.getLastMoveResult()));
+               toString(mGripper.axis().getLastMoveResult()));
 
         if (mAutoCycle.enabled) {
             scheduleAutoCycle(AutoCyclePauseMs);
@@ -87,43 +85,48 @@ void TestInterface::printHelp() const {
 
 void TestInterface::printStatus() const {
     printf("Status: axisBusy=%s axisResult=%s gripperBusy=%s gripperResult=%s autoCycle=%s\n",
-           mAxis.isBusy() ? "yes" : "no",
-           toString(mAxis.getLastMoveResult()),
+           mGripper.axis().isBusy() ? "yes" : "no",
+           toString(mGripper.axis().getLastMoveResult()),
            mGripper.isBusy() ? "yes" : "no",
            toString(mGripper.getLastResult()),
            mAutoCycle.enabled ? "on" : "off");
 }
 
 void TestInterface::testDriverConnection() const {
-    printf("Driver connection: %s\n", mDriver.testConnection() ? "ok" : "failed");
+    if (mGripper.driver().testConnection()) {
+        printf("Driver connection: ok\n");
+    } else {
+        printf("Driver connection: failed\n");
+    }
 }
+
 
 void TestInterface::printDriverDiagnostics() const {
     testDriverConnection();
 
     uint8_t writeCounter = 0;
-    if (mDriver.getWriteCounter(writeCounter)) {
+    if (mGripper.driver().getWriteCounter(writeCounter)) {
         printf("IFCNT: %u\n", writeCounter);
     } else {
         printf("IFCNT: read failed\n");
     }
 
     uint32_t driverStatus = 0;
-    if (mDriver.readDriverStatus(driverStatus)) {
+    if (mGripper.driver().readDriverStatus(driverStatus)) {
         printf("DRV_STATUS: 0x%08lx\n", static_cast<unsigned long>(driverStatus));
     } else {
         printf("DRV_STATUS: read failed\n");
     }
 
     bool diagActive = false;
-    if (mDriver.readDiagState(diagActive)) {
+    if (mGripper.driver().readDiagState(diagActive)) {
         printf("DIAG: %s\n", diagActive ? "active" : "inactive");
     } else {
         printf("DIAG: read failed\n");
     }
 
     uint16_t stallGuardResult = 0;
-    if (mDriver.readStallGuardResult(stallGuardResult)) {
+    if (mGripper.driver().readStallGuardResult(stallGuardResult)) {
         printf("SG_RESULT: %u\n", stallGuardResult);
     } else {
         printf("SG_RESULT: read failed\n");
@@ -178,13 +181,13 @@ void TestInterface::handleConsoleCommand(int input) {
         case 'c':
             mAutoCycle.enabled = false;
             mAutoCycle.actionScheduled = false;
-            printf(mGripper.close() ? "Close started\n" : "Close rejected\n");
+            printf(mGripper.close(true) ? "Close started\n" : "Close rejected\n");
             return;
 
         case 'o':
             mAutoCycle.enabled = false;
             mAutoCycle.actionScheduled = false;
-            printf(mGripper.open() ? "Open started\n" : "Open rejected\n");
+            printf(mGripper.open(true) ? "Open started\n" : "Open rejected\n");
             return;
 
         case 's':
@@ -195,14 +198,14 @@ void TestInterface::handleConsoleCommand(int input) {
             return;
 
         case 'e':
-            mAxis.setEnabled(true);
+            mGripper.axis().setEnabled(true);
             printf("Motor enabled\n");
             return;
 
         case 'x':
             mAutoCycle.enabled = false;
             mAutoCycle.actionScheduled = false;
-            mAxis.setEnabled(false);
+            mGripper.axis().setEnabled(false);
             printf("Motor disabled\n");
             return;
 
@@ -233,7 +236,7 @@ void TestInterface::updateAutoCycle() {
         return;
     }
 
-    const bool started = mAutoCycle.nextCommandIsClose ? mGripper.close() : mGripper.open();
+    const bool started = mAutoCycle.nextCommandIsClose ? mGripper.close(true) : mGripper.open(true);
     if (!started) {
         mAutoCycle.enabled = false;
         mAutoCycle.actionScheduled = false;

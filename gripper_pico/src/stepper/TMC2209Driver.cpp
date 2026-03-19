@@ -1,6 +1,6 @@
-#include "TMC2209Driver.h"
-#include "PinConfig.h"
-#include "TMC2209Registers.h"
+#include "stepper/TMC2209Driver.h"
+#include "config/PinConfig.h"
+#include "stepper/TMC2209Registers.h"
 
 #include "pico/time.h"
 
@@ -9,7 +9,7 @@ TMC2209Driver::TMC2209Driver(uart_inst_t* uartPort, uint32_t baudrate, uint8_t s
       mBaudrate(baudrate),
       mSlaveAddress(slaveAddress) {}
 
-void TMC2209Driver::begin() {
+void TMC2209Driver::setup() {
     gpio_set_function(PinConfig::TMC_UART_TX_PIN, GPIO_FUNC_UART);
     gpio_set_function(PinConfig::TMC_UART_RX_PIN, GPIO_FUNC_UART);
 
@@ -117,7 +117,12 @@ bool TMC2209Driver::setCoolThreshold(uint32_t threshold) {
 }
 
 bool TMC2209Driver::setStallGuardThreshold(uint8_t threshold) {
-    return writeRegister(TMC2209Reg::SGTHRS, threshold);
+    if (!writeRegister(TMC2209Reg::SGTHRS, threshold)) {
+        return false;
+    }
+
+    mStallGuardThreshold = threshold;
+    return true;
 }
 
 bool TMC2209Driver::configureStallGuard(uint32_t coolThreshold, uint8_t stallThreshold) {
@@ -158,19 +163,13 @@ bool TMC2209Driver::readStallGuardResult(uint16_t& result) {
     return true;
 }
 
-bool TMC2209Driver::isStallGuardTriggered(bool& triggered) {
-    uint32_t threshold = 0;
-    uint16_t sgResult = 0;
-
-    if (!readRegister(TMC2209Reg::SGTHRS, threshold)) {
-        return false;
-    }
-
+bool TMC2209Driver::readStallGuardStatus(uint16_t& sgResult, uint8_t& threshold, bool& triggered) {
     if (!readStallGuardResult(sgResult)) {
         return false;
     }
 
-    triggered = sgResult < static_cast<uint16_t>(threshold & 0xFFu);
+    threshold = mStallGuardThreshold;
+    triggered = sgResult <= static_cast<uint16_t>(threshold) * 2u;
     return true;
 }
 
@@ -192,6 +191,21 @@ bool TMC2209Driver::writeRegister(uint8_t reg, uint32_t value) {
 }
 
 bool TMC2209Driver::readRegister(uint8_t reg, uint32_t& value) {
+    static constexpr uint32_t ReadTimeoutUs = 20000;
+    static constexpr uint8_t MaxAttempts = 3;
+
+    for (uint8_t attempt = 0; attempt < MaxAttempts; ++attempt) {
+        if (readRegisterOnce(reg, value, ReadTimeoutUs)) {
+            return true;
+        }
+
+        sleep_us(500);
+    }
+
+    return false;
+}
+
+bool TMC2209Driver::readRegisterOnce(uint8_t reg, uint32_t& value, uint32_t timeoutUs) {
     // Read request frame
     uint8_t request[4];
     request[0] = Sync;
@@ -206,7 +220,7 @@ bool TMC2209Driver::readRegister(uint8_t reg, uint32_t& value) {
     // before the 8-byte read reply. Scan the received stream for a valid reply.
     uint8_t rx[16] = {0};
     size_t rxLen = 0;
-    const absolute_time_t deadline = make_timeout_time_us(10000);
+    const absolute_time_t deadline = make_timeout_time_us(timeoutUs);
 
     while (absolute_time_diff_us(get_absolute_time(), deadline) > 0 && rxLen < sizeof(rx)) {
         if (!uart_is_readable(mUartPort)) {
@@ -279,22 +293,4 @@ void TMC2209Driver::flushRx() {
     while (uart_is_readable(mUartPort)) {
         (void)uart_getc(mUartPort);
     }
-}
-
-bool TMC2209Driver::readExact(uint8_t* dst, size_t len, uint32_t timeoutUs) {
-    const absolute_time_t deadline = make_timeout_time_us(timeoutUs);
-    size_t index = 0;
-
-    while (index < len) {
-        if (uart_is_readable(mUartPort)) {
-            dst[index++] = uart_getc(mUartPort);
-            continue;
-        }
-
-        if (absolute_time_diff_us(get_absolute_time(), deadline) <= 0) {
-            return false;
-        }
-    }
-
-    return true;
 }

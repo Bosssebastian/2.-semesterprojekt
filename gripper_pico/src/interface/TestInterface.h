@@ -1,16 +1,15 @@
 #pragma once
 
 #include "Gripper.h"
-#include "StepperAxis.h"
-#include "TMC2209Driver.h"
+#include "stepper/StepperAxis.h"
 
 #include "pico/time.h"
 
 class TestInterface {
 public:
-    TestInterface(TMC2209Driver& driver, StepperAxis& axis, Gripper& gripper);
+    explicit TestInterface(Gripper& gripper);
 
-    void begin(bool driverConfigured);
+    void setup(bool driverConfigured);
     void update();
 
 private:
@@ -24,8 +23,6 @@ private:
         absolute_time_t nextActionAt = {};
     };
 
-    TMC2209Driver& mDriver;
-    StepperAxis& mAxis;
     Gripper& mGripper;
     AutoCycleState mAutoCycle;
     bool mPreviousGripperBusy = false;

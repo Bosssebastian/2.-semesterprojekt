@@ -1,14 +1,15 @@
-#include "StepperAxis.h"
-#include "ParameterConfig.h"
-#include "TMC2209Driver.h"
+#include "stepper/StepperAxis.h"
+#include "config/ParameterConfig.h"
+#include "stepper/TMC2209Driver.h"
 #include <cmath>
 #include "hardware/gpio.h"
 
 StepperAxis* StepperAxis::mDiagOwners[StepperAxis::MaxGpioCount] = {};
 
-StepperAxis::StepperAxis(TMC2209Driver* driver): mDriver(driver) {}
+StepperAxis::StepperAxis(TMC2209Driver& driver)
+    : mDriver(driver) {}
 
-void StepperAxis::begin() {
+void StepperAxis::setup() {
     gpio_init(PinConfig::DIR_PIN);
     gpio_set_dir(PinConfig::DIR_PIN, GPIO_OUT);
     gpio_put(PinConfig::DIR_PIN, 0);
@@ -17,7 +18,7 @@ void StepperAxis::begin() {
     gpio_set_dir(PinConfig::EN_PIN, GPIO_OUT);
     gpio_put(PinConfig::EN_PIN, 1);
     
-    mPWM.begin(PinConfig::STEP_PIN);
+    mPWM.setup(PinConfig::STEP_PIN);
     mPWM.setFrequency(ParameterConfig::AXIS_START_SPEED_SPS);
 
     if (PinConfig::STALL_DETECTION_MODE == PinConfig::StallDetectionMode::DiagInterrupt) {
@@ -39,6 +40,15 @@ bool StepperAxis::move(int32_t steps, bool stopOnStall) {
     mStopOnStall = stopOnStall;
     mDiagStallLatched = false;
     mLastMoveResult = AxisMoveResult::None;
+    mExecutedSteps = 0;
+    mStallDetectionArmedAt = make_timeout_time_us(ParameterConfig::DRIVER_STALL_ARM_DELAY_US);
+    mNextUartStallPollAt = get_absolute_time();
+    mConsecutiveUartStallSamples = 0;
+    mPeakStallGuardResult = 0;
+    mStallGuardPrimed = false;
+    mFilteredStallGuardResult = 0;
+    mHasFilteredStallGuardResult = false;
+    mCurrentStepFrequencyHz = static_cast<float>(ParameterConfig::AXIS_START_SPEED_SPS);
 
     mPWM.setFrequency(ParameterConfig::AXIS_START_SPEED_SPS);
     mIsBusy = true;
@@ -72,6 +82,7 @@ void StepperAxis::update() {
     for (uint32_t wrapIndex = 0; wrapIndex < wrapCount; ++wrapIndex) {
         if (mRemainingSteps > 0) {
             --mRemainingSteps;
+            ++mExecutedSteps;
         }
 
         if (mRemainingSteps <= 0) {
@@ -147,15 +158,61 @@ bool StepperAxis::checkStall() {
             return false;
 
         case PinConfig::StallDetectionMode::Uart: {
-            bool stallDetected = false;
-            if (!mDriver->isStallGuardTriggered(stallDetected)) {
+            if (absolute_time_diff_us(get_absolute_time(), mNextUartStallPollAt) > 0) {
                 return false;
             }
-            return stallDetected;
+
+            mNextUartStallPollAt = make_timeout_time_us(ParameterConfig::DRIVER_STALL_POLL_INTERVAL_US);
+            uint16_t sgResult = 0;
+            uint8_t threshold = 0;
+            bool triggered = false;
+            if (!mDriver.readStallGuardStatus(sgResult, threshold, triggered)) {
+                mConsecutiveUartStallSamples = 0;
+                return false;
+            }
+            (void)triggered;
+
+            const uint16_t compareValue = static_cast<uint16_t>(threshold) * 2u;
+
+            if (!mHasFilteredStallGuardResult) {
+                mFilteredStallGuardResult = sgResult;
+                mHasFilteredStallGuardResult = true;
+            } else {
+                mFilteredStallGuardResult = static_cast<uint16_t>((3u * mFilteredStallGuardResult + sgResult + 2u) / 4u);
+            }
+
+            updateStallGuardPriming(mFilteredStallGuardResult, compareValue);
+            if (!isStallDetectionActive()) {
+                mConsecutiveUartStallSamples = 0;
+                return false;
+            }
+
+            const bool filteredStallDetected = mFilteredStallGuardResult <= compareValue;
+            if (filteredStallDetected) {
+                if (mConsecutiveUartStallSamples < 0xFFu) {
+                    ++mConsecutiveUartStallSamples;
+                }
+            } else {
+                mConsecutiveUartStallSamples = 0;
+            }
+
+            const bool stopTriggered =
+                mConsecutiveUartStallSamples >= ParameterConfig::DRIVER_STALL_CONSECUTIVE_SAMPLES;
+            return stopTriggered;
         }
 
-        case PinConfig::StallDetectionMode::DiagInterrupt:
-            return mDiagStallLatched;
+        case PinConfig::StallDetectionMode::DiagInterrupt: {
+            if (!mDiagStallLatched) {
+                return false;
+            }
+
+            if (!isBasicStallWindowActive() || isInBrakingZone()) {
+                mDiagStallLatched = false;
+                return false;
+            }
+
+            return true;
+        }
     }
     return false;
 }
@@ -165,8 +222,77 @@ void StepperAxis::endMove(AxisMoveResult result) {
     mRemainingSteps = 0;
     mDiagStallLatched = false;
     mStopOnStall = false;
+    mConsecutiveUartStallSamples = 0;
+    mPeakStallGuardResult = 0;
+    mStallGuardPrimed = false;
+    mFilteredStallGuardResult = 0;
+    mHasFilteredStallGuardResult = false;
     mLastMoveResult = result;
     mPWM.stop();
+}
+
+bool StepperAxis::isBasicStallWindowActive() const {
+    const int64_t armDelayRemainingUs = absolute_time_diff_us(get_absolute_time(), mStallDetectionArmedAt);
+    if (armDelayRemainingUs > 0) {
+        return false;
+    }
+
+    return mExecutedSteps >= ParameterConfig::DRIVER_STALL_ARM_STEPS;
+}
+
+bool StepperAxis::isInBrakingZone() const {
+    const float startSpeedHz = static_cast<float>(ParameterConfig::AXIS_START_SPEED_SPS);
+    const float accelerationSps2 = static_cast<float>(ParameterConfig::AXIS_ACCELERATION_SPS2);
+    if (accelerationSps2 <= 0.0f) {
+        return false;
+    }
+
+    const float currentSpeedSquared = mCurrentStepFrequencyHz * mCurrentStepFrequencyHz;
+    const float startSpeedSquared = startSpeedHz * startSpeedHz;
+    const float stepsToBrake =
+        (currentSpeedSquared > startSpeedSquared)
+            ? (currentSpeedSquared - startSpeedSquared) / (2.0f * accelerationSps2)
+            : 0.0f;
+    const float brakingWindowSteps =
+        stepsToBrake + static_cast<float>(ParameterConfig::DRIVER_STALL_BRAKE_MARGIN_STEPS);
+    return static_cast<float>(mRemainingSteps) <= brakingWindowSteps;
+}
+
+void StepperAxis::updateStallGuardPriming(uint16_t sgResult, uint16_t compareValue) {
+    if (sgResult > mPeakStallGuardResult) {
+        mPeakStallGuardResult = sgResult;
+        return;
+    }
+
+    if (mStallGuardPrimed) {
+        return;
+    }
+
+    uint16_t primingFloor = ParameterConfig::DRIVER_STALL_PRIME_MIN_SG_RESULT;
+    const uint16_t compareFloor = static_cast<uint16_t>(compareValue + ParameterConfig::DRIVER_STALL_PRIME_COMPARE_MARGIN);
+    if (compareFloor > primingFloor) {
+        primingFloor = compareFloor;
+    }
+
+    if (mPeakStallGuardResult < primingFloor) {
+        return;
+    }
+
+    if (sgResult + ParameterConfig::DRIVER_STALL_PRIME_DROP_DELTA <= mPeakStallGuardResult) {
+        mStallGuardPrimed = true;
+    }
+}
+
+bool StepperAxis::isStallDetectionActive() const {
+    if (!isBasicStallWindowActive()) {
+        return false;
+    }
+
+    if (!mStallGuardPrimed) {
+        return false;
+    }
+
+    return !isInBrakingZone();
 }
 
 void StepperAxis::updateMotionSpeed() {

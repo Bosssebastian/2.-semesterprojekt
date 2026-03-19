@@ -38,10 +38,12 @@ pico_sdk_init()
 add_executable(gripper_pico
         src/Main.cpp
         src/Gripper.cpp
-        src/PwmOutput.cpp
-        src/TMC2209Driver.cpp
-        src/StepperAxis.cpp
-        src/TestInterface.cpp
+        src/stepper/PwmOutput.cpp
+        src/stepper/TMC2209Driver.cpp
+        src/stepper/StepperAxis.cpp
+        src/interface/TestInterface.cpp
+        src/interface/Interface.cpp
+        src/interface/Uart.cpp
 )
 
 pico_set_program_name(gripper_pico "gripper_pico")
@@ -64,19 +66,10 @@ target_link_libraries(gripper_pico
 # Add the standard include files to the build
 target_include_directories(gripper_pico PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
+        ${CMAKE_CURRENT_LIST_DIR}/src
 )
 
 pico_add_extra_outputs(gripper_pico)
 
-find_program(PICOTOOL_EXECUTABLE picotool)
 
-if(PICOTOOL_EXECUTABLE)
-    add_custom_command(TARGET gripper_pico POST_BUILD
-        COMMAND ${PICOTOOL_EXECUTABLE} reboot -f -u
-        COMMENT "Rebooting Pico into USB boot mode with picotool"
-        VERBATIM
-    )
-else()
-    message(WARNING "picotool not found in PATH; automatic 'picotool reboot -f -u' is disabled.")
-endif()
 
