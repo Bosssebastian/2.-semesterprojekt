@@ -10,7 +10,7 @@ enum class GripperResult : uint8_t {None, Done, Stalled, Stopped, Error};
 class Gripper {
 public:
     Gripper();
-    bool setup();
+    void setup();
     void update();
 
     bool open(bool stopOnStall = false);

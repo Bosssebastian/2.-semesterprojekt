@@ -1,5 +1,5 @@
 #include "Interface.h"
-
+#include "Types.h"
 #include <string>
 
 void Interface::setup() {

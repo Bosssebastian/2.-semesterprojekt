@@ -6,7 +6,7 @@ Gripper::Gripper()
     : mDriver(PinConfig::TMC_UART_PORT, PinConfig::TMC_UART_BAUD, PinConfig::TMC_ADDRESS),
       mAxis(mDriver) {}
 
-bool Gripper::setup() {
+void Gripper::setup() {
     mDriver.setup();
     mDriver.setCurrent(ParameterConfig::DRIVER_HOLD_CURRENT, ParameterConfig::DRIVER_RUN_CURRENT, ParameterConfig::DRIVER_HOLD_DELAY);
     mDriver.setMicrosteps(ParameterConfig::DRIVER_MICROSTEPS);

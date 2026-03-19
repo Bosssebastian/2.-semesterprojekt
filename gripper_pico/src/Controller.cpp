@@ -1,6 +1,8 @@
 #include "Controller.h"
 #include "Gripper.h"
 #include "interface/Interface.h"
+#include "interface/TestInterface.h"
+#include "Types.h"
 
 void Controller::setup() {  
 }
@@ -33,7 +35,6 @@ void Controller::update() {
                 break;
         }
     }
-
 }
 
 void Controller::openCommand() {
