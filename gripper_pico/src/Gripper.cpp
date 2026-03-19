@@ -8,19 +8,17 @@ Gripper::Gripper()
 
 bool Gripper::setup() {
     mDriver.setup();
-    const bool driverConfigured =
-        mDriver.setCurrent(ParameterConfig::DRIVER_HOLD_CURRENT, ParameterConfig::DRIVER_RUN_CURRENT, ParameterConfig::DRIVER_HOLD_DELAY) &&
-        mDriver.setMicrosteps(ParameterConfig::DRIVER_MICROSTEPS) &&
-        mDriver.enableSpreadCycle(ParameterConfig::DRIVER_SPREAD_CYCLE_ENABLED) &&
-        mDriver.setPwmThreshold(ParameterConfig::DRIVER_PWM_THRESHOLD) &&
-        mDriver.configureStallGuard(ParameterConfig::DRIVER_COOL_THRESHOLD, ParameterConfig::DRIVER_STALL_THRESHOLD);
+    mDriver.setCurrent(ParameterConfig::DRIVER_HOLD_CURRENT, ParameterConfig::DRIVER_RUN_CURRENT, ParameterConfig::DRIVER_HOLD_DELAY);
+    mDriver.setMicrosteps(ParameterConfig::DRIVER_MICROSTEPS);
+    mDriver.enableSpreadCycle(ParameterConfig::DRIVER_SPREAD_CYCLE_ENABLED);
+    mDriver.setPwmThreshold(ParameterConfig::DRIVER_PWM_THRESHOLD);
+    mDriver.configureStallGuard(ParameterConfig::DRIVER_COOL_THRESHOLD, ParameterConfig::DRIVER_STALL_THRESHOLD);
 
     mAxis.setup();
     mMoveStep = MoveStep::Idle;
     mIsBusy = false;
     mLastResult = GripperResult::None;
     mAxis.setEnabled(false);
-    return driverConfigured;
 }
 
 bool Gripper::open(bool stopOnStall) {
@@ -114,7 +112,13 @@ GripperResult Gripper::getLastResult() const {
 bool Gripper::startMoveStep(MoveStep moveStep, int32_t steps, bool stopOnStall) {
     mMoveStep = moveStep;
 
-    if (steps == 0 || !mAxis.move(steps, stopOnStall)) {
+    if (steps == 0) {
+        mMoveStep = MoveStep::Idle;
+        mIsBusy = false;
+        return false;
+    }
+
+    if (!mAxis.move(steps, stopOnStall)) {
         mMoveStep = MoveStep::Idle;
         mIsBusy = false;
         return false;

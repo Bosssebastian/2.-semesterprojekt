@@ -38,10 +38,10 @@ pico_sdk_init()
 add_executable(gripper_pico
         src/Main.cpp
         src/Gripper.cpp
+        src/Controller.cpp
         src/stepper/PwmOutput.cpp
         src/stepper/TMC2209Driver.cpp
         src/stepper/StepperAxis.cpp
-        src/interface/TestInterface.cpp
         src/interface/Interface.cpp
         src/interface/Uart.cpp
 )
