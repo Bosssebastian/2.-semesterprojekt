@@ -1,5 +1,6 @@
 #include "Interface.h"
-#include "Uart.h"
+
+#include <string>
 
 void Interface::setup() {
     uart.setup();
@@ -18,7 +19,16 @@ CmdType Interface::getCommand() {
     return CmdType::PING;
 }
 
-void Interface::sendResponse(CmdType, ResponseType) {
+void Interface::sendResponse(CmdType cmd, ResponseType response, const std::string& reason) {
+
+}
+
+void Interface::sendStatus() {
+
+}
+
+void Interface::sendStatistics() {
+
 }
 
 void Interface::sendEvent(EventType, Event) {
