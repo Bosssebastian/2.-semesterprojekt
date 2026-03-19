@@ -29,7 +29,7 @@ void Controller::update() {
                 // ToDo
                 break;
             default:
-                mInterface.sendResponse(cmd, ResponseType::ERR);
+                mInterface.sendResponse(cmd, ResponseType::ERROR);
                 break;
         }
     }
@@ -40,7 +40,7 @@ void Controller::openCommand() {
     if (mGripper.open()) {
         mInterface.sendResponse(CmdType::OPEN, ResponseType::OK);
     } else {
-        mInterface.sendResponse(CmdType::OPEN, ResponseType::ERR, "BUSY");
+        mInterface.sendResponse(CmdType::OPEN, ResponseType::ERROR, "BUSY");
     }
 }
 
@@ -48,6 +48,6 @@ void Controller::closeCommand() {
     if (mGripper.close()) {
         mInterface.sendResponse(CmdType::CLOSE, ResponseType::OK);
     } else {
-        mInterface.sendResponse(CmdType::CLOSE, ResponseType::ERR, "BUSY");
+        mInterface.sendResponse(CmdType::CLOSE, ResponseType::ERROR, "BUSY");
     }
 }

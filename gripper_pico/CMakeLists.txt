@@ -42,7 +42,6 @@ add_executable(gripper_pico
         src/stepper/PwmOutput.cpp
         src/stepper/TMC2209Driver.cpp
         src/stepper/StepperAxis.cpp
-        src/interface/TestInterface.cpp
         src/interface/Interface.cpp
         src/interface/Uart.cpp
 )

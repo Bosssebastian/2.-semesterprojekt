@@ -12,11 +12,11 @@ void Interface::update() {
 }
 
 bool Interface::hasCommand() {
-    return false;
+    return false;   //Placeholder
 }
 
 CmdType Interface::getCommand() {
-    return CmdType::PING;
+    return CmdType::PING; //Placeholder
 }
 
 void Interface::sendResponse(CmdType cmd, ResponseType response, const std::string& reason) {
@@ -31,5 +31,5 @@ void Interface::sendStatistics() {
 
 }
 
-void Interface::sendEvent(EventType, Event) {
+void Interface::sendEvent(CmdType cmd, EventType type, const std::string& reason) {
 }
