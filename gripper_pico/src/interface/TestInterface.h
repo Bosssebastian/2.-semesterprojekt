@@ -1,10 +1,11 @@
 #pragma once
-#include "Uart.h"
-#include "Types.h"
 #include <cstdint>
 #include <string>
-  
-class Interface {  
+#include <queue>
+#include "Types.h"
+#include "pico/stdlib.h"
+
+class TestInterface {  
 public:  
 	void setup();
 	void update(); 
@@ -13,10 +14,14 @@ public:
 	CmdType getCommand();    // Gets what type the received command is
   
 	void sendResponse(CmdType, ResponseType, const std::string& reason = "");   // Sends OK / ERR back
-    void sendStatus();			//Maybe easier to have its own function?
-    void sendStatistics();		//Maybe easier to have its own function?
+    //void sendStatus();			//Maybe easier to have its own function?
+    //void sendStatistics();		//Maybe easier to have its own function?
 	void sendEvent(CmdType, EventType, EventReason reason = EventReason::NONE);
 
 private:
-	Uart uart;
+    static constexpr uint32_t UsbStartupDelayMs = 2000;
+
+    std::queue<CmdType> commandQueue;
+
+    void parseCommand(const std::string& line);
 };

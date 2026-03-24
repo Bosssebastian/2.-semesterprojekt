@@ -1,6 +1,8 @@
 #include "Controller.h"
 #include "Gripper.h"
 #include "interface/Interface.h"
+#include "interface/TestInterface.h"
+#include "Types.h"
 
 void Controller::setup() {  
 }
@@ -34,6 +36,9 @@ void Controller::update() {
         }
     }
 
+    if (mGripper.hasMoveEvent()) {
+        sendMoveCompletionEvent(mGripper.getMoveEvent());
+    }
 }
 
 void Controller::openCommand() {
@@ -49,5 +54,24 @@ void Controller::closeCommand() {
         mInterface.sendResponse(CmdType::CLOSE, ResponseType::OK);
     } else {
         mInterface.sendResponse(CmdType::CLOSE, ResponseType::ERROR, "BUSY");
+    }
+}
+
+void Controller::sendMoveCompletionEvent(const GripperMoveEvent& moveEvent) {
+    switch (moveEvent.result) {
+        case GripperMoveResult::Done:
+            mInterface.sendEvent(moveEvent.cmd, EventType::MOVE_DONE, EventReason::STEPS_FINISHED);
+            break;
+        case GripperMoveResult::Stalled:
+            mInterface.sendEvent(moveEvent.cmd, EventType::MOVE_DONE, EventReason::STALL);
+            break;
+        case GripperMoveResult::Stopped:
+            mInterface.sendEvent(moveEvent.cmd, EventType::MOVE_DONE, EventReason::STOPPED);
+            break;
+        case GripperMoveResult::Error:
+            mInterface.sendEvent(moveEvent.cmd, EventType::ERROR, EventReason::MOVE_ERROR);
+            break;
+        case GripperMoveResult::None:
+            break;
     }
 }

@@ -3,6 +3,7 @@
 #include "Controller.h"
 #include "Gripper.h"
 #include "interface/Interface.h"
+#include "interface/TestInterface.h"
 
 #include "pico/stdlib.h"
 
@@ -12,15 +13,19 @@ int main() {
     Gripper gripper;
     gripper.setup();
 
-    Interface interface;
-    interface.setup();
+    //Interface interface;
+    //interface.setup();
 
-    Controller controller(gripper, interface);
+    TestInterface testInterface;
+    testInterface.setup();
+
+    Controller controller(testInterface, gripper);
     controller.setup();
 
     while (true) {
         gripper.update();
-        interface.update();
+        //interface.update();
+        testInterface.update();
         controller.update();
 
         tight_loop_contents();
