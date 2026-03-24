@@ -23,39 +23,38 @@ if (EXISTS ${picoVscode})
     include(${picoVscode})
 endif()
 # ====================================================================================
-set(PICO_BOARD pico CACHE STRING "Board type")
+set(PICO_BOARD pico2 CACHE STRING "Board type")
 
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
 
-project(storage_pico C CXX ASM)
+project(Slave1_Storage C CXX ASM)
 
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
-
-add_executable(storage_pico
-        src/Main.cpp
+# If you have C++ class source files (e.g. Slave1_Storage.cpp, uart.cpp), list them here.
+add_executable(Slave1_Storage
+    Slave1_Storage.cpp
 )
 
-pico_set_program_name(storage_pico "storage_pico")
-pico_set_program_version(storage_pico "0.1")
+pico_set_program_name(Slave1_Storage "Slave1_Storage")
+pico_set_program_version(Slave1_Storage "0.1")
 
 # Modify the below lines to enable/disable output over UART/USB
-pico_enable_stdio_uart(storage_pico 0)
-pico_enable_stdio_usb(storage_pico 1)
+# For USB Serial Monitor + Plotter use USB only.
+pico_enable_stdio_uart(Slave1_Storage 0)
+pico_enable_stdio_usb(Slave1_Storage 1)
 
 # Add the standard library to the build
-target_link_libraries(storage_pico
-        pico_stdlib
+target_link_libraries(Slave1_Storage
+    pico_stdlib
 )
 
 # Add the standard include files to the build
-target_include_directories(storage_pico PRIVATE
-        ${CMAKE_CURRENT_LIST_DIR}
-        ${CMAKE_CURRENT_LIST_DIR}/src
+target_include_directories(Slave1_Storage PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}
 )
 
-pico_add_extra_outputs(storage_pico)
-
+pico_add_extra_outputs(Slave1_Storage)

@@ -1,5 +1,7 @@
+<<<<<<< HEAD
 #include "pico/stdlib.h"
 #include "Uart.h"
+
 
 int main() {
     stdio_init_all();
