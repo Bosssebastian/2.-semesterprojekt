@@ -1,6 +1,5 @@
-// for the sender (sending pico)
-
-#include "Uart.h"
+#include <cstdio>
+#include "pico/stdlib.h"
 
 int main() {
     Uart uart0(0, 0, 1, 115200);  // UART0, pins GP0/GP1
