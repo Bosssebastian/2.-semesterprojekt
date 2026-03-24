@@ -2,8 +2,13 @@
 #include "pico/stdlib.h"
 
 int main() {
-    Uart uart0(0, 0, 1, 115200);  // UART0, pins GP0/GP1
-    uart0.init();
+    stdio_init_all();
+    sleep_ms(2000);
 
-    uart0.send('A');
+    while (true) {
+        printf("A sent\n");
+        sleep_ms(1000);
+    }
+
+    return 0;
 }

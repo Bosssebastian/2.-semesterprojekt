@@ -12,12 +12,12 @@ int main()
     gpio_set_dir(LED_PIN, GPIO_OUT);
 
     while (true) {
-        printf("Hello, world!\n");
+        printf("Hello, world 1!\n");
 
         gpio_put(LED_PIN, 1);
-        sleep_ms(200);
+        sleep_ms(2000);
 
         gpio_put(LED_PIN, 0);
-        sleep_ms(200);
+        sleep_ms(2000);
     }
 }
