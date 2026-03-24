@@ -17,5 +17,6 @@ public:
     double PI_4 = 0.785398163397448309616;
     double rec_PI = 0.318309886183790671538;
     double rec_2_PI = 0.636619772367581343076;
+    std::vector<std::vector<double>> rot0 = {{1,0,0},{0,1,0},{0,0,1}};
+    std::vector<std::vector<double>> vec0 = {{0},{0},{0}};
 };
-
