@@ -1,30 +1,30 @@
 #include "IoRunner.h"
+#include <chrono>
 #include <thread>
-#include <atomic>
-using namespace std;
 
-// Plan is to use asio to handle io
+IoRunner::IoRunner() = default;
 
-class IO {
-public:
-    void start() {
-        running = true;
-        worker = thread(&IO::run, this);
+IoRunner::~IoRunner() {
+    stop();
+}
+
+void IoRunner::start() {
+    if (mRunning.exchange(true)) {
+        return;
     }
 
-    void stop() {
-        running = false;
-        if (worker.joinable())
-            worker.join();
-    }
+    mWorker = std::thread(&IoRunner::run, this);
+}
 
-private:
-    void run() {
-        while (running) {
-            // io loop
-        }
+void IoRunner::stop() {
+    mRunning = false;
+    if (mWorker.joinable()) {
+        mWorker.join();
     }
+}
 
-    thread worker;
-    atomic<bool> running{false};
-};
+void IoRunner::run() {
+    while (mRunning) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+}

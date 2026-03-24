@@ -1,7 +1,6 @@
 #pragma once
-#include <string>
-#include <vector>
-using namespace std;
+#include <atomic>
+#include <thread>
 
 class IoRunner {
 public:
@@ -12,6 +11,8 @@ public:
     void stop();
 
 private:
-
     void run();
+
+    std::thread mWorker;
+    std::atomic<bool> mRunning{false};
 };
