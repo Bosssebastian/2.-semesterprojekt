@@ -13,6 +13,21 @@ enum class AxisMoveResult : uint8_t {
     Stopped
 };
 
+inline const char* toString(AxisMoveResult result) {
+    switch (result) {
+        case AxisMoveResult::None:
+            return "None";
+        case AxisMoveResult::Done:
+            return "Done";
+        case AxisMoveResult::Stalled:
+            return "Stalled";
+        case AxisMoveResult::Stopped:
+            return "Stopped";
+    }
+
+    return "Unknown";
+}
+
 class StepperAxis {
 public:
     explicit StepperAxis(TMC2209Driver& driver);

@@ -1,5 +1,5 @@
 #include "Interface.h"
-
+#include "Types.h"
 #include <string>
 
 void Interface::setup() {
@@ -31,5 +31,5 @@ void Interface::sendStatistics() {
 
 }
 
-void Interface::sendEvent(CmdType cmd, EventType type, const std::string& reason) {
+void Interface::sendEvent(CmdType cmd, EventType type, EventReason reason) {
 }
