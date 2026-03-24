@@ -17,11 +17,11 @@ public:
     //void sendStatus();			//Maybe easier to have its own function?
     //void sendStatistics();		//Maybe easier to have its own function?
 	void sendEvent(CmdType, EventType, EventReason reason = EventReason::NONE);
-    
     static void logf(const char* format, ...);
 
 private:
     static constexpr uint32_t UsbStartupDelayMs = 2000;
+    static bool sStallDebugEnabled;
 
     std::queue<CmdType> commandQueue;
 

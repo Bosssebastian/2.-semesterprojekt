@@ -6,6 +6,8 @@
 #include <string>
 #include "pico/stdlib.h"
 
+bool TestInterface::sStallDebugEnabled = false;
+
 void TestInterface::setup() {
     stdio_init_all();
     sleep_ms(UsbStartupDelayMs);
@@ -52,7 +54,7 @@ void TestInterface::sendEvent(CmdType cmd, EventType type, EventReason reason) {
 }
 
 void TestInterface::logf(const char* format, ...) {
-    if (format == nullptr) {
+    if (!sStallDebugEnabled || format == nullptr) {
         return;
     }
 
@@ -86,6 +88,19 @@ void TestInterface::parseCommand(const std::string& line) {
     else if (line == "s") {
         printf("CMD STOP\n");
         commandQueue.push(CmdType::STOP);
+    }
+    else if (line == "h") {
+        printf("CMDS:\n");
+        printf("  p = PING\n");
+        printf("  o = OPEN\n");
+        printf("  c = CLOSE\n");
+        printf("  s = STOP\n");
+        printf("  t = STALL DEBUG TOGGLE\n");
+        printf("  h = HELP\n");
+    }
+    else if (line == "t") {
+        sStallDebugEnabled = !sStallDebugEnabled;
+        printf("STALL DEBUG %s\n", sStallDebugEnabled ? "ON" : "OFF");
     }
     else {
         printf("CMD NONE\n");
