@@ -1,8 +1,6 @@
 #pragma once
-#include <string>
-#include <vector>
-#include <memory>
-using namespace std;
+#include <atomic>
+#include <thread>
 
 class VisionRunner {
 public:
@@ -13,6 +11,8 @@ public:
     void stop();
     
 private:
-
     void run();
+
+    std::thread mWorker;
+    std::atomic<bool> mRunning{false};
 };
