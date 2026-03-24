@@ -1,13 +1,13 @@
-#pragma once 
+#pragma once
 
-class uart {
+class Uart {
 private:
-    int uart_id; //uart1 or uart 0
+    int uart_id;
     int tx_pin;
     int rx_pin;
     int baudrate;
 
-public;
+public:
     Uart(int uart_id, int tx, int rx, int baud);
 
     void init();
