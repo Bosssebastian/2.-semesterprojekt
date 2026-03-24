@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
-#include <string>
 #include <queue>
+#include <string>
 #include "Types.h"
 #include "pico/stdlib.h"
 
@@ -17,6 +17,8 @@ public:
     //void sendStatus();			//Maybe easier to have its own function?
     //void sendStatistics();		//Maybe easier to have its own function?
 	void sendEvent(CmdType, EventType, EventReason reason = EventReason::NONE);
+    
+    static void logf(const char* format, ...);
 
 private:
     static constexpr uint32_t UsbStartupDelayMs = 2000;

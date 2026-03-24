@@ -16,6 +16,12 @@ constexpr uint TMC_UART_TX_PIN = 12;    //temp
 constexpr uint TMC_UART_RX_PIN = 13;    //temp
 constexpr uint32_t TMC_UART_BAUD = 115200;
 
+// Debug UART output
+inline uart_inst_t* const DEBUG_UART_PORT = uart1;
+constexpr uint DEBUG_UART_TX_PIN = 4;
+constexpr uint DEBUG_UART_RX_PIN = 5;
+constexpr uint32_t DEBUG_UART_BAUD = 115200;
+
 // Stepper control pins
 constexpr uint STEP_PIN = 20;
 constexpr uint DIR_PIN = 21;
@@ -37,7 +43,7 @@ inline const char* toString(StallDetectionMode mode) {
 
     return "Unknown";
 }
-constexpr StallDetectionMode STALL_DETECTION_MODE = StallDetectionMode::DiagInterrupt;
+constexpr StallDetectionMode STALL_DETECTION_MODE = StallDetectionMode::Uart;
 constexpr uint32_t DIAG_IRQ_EVENT_MASK = GPIO_IRQ_EDGE_RISE;
 
 }

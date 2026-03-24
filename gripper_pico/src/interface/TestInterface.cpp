@@ -1,7 +1,9 @@
 #include "TestInterface.h"
 #include "Types.h"
-#include <string>
+#include <cstdarg>
+#include <cstdio>
 #include <queue>
+#include <string>
 #include "pico/stdlib.h"
 
 void TestInterface::setup() {
@@ -47,6 +49,25 @@ void TestInterface::sendEvent(CmdType cmd, EventType type, EventReason reason) {
            toString(cmd),
            toString(type),
            toString(reason));
+}
+
+void TestInterface::logf(const char* format, ...) {
+    if (format == nullptr) {
+        return;
+    }
+
+    char buffer[160];
+
+    va_list args;
+    va_start(args, format);
+    const int length = vsnprintf(buffer, sizeof(buffer), format, args);
+    va_end(args);
+
+    if (length <= 0) {
+        return;
+    }
+
+    printf("%s", buffer);
 }
 
 void TestInterface::parseCommand(const std::string& line) {

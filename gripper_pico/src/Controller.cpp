@@ -42,7 +42,7 @@ void Controller::update() {
 }
 
 void Controller::openCommand() {
-    if (mGripper.open()) {
+    if (mGripper.open(true)) {
         mInterface.sendResponse(CmdType::OPEN, ResponseType::OK);
     } else {
         mInterface.sendResponse(CmdType::OPEN, ResponseType::ERROR, "BUSY");
@@ -50,7 +50,7 @@ void Controller::openCommand() {
 }
 
 void Controller::closeCommand() {
-    if (mGripper.close()) {
+    if (mGripper.close(true)) {
         mInterface.sendResponse(CmdType::CLOSE, ResponseType::OK);
     } else {
         mInterface.sendResponse(CmdType::CLOSE, ResponseType::ERROR, "BUSY");

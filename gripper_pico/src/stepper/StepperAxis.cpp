@@ -1,5 +1,6 @@
 #include "stepper/StepperAxis.h"
 #include "config/ParameterConfig.h"
+#include "interface/TestInterface.h"
 #include "stepper/TMC2209Driver.h"
 #include <cmath>
 #include "hardware/gpio.h"
@@ -70,8 +71,10 @@ void StepperAxis::update() {
         return;
     }
 
-    // Stop movement if stall is detected
-    if (mStopOnStall && checkStall()) {
+    const bool stalled = checkStall();
+
+    // Keep polling SG_RESULT during motion. Only stop when stall-stop is enabled.
+    if (mStopOnStall && stalled) {
         endMove(AxisMoveResult::Stalled);
         return;
     }
@@ -178,11 +181,14 @@ bool StepperAxis::checkStall() {
                 mFilteredStallGuardResult = sgResult;
                 mHasFilteredStallGuardResult = true;
             } else {
-                mFilteredStallGuardResult = static_cast<uint16_t>((3u * mFilteredStallGuardResult + sgResult + 2u) / 4u);
+                mFilteredStallGuardResult = static_cast<uint16_t>((mFilteredStallGuardResult + sgResult + 1u) / 2u);
             }
 
+            TestInterface::logf("%u\r\n", static_cast<unsigned>(mFilteredStallGuardResult));
+
             updateStallGuardPriming(mFilteredStallGuardResult, compareValue);
-            if (!isStallDetectionActive()) {
+            const bool detectionActive = isStallDetectionActive();
+            if (!detectionActive) {
                 mConsecutiveUartStallSamples = 0;
                 return false;
             }
@@ -292,7 +298,7 @@ bool StepperAxis::isStallDetectionActive() const {
         return false;
     }
 
-    return !isInBrakingZone();
+    return true;
 }
 
 void StepperAxis::updateMotionSpeed() {
