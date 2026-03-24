@@ -35,7 +35,9 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(storage_pico storage_pico.cpp )
+add_executable(storage_pico
+        src/Main.cpp
+)
 
 pico_set_program_name(storage_pico "storage_pico")
 pico_set_program_version(storage_pico "0.1")
@@ -46,11 +48,13 @@ pico_enable_stdio_usb(storage_pico 1)
 
 # Add the standard library to the build
 target_link_libraries(storage_pico
-        pico_stdlib)
+        pico_stdlib
+)
 
 # Add the standard include files to the build
 target_include_directories(storage_pico PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
+        ${CMAKE_CURRENT_LIST_DIR}/src
 )
 
 pico_add_extra_outputs(storage_pico)
