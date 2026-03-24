@@ -9,13 +9,22 @@ double MatrixOperations::degToRad(double degree) {
 	return (degree * (PI / 180));
 }
 
-double sRound(double val, double bound) {
+double MatrixOperations::sRound(double val, double bound) {
 	if (abs(val) < bound) {
 		return 0;
 	}
 	else {
 		return val;
 	}
+}
+
+std::vector<std::vector<double>> MatrixOperations::roundMat(std::vector<std::vector<double>> mat) {
+	for (int i = 0;i < mat.size();i++) {
+		for (int j = 0;j < mat[i].size(); j++) {
+			mat[i][j] = sRound(mat[i][j]);
+		}
+	}
+	return mat;
 }
 
 std::vector<std::vector<double>> MatrixOperations::rotz(double theta) {

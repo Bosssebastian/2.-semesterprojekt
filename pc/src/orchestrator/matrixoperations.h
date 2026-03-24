@@ -5,6 +5,7 @@ class MatrixOperations
 public:
 	double degToRad(double);
     double sRound(double val, double bound = 0.0001);
+    std::vector<std::vector<double>> roundMat(std::vector<std::vector<double>>);
 	std::vector<std::vector<double>> rotz(double);
 	std::vector<std::vector<double>> rotx(double);
 	std::vector<std::vector<double>> roty(double);
