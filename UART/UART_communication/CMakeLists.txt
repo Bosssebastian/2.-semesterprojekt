@@ -35,7 +35,7 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(UART_communication UART_communication.cpp )
+add_executable(UART_communication UART_communication.cpp ../../shared/uart.cpp )
 
 pico_set_program_name(UART_communication "UART_communication")
 pico_set_program_version(UART_communication "0.1")
@@ -50,8 +50,13 @@ target_link_libraries(UART_communication
 
 # Add the standard include files to the build
 target_include_directories(UART_communication PRIVATE
-        ${CMAKE_CURRENT_LIST_DIR}
+    ${CMAKE_CURRENT_LIST_DIR}
+    ${CMAKE_CURRENT_LIST_DIR}/../../shared
 )
 
 pico_add_extra_outputs(UART_communication)
 
+# Serial monitor: enable stdio over USB for this target
+# (use the exact target name `UART_communication` — CMake target names are case-sensitive)
+pico_enable_stdio_usb(UART_communication 1)
+pico_enable_stdio_uart(UART_communication 0)
