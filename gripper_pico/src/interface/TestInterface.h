@@ -5,10 +5,13 @@
 #include "Types.h"
 #include "pico/stdlib.h"
 
+class TMC2209Driver;
+
 class TestInterface {  
 public:  
 	void setup();
 	void update(); 
+    void setDriver(TMC2209Driver& driver);
   
 	bool hasCommand();       // Checks if a new command was received  
 	CmdType getCommand();    // Gets what type the received command is
@@ -23,6 +26,7 @@ private:
     static constexpr uint32_t UsbStartupDelayMs = 2000;
     static bool sStallDebugEnabled;
 
+    TMC2209Driver* mDriver = nullptr;
     std::queue<CmdType> commandQueue;
 
     void parseCommand(const std::string& line);

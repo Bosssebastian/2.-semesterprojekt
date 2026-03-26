@@ -18,6 +18,7 @@ int main() {
 
     TestInterface testInterface;
     testInterface.setup();
+    testInterface.setDriver(gripper.driver());
 
     Controller controller(testInterface, gripper);
     controller.setup();
