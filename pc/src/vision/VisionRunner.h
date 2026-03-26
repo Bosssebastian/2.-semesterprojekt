@@ -13,6 +13,7 @@ public:
 private:
     void run();
 
+    cv::VideoCapture cam;
     std::thread mWorker;
     std::atomic<bool> mRunning{false};
 };

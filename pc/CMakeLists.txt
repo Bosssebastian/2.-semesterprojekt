@@ -15,6 +15,8 @@ file(GLOB_RECURSE SHARED_SOURCES CONFIGURE_DEPENDS
     "${SHARED_DIR}/*.cxx"
 )
 
+find_package(OpenCV REQUIRED)
+
 add_executable(pc
     src/app/main.cpp
     src/io/IoRunner.cpp
@@ -31,6 +33,8 @@ target_include_directories(pc PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/orchestrator
     ${SHARED_DIR}
 )
+
+target_link_libraries(pc PRIVATE ${OpenCV_LIBS})
 
 if(MSVC)
     target_compile_options(pc PRIVATE /W4)

@@ -1,8 +1,12 @@
 #include "VisionRunner.h"
 #include <chrono>
 #include <thread>
+#include "VisionController.h"
+using namespace std;
 
-VisionRunner::VisionRunner() = default;
+VisionRunner::VisionRunner() {
+    VisionController Vision;
+}
 
 VisionRunner::~VisionRunner() {
     stop();
