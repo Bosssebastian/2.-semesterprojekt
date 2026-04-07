@@ -5,7 +5,11 @@
 using namespace std;
 
 VisionRunner::VisionRunner() {
-    mVision.scanForObject();
+    while (true)    
+    {
+        mVision.scanForObject();
+        std::this_thread::sleep_for(100ms);
+    }
 }
 
 VisionRunner::~VisionRunner() {
