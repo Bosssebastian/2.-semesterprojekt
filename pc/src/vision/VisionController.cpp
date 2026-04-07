@@ -1,5 +1,20 @@
 #include "VisionController.h"
 
+std::string getJsonValue(const std::string& json, const std::string& key) {
+    std::string searchKey = "\"" + key + "\":";
+    size_t startPos = json.find(searchKey);
+    if (startPos == std::string::npos) return "";
+
+    startPos += searchKey.length();
+    
+    // Skip optional whitespace and look for value
+    size_t valStart = json.find_first_not_of(" \"", startPos);
+    size_t valEnd = json.find_first_of("\",}", valStart);
+    
+    return json.substr(valStart, valEnd - valStart);
+}
+
+
 VisionController::VisionController()
 {
     mCam = cv::VideoCapture(0, cv::CAP_V4L2); // uses defalut camare on pc
@@ -26,15 +41,21 @@ VisionController::~VisionController()
 
 void VisionController::scanForObject()
 {
+    // take an image and save it as mFrame
+    mCam.grab();
     mCam.retrieve(mFrame);
 
+    // checks if an image was taken if not then returns
     if (mFrame.empty()) {
         std::cout << "failed to capture image\n";
         return;
     }
-    mData = mQR.detectAndDecodeCurved(mFrame, mCorners, mRectImage);
-    std::cout << mData << "\n" << mCorners << "\n";
 
+    // detects the QR code in mFrame, then returns the decoded message to mData and the corners to mCorners
+    mData = mQR.detectAndDecodeCurved(mFrame, mCorners);
+    std::cout << mData << "\n";
+
+    // find the center of the QR code
     if (!mCorners.empty()) {
         int corners = mCorners.cols; // Usually 4 corners
 
@@ -47,6 +68,13 @@ void VisionController::scanForObject()
         mX /= 4.;
         mY /= 4.;
         std::cout << "x: " << mX <<"\ny: " << mY << "\n";
+    }
+    if (!mData.empty())
+    {
+        mObject = getJsonValue(mData, "object");
+        mSize = getJsonValue(mData, "size");
+        mColor = getJsonValue(mData, "color");
+        std::cout << "object: " << mObject << "\nsize: " << mSize << "\ncolor: " << mColor << "\n";
     }
 }
 
@@ -61,3 +89,4 @@ void VisionController::getObjectPosition(double outputPos[2][1])
     outputPos[1][0] = mY;
     return;
 }
+

@@ -1,6 +1,5 @@
 #include <opencv2/opencv.hpp>
 
-
 class VisionController
 {
 public:
@@ -15,11 +14,13 @@ public:
 private:
     cv::VideoCapture mCam;
     cv::QRCodeDetector mQR;
-    cv::Mat mFrame, mCorners, mRectImage;
+    cv::Mat mFrame, mCorners;
+    
+    
     std::string mData;
+    std::string mObject, mSize, mColor;
     
     cv::Point2d mPos;
-
     double mX, mY;
 
 };
