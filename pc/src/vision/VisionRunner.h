@@ -1,6 +1,7 @@
 #pragma once
 #include <atomic>
 #include <thread>
+#include "VisionController.h"
 
 class VisionRunner {
 public:
@@ -13,7 +14,7 @@ public:
 private:
     void run();
 
-    cv::VideoCapture cam;
+    VisionController mVision;
     std::thread mWorker;
     std::atomic<bool> mRunning{false};
 };

@@ -20,6 +20,7 @@ find_package(OpenCV REQUIRED)
 add_executable(pc
     src/app/main.cpp
     src/io/IoRunner.cpp
+    src/vision/VisionController.cpp
     src/vision/VisionRunner.cpp
     src/orchestrator/Orchestrator.cpp
     ${SHARED_SOURCES}

@@ -1,11 +1,11 @@
 #include "VisionRunner.h"
 #include <chrono>
 #include <thread>
-#include "VisionController.h"
+
 using namespace std;
 
 VisionRunner::VisionRunner() {
-    VisionController Vision;
+    mVision.scanForObject();
 }
 
 VisionRunner::~VisionRunner() {
@@ -16,7 +16,6 @@ void VisionRunner::start() {
     if (mRunning.exchange(true)) {
         return;
     }
-
     mWorker = std::thread(&VisionRunner::run, this);
 }
 

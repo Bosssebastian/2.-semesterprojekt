@@ -3,15 +3,15 @@
 #include "orchestrator/Orchestrator.h"
 
 int main() {
-    IoRunner io;
+    //IoRunner io;
     VisionRunner vision;
-    Orchestrator orchestrator(io, vision);
+    //Orchestrator orchestrator(io, vision);
 
-    io.start();
+    //io.start();
     vision.start();
-    orchestrator.run();
+    //orchestrator.run();
 
-    io.stop();
+    //io.stop();
     vision.stop();
     return 0;
 }
