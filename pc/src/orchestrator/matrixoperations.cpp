@@ -90,8 +90,8 @@ std::vector<std::vector<double>> MatrixOperations::inverseMat(std::vector<std::v
 		}
 		inverseMat.push_back(newRow); // add new row to transformation matrix
 	}
-	std::vector<std::vector<double>> vec = { {-mat[0][3]},{-mat[1][3]},{-mat[2][3]} }; // create reverse vector
-	std::vector<std::vector<double>> newVec = multMat(inverseMat, vec); // calculate transformation vector
+	std::vector<std::vector<double>> revVec = { {-mat[0][3]},{-mat[1][3]},{-mat[2][3]} }; // create reverse vector
+	std::vector<std::vector<double>> newVec = multMat(inverseMat, revVec); // calculate transformation vector
 	for (int i = 0;i < 3;i++) { // add transformation vector rows to inverse matrix rows
 		inverseMat[i].push_back(newVec[i][0]);
 	}
@@ -105,12 +105,12 @@ std::vector<std::vector<double>> MatrixOperations::findBaseToCamTrans(double upZ
 	double totalY = -(600.+50./2.0+12.); // length from base center first hole before sidebar middle, plus half the distance between two holes, plus width of camera mount
 	double cameraOffset = (42-29)+(29/2); // onboard mount width, plus distance to middle of camera lens
 	std::vector<std::vector<double>> rot;
-	if (inwardsY) { // add/subtract cameraOffset if camera is mounted inwards/outwards, and rotate to match orientation
-		totalY += 42.;
+	if (inwardsY) { // add/subtract cameraOffset if camera is mounted inwards/outwards, and rotate to match orientation (using euler angles)
+		totalY += cameraOffset;
 		rot = multMat(rotz(degToRad(rotationZ)),roty(PI));
 	}
 	else {
-		totalY -= 42.;
+		totalY -= cameraOffset;
 		rot = multMat(rotz(degToRad(rotationZ)),rotx(PI));
 	}
 	totalY /= 1000.; // convert to m
@@ -119,7 +119,7 @@ std::vector<std::vector<double>> MatrixOperations::findBaseToCamTrans(double upZ
 	return toTrans(rot,vec);
 }
 
-void MatrixOperations::printMat(std::vector<std::vector<double>> matrix){ // for debugging
+void MatrixOperations::printMat(std::vector<std::vector<double>> matrix) { // for debugging
 	for (int i = 0; i < matrix.size();i++) {
 		for (int j = 0;j < matrix[i].size();j++) {
 			std::cout << matrix[i][j] << " ";
