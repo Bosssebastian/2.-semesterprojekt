@@ -1,4 +1,5 @@
 #include "matrixoperations.h"
+#include <iostream>
 
 // The class functions uses radians, but takes input in degrees, which is translated here
 double MatrixOperations::degToRad(double degree) {
@@ -97,4 +98,29 @@ std::vector<std::vector<double>> MatrixOperations::inverseMat(std::vector<std::v
 	inverseMat.push_back({ 0,0,0,1 }); // add shearing and scaling factors (constant)
 	//std::cout << "inverseMat works\n";
 	return inverseMat;
+}
+
+std::vector<std::vector<double>> MatrixOperations::findBaseToCamTrans(double upZ, bool inwardsY, double rotationZ) {
+	double totalZ = (50.*upZ)/1000.; // add 50mm for each hole from table surface (first half hole does not count)
+	double totalY = -(600.+50./2.0+12.); // length from base center first hole before sidebar middle, plus half the distance between two holes, plus width of camera mount
+	double cameraOffset = (42-29)+(29/2); // onboard mount width, plus distance to middle of camera lens
+	if (inwardsY) { // add/subtract cameraOffset if camera is mounted inwards/outwards
+		totalY += 42.;
+	}
+	else {
+		totalY -= 42.;
+	}
+	totalY /= 1000.; // convert to m
+	double totalX = -(425.-158.-92.)/1000.; // distance from base center to table side, minus mounting arm link to camera center, minus distance from sidebar to mounting arm link
+	std::vector<std::vector<double>> vec = {{totalX},{totalY},{totalZ}};
+	return toTrans(rotz(degToRad(rotationZ)),vec);
+}
+
+void MatrixOperations::printMat(std::vector<std::vector<double>> matrix){ // for debugging
+	for (int i = 0; i < matrix.size();i++) {
+		for (int j = 0;j < matrix[i].size();j++) {
+			std::cout << matrix[i][j] << " ";
+		}
+		std::cout << std::endl;
+	}
 }
