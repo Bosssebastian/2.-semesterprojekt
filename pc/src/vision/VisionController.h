@@ -10,10 +10,16 @@ public:
     void scanForObject();
 
     bool objectReady();
-    void getObjectPosition(double outputPos[2]);
+    void getObjectPosition(double outputPos[2][1]);
 
 private:
     cv::VideoCapture mCam;
-    cv::Mat mFrame, mCorners, mRectImage, mPos;
+    cv::QRCodeDetector mQR;
+    cv::Mat mFrame, mCorners, mRectImage;
+    std::string mData;
+    
+    cv::Point2d mPos;
+
+    double mX, mY;
 
 };
