@@ -3,6 +3,7 @@
 
 #include "pico/stdlib.h"
 #include "hardware/uart.h"
+#include <string>
 
 
 
@@ -25,11 +26,13 @@ public:
 
     // Constructor for the UartClass
     UartClass(int uart_id, int pin_tx, int pin_rx, int baud);
+    void setup();
 
     // Methods for Uart-Class
-    void writePackage(uint8_t flag, uint8_t msgType, uint8_t data);
-    //readPackage uses reference parameters to output the read values
-    void readPackage(uint8_t &flag, uint8_t &msgType, uint8_t &data);
+    void writePackage(std::string line);
+    std::string readPackage();
+    bool hasPackage();
+
     void clearRXQue();
     //&result is reference parameter used as output parameter
     bool requestPackage(uint8_t msgType, uint8_t &result, uint32_t ackTimeout_ms = 500, uint32_t resTimeout_ms = 500);
@@ -37,10 +40,13 @@ public:
     bool tryReadPackage(uint8_t &flag, uint8_t &msgType, uint8_t &data);
 
 private:
-    uart_inst_t* uart;
+    uart_inst_t* uart = nullptr;
+    int uart_id;
     int pin_tx;
     int pin_rx;
     int baud;
+    std::string rxBuffer;
+    bool packageReady = false;
 };
 
 #endif
