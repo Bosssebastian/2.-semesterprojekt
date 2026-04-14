@@ -101,7 +101,7 @@ std::vector<std::vector<double>> MatrixOperations::inverseMat(std::vector<std::v
 }
 
 std::vector<std::vector<double>> MatrixOperations::findBaseToCamTrans(double upZ, bool inwardsY, double rotationZ) {
-	double totalZ = (50.*upZ)/1000.; // add 50mm for each hole from table surface (first half hole does not count)
+	double totalZ = (50.*upZ-32)/1000.; // add 50mm for each hole from table surface (first half hole does not count), -32 to account for raised base plane
 	double totalY = -(600.+50./2.0+12.); // length from base center first hole before sidebar middle, plus half the distance between two holes, plus width of camera mount
 	double cameraOffset = (42-29)+(29/2); // onboard mount width, plus distance to middle of camera lens
 	std::vector<std::vector<double>> rot;

@@ -18,6 +18,6 @@ public:
     double rec_PI = 0.318309886183790671538;
     std::vector<std::vector<double>> rot0 = {{1,0,0},{0,1,0},{0,0,1}};
     std::vector<std::vector<double>> vec0 = {{0},{0},{0}};
-    std::vector<std::vector<double>> findBaseToCamTrans(double, bool = false, double rotationZ = 30.);
+    std::vector<std::vector<double>> findBaseToCamTrans(double, bool = false, double rotationZ = 22.5);
     void printMat(std::vector<std::vector<double>>); // For debugging
 };
