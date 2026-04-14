@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.10)
 
 project(pc LANGUAGES CXX)
 
@@ -40,3 +40,5 @@ if(MSVC)
 else()
     target_compile_options(pc PRIVATE -Wall -Wextra -Wpedantic)
 endif()
+
+target_link_libraries(pc PRIVATE pthread)
