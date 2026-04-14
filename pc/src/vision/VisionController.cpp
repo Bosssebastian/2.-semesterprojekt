@@ -1,4 +1,5 @@
 #include "VisionController.h"
+#include <iostream>
 
 std::string getJsonValue(const std::string& json, const std::string& key) {
     std::string searchKey = "\"" + key + "\":";
@@ -16,77 +17,121 @@ std::string getJsonValue(const std::string& json, const std::string& key) {
 
 
 VisionController::VisionController()
+    : mCam(nullptr)
+    , mPos(0, 0)
+    , mX(0)
+    , mY(0)
 {
-    mCam = cv::VideoCapture(0, cv::CAP_V4L2); // uses defalut camare on pc
-    
-    // so the cam do not make shredded lines in the image
-    mCam.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'));
-
-    // set cam settings
-    mCam.set(3,1920); // width
-    mCam.set(4,1080); // height
-
-    // give the camare time to start correctly
-    for(int i = 0; i < 30; i++) 
-    {
-        mCam.grab(); // Just grab the data, don't decode it yet to save time
+    mCam = new cv::VideoCapture(0, cv::CAP_V4L2); // uses default camera on PC
+    if (!mCam->isOpened()) {
+        std::cerr << "VisionController: failed to open camera\n";
+        delete mCam;
+        mCam = nullptr;
+        return;
     }
 
+
+    // so the cam do not make shredded lines in the image
+    mCam->set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'));
+
+    // set cam settings
+    mCam->set(cv::CAP_PROP_FRAME_WIDTH, 1920);
+    mCam->set(cv::CAP_PROP_FRAME_HEIGHT, 1080);
+
+    // turn off autofocus
+    mCam->set(cv::CAP_PROP_AUTOFOCUS, 0);
+
+    // give the camera time to start correctly
+    for (int i = 0; i < 30; i++) {
+        mCam->grab(); // Just grab the data, don't decode it yet to save time
+    }
+    mCam->retrieve(mFrame);
+    cv::imwrite("fixed_capture.jpg", mFrame);
 }
 
 VisionController::~VisionController()
 {
-    // Deconstructor
+    delete mCam;
 }
 
 void VisionController::scanForObject()
 {
+    if (!mCam || !mCam->isOpened()) {
+        std::cerr << "VisionController: camera unavailable\n";
+        return;
+    }
+
     // take an image and save it as mFrame
-    mCam.grab();
-    mCam.retrieve(mFrame);
+    mCam->grab();
+    mCam->retrieve(mFrame);
 
     // checks if an image was taken if not then returns
     if (mFrame.empty()) {
-        std::cout << "failed to capture image\n";
+        std::cerr << "VisionController: failed to capture image\n";
         return;
     }
 
     // detects the QR code in mFrame, then returns the decoded message to mData and the corners to mCorners
-    mData = mQR.detectAndDecodeCurved(mFrame, mCorners);
+    try {
+        mData = mQR.detectAndDecodeCurved(mFrame, mCorners);
+    } catch (const cv::Exception& e) {
+        std::cerr << "VisionController: QR decode failed: " << e.what() << "\n";
+        mData.clear();
+        mCorners.release();
+        return;
+    }
     std::cout << mData << "\n";
 
-    // find the center of the QR code
-    if (!mCorners.empty()) {
-        int corners = mCorners.cols; // Usually 4 corners
+    mX = 0;
+    mY = 0;
+    int pointCount = 0;
 
-        for (int i = 0; i < corners; i++) {
-            // pooints is typically a 1x4 CV_32FC2 matrix or 4x2 CV_32F
-            cv::Point2f pt = mCorners.at<cv::Point2f>(i);
-            mX += pt.x;
-            mY += pt.y;
+    // find the center of the QR code
+    if (!mCorners.empty() && mCorners.total() >= 4) {
+        for (int row = 0; row < mCorners.rows; ++row) {
+            for (int col = 0; col < mCorners.cols; ++col) {
+                cv::Point2f pt = mCorners.at<cv::Point2f>(row, col);
+                mX += pt.x;
+                mY += pt.y;
+                ++pointCount;
+            }
         }
-        mX /= 4.;
-        mY /= 4.;
-        std::cout << "x: " << mX <<"\ny: " << mY << "\n";
+
+        if (pointCount > 0) {
+            mX /= static_cast<double>(pointCount);
+            mY /= static_cast<double>(pointCount);
+            std::cout << "x: " << mX << "\ny: " << mY << "\n";
+        }
     }
-    if (!mData.empty())
-    {
+
+    if (!mData.empty()) {
         mObject = getJsonValue(mData, "object");
         mSize = getJsonValue(mData, "size");
         mColor = getJsonValue(mData, "color");
+        mStatus = true;
         std::cout << "object: " << mObject << "\nsize: " << mSize << "\ncolor: " << mColor << "\n";
     }
 }
 
 bool VisionController::objectReady()
 {
-    return false;
+    return mStatus;
 }
 
 void VisionController::getObjectPosition(double outputPos[2][1])
 {
     outputPos[0][0] = mX;
     outputPos[1][0] = mY;
+    mStatus = false;
+    return;
+}
+
+
+void VisionController::getObjectInfo(std::string& object, std::string& size, std::string& color)
+{
+    object = mObject;
+    size = mSize;
+    color = mColor;
     return;
 }
 
