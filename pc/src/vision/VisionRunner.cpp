@@ -4,13 +4,7 @@
 
 using namespace std;
 
-VisionRunner::VisionRunner() {
-    while (true)    
-    {
-        mVision.scanForObject();
-        std::this_thread::sleep_for(100ms);
-    }
-}
+VisionRunner::VisionRunner() = default;
 
 VisionRunner::~VisionRunner() {
     stop();
@@ -32,6 +26,7 @@ void VisionRunner::stop() {
 
 void VisionRunner::run() {
     while (mRunning) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        mVision.scanForObject();
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 }
