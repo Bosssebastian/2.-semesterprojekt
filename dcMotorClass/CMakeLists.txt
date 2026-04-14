@@ -28,30 +28,30 @@ set(PICO_BOARD pico CACHE STRING "Board type")
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
 
-project(dcMotorClass C CXX ASM)
+project(dcMotor C CXX ASM)
 
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(dcMotorClass dcMotorClass.cpp )
+add_executable(dcMotor dcMotor.cpp )
 
-pico_set_program_name(dcMotorClass "dcMotorClass")
-pico_set_program_version(dcMotorClass "0.1")
+pico_set_program_name(dcMotor "dcMotor")
+pico_set_program_version(dcMotor "0.1")
 
 # Modify the below lines to enable/disable output over UART/USB
-pico_enable_stdio_uart(dcMotorClass 0)
-pico_enable_stdio_usb(dcMotorClass 0)
+pico_enable_stdio_uart(dcMotor 0)
+pico_enable_stdio_usb(dcMotor 0)
 
 # Add the standard library to the build
-target_link_libraries(dcMotorClass
+target_link_libraries(dcMotor
         pico_stdlib)
 
 # Add the standard include files to the build
-target_include_directories(dcMotorClass PRIVATE
+target_include_directories(dcMotor PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
 )
 
-pico_add_extra_outputs(dcMotorClass)
+pico_add_extra_outputs(dcMotor)
 
