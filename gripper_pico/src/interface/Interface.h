@@ -1,6 +1,6 @@
 #pragma once
 #include "uartClass.h"
-#include "Types.h"
+#include "../../../shared/Types.h"
 #include <cstdint>
 #include <string>
   

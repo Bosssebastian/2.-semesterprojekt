@@ -1,5 +1,5 @@
 #include "TestInterface.h"
-#include "Types.h"
+#include "../../../shared/Types.h"
 #include "stepper/TMC2209Driver.h"
 #include "stepper/TMC2209Registers.h"
 #include <cstdarg>

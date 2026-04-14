@@ -2,7 +2,7 @@
 #include "Gripper.h"
 #include "interface/Interface.h"
 #include "interface/TestInterface.h"
-#include "Types.h"
+#include "../../shared/Types.h"
 
 void Controller::setup() {  
 }

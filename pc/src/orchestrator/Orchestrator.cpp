@@ -1,12 +1,15 @@
 #include "Orchestrator.h"
 #include "io/IoRunner.h"
 #include "vision/VisionRunner.h"
+#include "Types.h"
 #include <iostream>
-#include <limits>
+#ifdef _WIN32
+#include <conio.h>
+#endif
 
 
 Orchestrator::Orchestrator(IoRunner& io, VisionRunner& vision)
-    : mIo(io), mVision(vision) {
+    : mIo(io), mVision(vision), mGripper(io.gripper()), mStorage(io.storage()) {
 }
 
 void Orchestrator::run() {
@@ -84,6 +87,7 @@ const std::string& Orchestrator::getFaultReason() const {
 
 void Orchestrator::transitionTo(OrchestratorState newState) {
     mState = newState;
+    mStateJustEntered = true;
 }
 
 void Orchestrator::transitionToFault(const std::string& reason) {
@@ -92,60 +96,75 @@ void Orchestrator::transitionToFault(const std::string& reason) {
 }
 
 void Orchestrator::handleStarting() {
-    // Startup logic here
-    printf("Orchestrator: Starting up...\n");
-    waitForEnter();
+    if (!onStateEnter("Orchestrator: Starting up...\n", true)) {
+        return;
+    }
     transitionTo(OrchestratorState::Idle);
 }
 
 void Orchestrator::handleIdle() {
-    printf("Orchestrator: Idle. Waiting for cube on input...\n");
-    // Check for cube on input, e.g. via vision
-    // If cube detected, transition to next state
-    waitForEnter();
+    if (!onStateEnter("Orchestrator: Idle. Waiting for cube on input...\n", true)) {
+        return;
+    }
     transitionTo(OrchestratorState::InStor_StorageMoveToSlot_Cmd);
 }
 
 void Orchestrator::handleInStorStorageMoveToSlotCmd() {
-    printf("Orchestrator: Reserving storage slot...\n");
-    // Logic to reserve a storage slot for the incoming cube
-    // If successful, transition to next state
-    waitForEnter();
+    if (!onStateEnter("Orchestrator: Reserving storage slot...\n", true)) {
+        return;
+    }
     transitionTo(OrchestratorState::InStor_RobotOverInput_Cmd);
 }
 
 void Orchestrator::handleInStorRobotOverInputCmd() {
-    printf("Orchestrator: Commanding move over input...\n");
-    // Command robot to move over input area
-    // If command successful, transition to next state
-    waitForEnter();
+    if (!onStateEnter("Orchestrator: Commanding move over input...\n", true)) {
+        return;
+    }
     transitionTo(OrchestratorState::InStor_RobotOverInput_Wait);
 
 }
 
 void Orchestrator::handleInStorRobotOverInputWait() {
-    printf("Orchestrator: Waiting for move over input to complete...\n");
-    // Check if robot has completed move over input
-    // If completed, transition to next state
-    waitForEnter();
+    if (!onStateEnter("Orchestrator: Waiting for move over input to complete...\n", true)) {
+        return;
+    }
     transitionTo(OrchestratorState::InStor_RobotToCube_Cmd);
 
 }
 
 void Orchestrator::handleInStorRobotToCubeCmd() {
+    if (!onStateEnter("Orchestrator: Commanding move to cube...\n", true)) {
+        return;
+    }
+    transitionTo(OrchestratorState::InStor_RobotToCube_Wait);
 
 }
 
 void Orchestrator::handleInStorRobotToCubeWait() {
-
+    if (!onStateEnter("Orchestrator: Waiting for move to cube to complete...\n", true)) {
+        return;
+    }
+    transitionTo(OrchestratorState::InStor_GripperClose_Cmd);
 }
 
 void Orchestrator::handleInStorGripperCloseCmd() {
-
+    onStateEnter("Orchestrator: Commanding gripper close...\n");
+    mGripper.sendCommand(CmdType::CLOSE);
+    transitionTo(OrchestratorState::InStor_GripperClose_Wait);
 }
 
 void Orchestrator::handleInStorGripperCloseWait() {
-
+    onStateEnter("Orchestrator: Waiting for gripper close to complete...\n");
+    switch (mGripper.getStatus(CmdType::CLOSE)) {
+        case CmdStatus::DONE:
+            transitionTo(OrchestratorState::InStor_RobotOverStorage_Cmd);
+            break;
+        case CmdStatus::FAILED:
+            transitionToFault("Gripper failed to close");
+            break;
+        default:
+            break;
+    }
 }
 
 void Orchestrator::handleInStorRobotOverStorageCmd() {
@@ -197,7 +216,34 @@ void Orchestrator::handleStopping() {
 }
 
 
-void Orchestrator::waitForEnter() {
-    printf("Press Enter to continue...");
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+bool Orchestrator::onStateEnter(const char* message, bool waitForEnter) {
+    if (mStateJustEntered) {
+        std::printf("%s", message);
+        if (waitForEnter) {
+            std::printf("Press Enter to continue...\n");
+        }
+        mStateJustEntered = false;
+    }
+
+    if (!waitForEnter) {
+        return true;
+    }
+
+#ifdef _WIN32
+    while (_kbhit()) {
+        const int ch = _getch();
+        if (ch == '\r' || ch == '\n') {
+            return true;
+        }
+    }
+    return false;
+#else
+    if (std::cin.rdbuf()->in_avail() <= 0) {
+        return false;
+    }
+
+    char ch = '\0';
+    std::cin.get(ch);
+    return ch == '\n';
+#endif
 }

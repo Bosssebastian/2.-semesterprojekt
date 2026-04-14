@@ -44,7 +44,7 @@ add_executable(gripper_pico
         src/stepper/StepperAxis.cpp
         src/interface/Interface.cpp
         src/interface/TestInterface.cpp
-        ../shared/uartClass.cpp
+        ../shared/UartClass.cpp
 )
 
 pico_set_program_name(gripper_pico "gripper_pico")

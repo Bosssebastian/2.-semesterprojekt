@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <queue>
 #include <string>
-#include "Types.h"
+#include "../../../shared/Types.h"
 #include "pico/stdlib.h"
 
 class TMC2209Driver;

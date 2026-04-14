@@ -13,6 +13,8 @@ void IoRunner::start() {
         return;
     }
 
+    mGripper.setup();
+    mStorage.setup();
     mWorker = std::thread(&IoRunner::run, this);
 }
 
@@ -25,6 +27,16 @@ void IoRunner::stop() {
 
 void IoRunner::run() {
     while (mRunning) {
+        mGripper.update();
+        mStorage.update();
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
+}
+
+Interface& IoRunner::gripper() {
+    return mGripper;
+}
+
+Interface& IoRunner::storage() {
+    return mStorage;
 }
