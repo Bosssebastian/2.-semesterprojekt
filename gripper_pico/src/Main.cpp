@@ -13,19 +13,18 @@ int main() {
     Gripper gripper;
     gripper.setup();
 
-    //Interface interface;
-    //interface.setup();
+    Interface interface;
+    interface.setup();
 
     TestInterface testInterface;
     testInterface.setup();
     testInterface.setDriver(gripper.driver());
 
-    Controller controller(testInterface, gripper);
+    Controller controller(interface, gripper);
     controller.setup();
 
     while (true) {
         gripper.update();
-        //interface.update();
         testInterface.update();
         controller.update();
 

@@ -68,6 +68,7 @@ target_link_libraries(gripper_pico
 target_include_directories(gripper_pico PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
         ${CMAKE_CURRENT_LIST_DIR}/src
+        ${CMAKE_CURRENT_LIST_DIR}/src/config
         ${CMAKE_CURRENT_LIST_DIR}/../shared
 )
 

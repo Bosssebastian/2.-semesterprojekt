@@ -36,7 +36,9 @@ void UartClass::setup() {
 
 
 void UartClass::writePackage(std::string line) {
-    uart_write_blocking(uart, line.c_str(), line.length());
+    uart_write_blocking(uart,
+                        reinterpret_cast<const uint8_t*>(line.c_str()),
+                        line.length());
 }
 
 std::string UartClass::readPackage() {
