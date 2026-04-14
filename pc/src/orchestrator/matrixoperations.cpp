@@ -119,6 +119,12 @@ std::vector<std::vector<double>> MatrixOperations::findBaseToCamTrans(double upZ
 	return toTrans(rot,vec);
 }
 
+std::vector<std::vector<double>> MatrixOperations::getWorldToBaseTrans() {
+		std::vector<std::vector<double>> rot = rotz(degToRad(22.5));
+		return toTrans(rot,vec0);
+}
+
+
 void MatrixOperations::printMat(std::vector<std::vector<double>> matrix) { // for debugging
 	for (int i = 0; i < matrix.size();i++) {
 		for (int j = 0;j < matrix[i].size();j++) {
