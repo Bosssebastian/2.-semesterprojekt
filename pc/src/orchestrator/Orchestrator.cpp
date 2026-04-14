@@ -222,6 +222,7 @@ bool Orchestrator::onStateEnter(const char* message, bool waitForEnter) {
         if (waitForEnter) {
             std::printf("Press Enter to continue...\n");
         }
+        std::fflush(stdout);
         mStateJustEntered = false;
     }
 
@@ -238,12 +239,11 @@ bool Orchestrator::onStateEnter(const char* message, bool waitForEnter) {
     }
     return false;
 #else
-    if (std::cin.rdbuf()->in_avail() <= 0) {
+    std::string line;
+    if (!std::getline(std::cin, line)) {
         return false;
     }
-
-    char ch = '\0';
-    std::cin.get(ch);
-    return ch == '\n';
+    return true;
 #endif
 }
+
