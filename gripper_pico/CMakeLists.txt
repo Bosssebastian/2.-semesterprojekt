@@ -44,7 +44,7 @@ add_executable(gripper_pico
         src/stepper/StepperAxis.cpp
         src/interface/Interface.cpp
         src/interface/TestInterface.cpp
-        ../shared/uartClass.cpp
+        ../shared/serialPort.cpp
 )
 
 pico_set_program_name(gripper_pico "gripper_pico")
@@ -68,6 +68,7 @@ target_link_libraries(gripper_pico
 target_include_directories(gripper_pico PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
         ${CMAKE_CURRENT_LIST_DIR}/src
+        ${CMAKE_CURRENT_LIST_DIR}/src/config
         ${CMAKE_CURRENT_LIST_DIR}/../shared
 )
 
