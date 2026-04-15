@@ -14,18 +14,16 @@ int main() {
     gripper.setup();
 
     Interface interface;
-    interface.setup();
 
-    TestInterface testInterface;
-    testInterface.setup();
-    testInterface.setDriver(gripper.driver());
+    //TestInterface testInterface;
+    //testInterface.setup();
+    //testInterface.setDriver(gripper.driver());
 
     Controller controller(interface, gripper);
-    controller.setup();
 
     while (true) {
         gripper.update();
-        testInterface.update();
+        //testInterface.update();
         controller.update();
 
         tight_loop_contents();

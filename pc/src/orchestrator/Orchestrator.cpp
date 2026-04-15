@@ -157,9 +157,11 @@ void Orchestrator::handleInStorGripperCloseWait() {
     onStateEnter("Orchestrator: Waiting for gripper close to complete...\n");
     switch (mGripper.getStatus(CmdType::CLOSE)) {
         case CmdStatus::DONE:
+            printf("Gripper close completed successfully.\n");
             transitionTo(OrchestratorState::InStor_RobotOverStorage_Cmd);
             break;
         case CmdStatus::FAILED:
+            printf("Gripper close failed.\n");
             transitionToFault("Gripper failed to close");
             break;
         default:

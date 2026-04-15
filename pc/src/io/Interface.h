@@ -1,9 +1,9 @@
 #pragma once
 #include "Types.h"
-#include "UartClass.h"
+#include "SerialPort.h"
 #include <ctime>
-#include <string>
 #include <map>
+#include <string>
 #include <vector>
 
 enum class CmdStatus {
@@ -24,8 +24,9 @@ struct CmdState {
 
 class Interface {
 public:
-    Interface(int uartId, int pinTx = 0, int pinRx = 1, int baud = 115200);
+    Interface(std::string devicePath, int baud = 115200);
 
+    void setDevicePath(std::string devicePath);
     void setup();
     void update();
 
@@ -33,7 +34,7 @@ public:
     CmdStatus getStatus(CmdType cmd) const;
 
 private:
-    UartClass mUart;
+    SerialPort mSerialPort;
     std::map<CmdType, CmdState> mCmdStates;
 
     void handlePackage(const std::vector<std::string>& parts);

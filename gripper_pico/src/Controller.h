@@ -6,7 +6,7 @@
 class Controller {
 public:
     Controller(Interface& interface, Gripper& gripper) : mInterface(interface), mGripper(gripper) {};
-	void setup(); 
+    
 	void update();
 
 private:

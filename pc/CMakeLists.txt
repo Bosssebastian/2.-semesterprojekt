@@ -15,12 +15,13 @@ file(GLOB_RECURSE SHARED_SOURCES CONFIGURE_DEPENDS
     "${SHARED_DIR}/*.cxx"
 )
 list(FILTER SHARED_SOURCES EXCLUDE REGEX ".*/[Uu]artClass\\.(c|cc|cpp|cxx)$")
+list(FILTER SHARED_SOURCES EXCLUDE REGEX ".*/serialPort\\.(c|cc|cpp|cxx)$")
 
 add_executable(pc
     src/app/main.cpp
     src/io/IoRunner.cpp
     src/io/Interface.cpp
-    src/io/UartClass.cpp
+    src/io/SerialPort.cpp
     src/vision/VisionRunner.cpp
     src/orchestrator/Orchestrator.cpp
     ${SHARED_SOURCES}

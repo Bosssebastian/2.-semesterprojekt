@@ -11,17 +11,21 @@ bool commandWaitsForEvent(CmdType command) {
 }
 }
 
-Interface::Interface(int uartId, int pinTx, int pinRx, int baud)
-    : mUart(uartId, pinTx, pinRx, baud) {
+Interface::Interface(std::string devicePath, int baud)
+    : mSerialPort(std::move(devicePath), baud) {
+}
+
+void Interface::setDevicePath(std::string devicePath) {
+    mSerialPort.setDevicePath(std::move(devicePath));
 }
 
 void Interface::setup() {
-    mUart.setup();
+    mSerialPort.setup();
 }
 
 void Interface::update() {
-    while (mUart.hasPackage()) {
-        std::string message = mUart.readPackage();
+    while (mSerialPort.hasPackage()) {
+        std::string message = mSerialPort.readPackage();
         handlePackage(split(message));
     }
 
@@ -46,7 +50,7 @@ bool Interface::sendCommand(CmdType command, const std::string& argument) {
     }
     package += "\n";
 
-    mUart.writePackage(package);
+    mSerialPort.writePackage(package);
     return true;
 }
 
@@ -83,6 +87,10 @@ std::vector<std::string> Interface::split(const std::string& str) {
 
 void Interface::handlePackage(const std::vector<std::string>& parts) {
     if (parts.empty()) {
+        return;
+    }
+
+    if (parts[0] == "DEBUG") {
         return;
     }
 

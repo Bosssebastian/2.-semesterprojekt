@@ -1,26 +1,14 @@
 #include "Interface.h"
-#include "PinConfig.h"
-#include "uartClass.h"
 #include <string>
-#include <vector>
 
-Interface::Interface()
-    : uart(PinConfig::UART_PORT == uart1 ? 1 : 0,
-           PinConfig::UART_TX_PIN,
-           PinConfig::UART_RX_PIN,
-           PinConfig::UART_BAUD) {
-}
-
-void Interface::setup() {
-    uart.setup();
-}
 
 bool Interface::hasCommand() {
-    return uart.hasPackage();
+    return mSerialPort.hasLine();
 }
 
 CmdType Interface::getCommand() {
-    const std::vector<std::string> parts = split(uart.readPackage());
+    const std::string line = mSerialPort.getLine();
+    const std::vector<std::string> parts = mSerialPort.split(line);
 
     if (parts.size() < 2 || parts[0] != "CMD") {
         return CmdType::NONE;
@@ -46,7 +34,7 @@ void Interface::sendResponse(CmdType cmd, ResponseType response, const std::stri
         line += " " + reason;
     }
     line += "\n";
-    uart.writePackage(line);
+    mSerialPort.sendLine(line);
 }
 
 void Interface::sendStatus() {
@@ -58,27 +46,5 @@ void Interface::sendStatistics() {
 }
 
 void Interface::sendEvent(CmdType cmd, EventType type, EventReason reason) {
-    uart.writePackage(std::string("EVENT ") + toString(type) + " " + toString(cmd) + " " + toString(reason) + "\n");
-}
-
-std::vector<std::string> Interface::split(const std::string& package) {
-    std::vector<std::string> parts;
-    std::string current;
-
-    for (char c : package) {
-        if (c == ' ') {
-            if (!current.empty()) {
-                parts.push_back(current);
-                current.clear();
-            }
-        } else {
-            current += c;
-        }
-    }
-
-    if (!current.empty()) {
-        parts.push_back(current);
-    }
-
-    return parts;
+    mSerialPort.sendLine(std::string("EVENT ") + toString(type) + " " + toString(cmd) + " " + toString(reason) + "\n");
 }
