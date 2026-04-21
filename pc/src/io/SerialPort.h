@@ -4,7 +4,7 @@
 
 class SerialPort {
 public:
-    SerialPort(std::string devicePath, int baud);
+    SerialPort(std::string devicePath, int baud, std::string portLabel = "");
     ~SerialPort();
 
     void setDevicePath(std::string devicePath);
@@ -23,6 +23,7 @@ private:
     std::string mDevicePath;
     std::string mIdentifiedDevice;
     std::string mLastProbeResponse;
+    std::string mPortLabel;
     int mBaud;
     std::string mRxBuffer;
     bool mPackageReady{false};

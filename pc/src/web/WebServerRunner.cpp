@@ -1,4 +1,5 @@
 #include "WebServerRunner.h"
+#include "logging/Logger.h"
 
 #include <algorithm>
 #include <chrono>
@@ -6,6 +7,8 @@
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
+#include <ctime>
+#include <iomanip>
 #include <optional>
 #include <sstream>
 #include <stdexcept>
@@ -64,7 +67,7 @@ OrchestratorState WebServerRunner::getState() const {
 }
 
 void WebServerRunner::run() {
-    std::printf("WebServerRunner is not implemented for Windows\n");
+    LOG_WARN("WebServerRunner is not implemented for Windows");
     while (mRunning) {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
@@ -157,6 +160,42 @@ std::string jsonEscape(const std::string& value) {
     }
 
     return escaped;
+}
+
+std::string formatLogTimestampForApi(const std::chrono::system_clock::time_point& timestamp) {
+    const std::time_t rawTime = std::chrono::system_clock::to_time_t(timestamp);
+    std::tm timeInfo{};
+
+#ifdef _WIN32
+    localtime_s(&timeInfo, &rawTime);
+#else
+    localtime_r(&rawTime, &timeInfo);
+#endif
+
+    std::ostringstream stream;
+    stream << std::put_time(&timeInfo, "%H:%M:%S");
+    return stream.str();
+}
+
+std::string buildLogsJsonBody() {
+    const auto entries = Logger::instance().entries();
+
+    std::ostringstream stream;
+    stream << "{\"entries\":[";
+
+    for (std::size_t index = 0; index < entries.size(); ++index) {
+        const auto& entry = entries[index];
+        if (index > 0) {
+            stream << ',';
+        }
+
+        stream << "{\"timestamp\":\"" << jsonEscape(formatLogTimestampForApi(entry.timestamp))
+               << "\",\"type\":\"" << jsonEscape(toString(entry.type))
+               << "\",\"message\":\"" << jsonEscape(entry.message) << "\"}";
+    }
+
+    stream << "]}";
+    return stream.str();
 }
 
 std::string buildHttpResponse(const HttpResponse& response) {
@@ -407,7 +446,7 @@ bool WebServerRunner::tryStoreCommand(const WebCommand& command) {
 void WebServerRunner::run() {
     const int serverFd = socket(AF_INET, SOCK_STREAM, 0);
     if (serverFd < 0) {
-        std::printf("WebServerRunner failed to create socket\n");
+        LOG_ERROR("WebServerRunner failed to create socket");
         mRunning = false;
         return;
     }
@@ -421,20 +460,24 @@ void WebServerRunner::run() {
     address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 
     if (bind(serverFd, reinterpret_cast<sockaddr*>(&address), sizeof(address)) < 0) {
-        std::printf("WebServerRunner failed to bind to 127.0.0.1:%d: %s\n", kServerPort, std::strerror(errno));
+        const std::string bindError =
+            "WebServerRunner failed to bind to 127.0.0.1:" + std::to_string(kServerPort) + ": " + std::strerror(errno);
+        LOG_ERROR(bindError.c_str());
         close(serverFd);
         mRunning = false;
         return;
     }
 
     if (listen(serverFd, kListenBacklog) < 0) {
-        std::printf("WebServerRunner failed to listen on 127.0.0.1:%d: %s\n", kServerPort, std::strerror(errno));
+        const std::string listenError =
+            "WebServerRunner failed to listen on 127.0.0.1:" + std::to_string(kServerPort) + ": " + std::strerror(errno);
+        LOG_ERROR(listenError.c_str());
         close(serverFd);
         mRunning = false;
         return;
     }
 
-    std::printf("WebServerRunner listening on http://127.0.0.1:%d\n", kServerPort);
+    LOG_INFO("Web server is started");
 
     while (mRunning) {
         fd_set readSet;
@@ -475,6 +518,8 @@ void WebServerRunner::run() {
                     "OK",
                     std::string("{\"state\":\"") + jsonEscape(toString(getState())) + "\"}"
                 );
+            } else if (request.method == "GET" && request.path == "/logs") {
+                response = makeJsonResponse(200, "OK", buildLogsJsonBody());
             } else if (request.method == "POST" && request.path == "/cmdStart") {
                 if (!canAcceptStart(getState())) {
                     response = makeJsonResponse(409, "Conflict", "{\"error\":\"cmdStart is not valid in the current state\"}");

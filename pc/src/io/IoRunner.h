@@ -18,8 +18,8 @@ public:
 private:
     void run();
 
-    Interface mGripper{""};
-    Interface mStorage{""};
+    Interface mGripper{"", "GRIPPER"};
+    Interface mStorage{"", "STORAGE"};
     std::thread mWorker;
     std::atomic<bool> mRunning{false};
 };

@@ -24,7 +24,7 @@ struct CmdState {
 
 class Interface {
 public:
-    Interface(std::string devicePath, int baud = 115200);
+    Interface(std::string devicePath, std::string portLabel = "", int baud = 115200);
 
     void setDevicePath(std::string devicePath);
     void setup();

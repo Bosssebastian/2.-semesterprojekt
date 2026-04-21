@@ -1,5 +1,6 @@
 #include "Orchestrator.h"
 #include "io/IoRunner.h"
+#include "logging/Logger.h"
 #include "web/WebServerRunner.h"
 #include "vision/VisionRunner.h"
 #include "Types.h"
@@ -105,6 +106,7 @@ void Orchestrator::transitionTo(OrchestratorState newState) {
 }
 
 void Orchestrator::transitionToFault(const std::string& reason) {
+    LOG_ERROR(reason);
     mFaultReason = reason;
     transitionTo(OrchestratorState::Faulted);
 }
@@ -122,10 +124,7 @@ void Orchestrator::handleWebCommand(const WebCommand& command) {
             }
             break;
         case WebCommandType::GetObject:
-            if (mState == OrchestratorState::Idle && !command.objectId.empty()) {
-                mRequestedObjectId = command.objectId;
-                transitionTo(OrchestratorState::InStor_StorageMoveToSlot_Cmd);
-            }
+            //TODO
             break;
     }
 }
@@ -187,13 +186,14 @@ void Orchestrator::handleInStorGripperCloseWait() {
     onStateEnter("Orchestrator: Waiting for gripper close to complete...\n");
     switch (mGripper.getStatus(CmdType::CLOSE)) {
         case CmdStatus::DONE:
-            std::printf("Gripper close completed successfully.\n");
+            LOG_INFO("Gripper close completed successfully.");
             transitionTo(OrchestratorState::InStor_RobotOverStorage_Cmd);
             break;
         case CmdStatus::FAILED:
-        case CmdStatus::TIMED_OUT:
-            std::printf("Gripper close failed.\n");
             transitionToFault("Gripper failed to close");
+            break;
+        case CmdStatus::TIMED_OUT:
+            transitionToFault("Gripper close timed out");
             break;
         default:
             break;
@@ -254,7 +254,6 @@ void Orchestrator::handleInStorRobotUpFromSlotWait() {
 
 void Orchestrator::handleInStorComplete() {
     onStateEnter("Orchestrator: Input-to-storage cycle complete.\n");
-    mRequestedObjectId.clear();
     transitionTo(OrchestratorState::Idle);
 }
 
@@ -262,14 +261,14 @@ void Orchestrator::handleStopping() {
     onStateEnter("Orchestrator: Stopping system...\n");
     mGripper.sendCommand(CmdType::STOP);
     mStorage.sendCommand(CmdType::STOP);
-    mRequestedObjectId.clear();
+    //Robot stop
     transitionTo(OrchestratorState::Stopped);
 }
 
 
 bool Orchestrator::onStateEnter(const char* message, bool waitForEnter) {
     if (mStateJustEntered) {
-        std::printf("%s", message);
+        LOG_INFO(message);
         if (waitForEnter) {
             std::printf("Press Enter to continue...\n");
         }

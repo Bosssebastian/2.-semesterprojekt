@@ -22,6 +22,7 @@ add_executable(pc
     src/io/IoRunner.cpp
     src/io/Interface.cpp
     src/io/SerialPort.cpp
+    src/logging/Logger.cpp
     src/vision/VisionRunner.cpp
     src/orchestrator/Orchestrator.cpp
     src/web/WebServerRunner.cpp
@@ -32,6 +33,7 @@ target_include_directories(pc PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/core
     ${CMAKE_CURRENT_SOURCE_DIR}/src/io
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/logging
     ${CMAKE_CURRENT_SOURCE_DIR}/src/vision
     ${CMAKE_CURRENT_SOURCE_DIR}/src/orchestrator
     ${CMAKE_CURRENT_SOURCE_DIR}/src/web

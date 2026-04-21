@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { onMount } from "svelte";
+	import { LogViewer } from "$lib/components/log";
+	import type { LogEntry } from "$lib/logs";
 	import { Button } from "$lib/components/ui/button";
 	import * as Card from "$lib/components/ui/card";
 	import * as Dialog from "$lib/components/ui/dialog";
@@ -7,7 +9,7 @@
 	import type { ControllerStatus } from "$lib/server/controller";
 
 	type ChartTab = "chart-a" | "chart-b" | "chart-c";
-	type ObjectTab = "objects" | "groups";
+	type ObjectTab = "objects" | "log";
 	type PageData = {
 		initialStatus: ControllerStatus;
 	};
@@ -24,7 +26,7 @@
 
 	const objectTabs: Array<{ value: ObjectTab; label: string }> = [
 		{ value: "objects", label: "Objects" },
-		{ value: "groups", label: "Groups" },
+		{ value: "log", label: "Log" },
 	];
 
 	let activeChartTab = $state<ChartTab>("chart-a");
@@ -32,6 +34,9 @@
 	let controllerOnline = $state(false);
 	let controllerState = $state("Unavailable");
 	let offlineReason = $state<string | null>(null);
+	let logEntries = $state<LogEntry[]>([]);
+	let logError = $state<string | null>(null);
+	let logInterval: number | null = null;
 
 	$effect(() => {
 		controllerOnline = data.initialStatus.online;
@@ -66,6 +71,46 @@
 			typeof payload?.error === "string" && payload.error.length > 0 ? payload.error : null;
 	}
 
+	async function refreshLogs() {
+		try {
+			const response = await fetch("/api/controller/logs");
+			const payload = await response.json();
+
+			if (!response.ok) {
+				logEntries = [];
+				logError =
+					typeof payload?.error === "string" ? payload.error : "Failed to fetch controller logs";
+				return;
+			}
+
+			logEntries = Array.isArray(payload?.entries) ? payload.entries : [];
+			logError = null;
+		} catch (error) {
+			logEntries = [];
+			logError = error instanceof Error ? error.message : "Failed to fetch controller logs";
+		}
+	}
+
+	function startLogPolling() {
+		if (typeof window === "undefined" || logInterval !== null) {
+			return;
+		}
+
+		void refreshLogs();
+		logInterval = window.setInterval(() => {
+			void refreshLogs();
+		}, 1000);
+	}
+
+	function stopLogPolling() {
+		if (typeof window === "undefined" || logInterval === null) {
+			return;
+		}
+
+		window.clearInterval(logInterval);
+		logInterval = null;
+	}
+
 	async function sendCommand(command: CommandName) {
 		if (!controllerOnline) {
 			return;
@@ -97,8 +142,18 @@
 		void refreshControllerStatus();
 
 		return () => {
+			stopLogPolling();
 			window.clearInterval(interval);
 		};
+	});
+
+	$effect(() => {
+		if (activeObjectTab === "log") {
+			startLogPolling();
+			return;
+		}
+
+		stopLogPolling();
 	});
 </script>
 
@@ -153,7 +208,7 @@
 						<Card.Content class="flex min-h-0 flex-1 pt-8">
 							{#each chartTabs as tab}
 								<Tabs.Content value={tab.value} class="flex min-h-0 flex-1">
-									<div class="min-h-72 flex-1 rounded-[1.75rem] border border-border/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.88))] lg:min-h-0"></div>
+									<div class="min-h-72 flex-1 lg:min-h-0"></div>
 								</Tabs.Content>
 							{/each}
 						</Card.Content>
@@ -164,7 +219,7 @@
 					<Card.Content class="h-full pt-6">
 						<div class="flex h-full flex-col gap-6">
 							<div class="flex flex-col gap-4">
-								<div class="flex w-full items-center gap-4 rounded-[1.6rem] border border-border/80 bg-background/95 px-5 py-4 shadow-inner">
+								<div class="flex w-full items-center gap-4 ps-4">
 									<span class="shrink-0 text-base font-semibold uppercase tracking-[0.18em] text-muted-foreground">
 										State
 									</span>
@@ -179,7 +234,6 @@
 							<div class="grid flex-1 gap-4 sm:grid-cols-2">
 								<Button
 									onclick={() => void sendCommand("start")}
-									disabled={!controllerOnline}
 									size="lg"
 									class="h-24 rounded-[1.9rem] border border-emerald-700/20 bg-emerald-700 text-2xl font-semibold uppercase tracking-[0.16em] text-white shadow-[0_18px_36px_-22px_rgba(4,120,87,0.9)] hover:bg-emerald-600 sm:h-28 lg:h-full lg:min-h-[8.75rem]"
 								>
@@ -187,7 +241,6 @@
 								</Button>
 								<Button
 									onclick={() => void sendCommand("stop")}
-									disabled={!controllerOnline}
 									variant="destructive"
 									size="lg"
 									class="h-24 rounded-[1.9rem] border border-destructive/20 bg-destructive text-2xl font-semibold uppercase tracking-[0.16em] text-white shadow-[0_18px_36px_-22px_rgba(185,28,28,0.85)] hover:bg-red-600 sm:h-28 lg:h-full lg:min-h-[8.75rem]"
@@ -209,11 +262,21 @@
 					</Tabs.List>
 				</div>
 
-				<Card.Root class="flex min-h-0 flex-1 flex-col overflow-hidden border-slate-300/70 bg-white/92">
-					<Card.Content class="flex min-h-0 flex-1 pt-8">
+				<Card.Root
+					class={`flex min-h-0 flex-1 flex-col overflow-hidden border-slate-300/70 ${
+						activeObjectTab === "log" ? "bg-slate-50 text-slate-900" : "bg-white/92"
+					}`}
+				>
+					<Card.Content
+						class={`flex min-h-0 flex-1 ${activeObjectTab === "log" ? "p-6 pt-6" : "pt-8"}`}
+					>
 						{#each objectTabs as tab}
 							<Tabs.Content value={tab.value} class="flex min-h-0 flex-1">
-								<div class="min-h-72 flex-1 rounded-[1.9rem] border border-border/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(241,245,249,0.75))] lg:min-h-0"></div>
+								{#if tab.value === "log"}
+									<LogViewer entries={logEntries} emptyMessage={logError ?? "No log entries yet."} />
+								{:else}
+									<div class="min-h-72 flex-1 lg:min-h-0"></div>
+								{/if}
 							</Tabs.Content>
 						{/each}
 					</Card.Content>

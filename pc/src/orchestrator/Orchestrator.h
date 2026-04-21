@@ -64,7 +64,7 @@ private:
     Interface& mGripper;
     Interface& mStorage;
 
-    OrchestratorState mState{OrchestratorState::Starting};
+    OrchestratorState mState{OrchestratorState::Stopped};
     std::string mFaultReason;
     std::string mRequestedObjectId;
     bool mStopRequested{false};

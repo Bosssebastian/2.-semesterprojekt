@@ -11,8 +11,8 @@ bool commandWaitsForEvent(CmdType command) {
 }
 }
 
-Interface::Interface(std::string devicePath, int baud)
-    : mSerialPort(std::move(devicePath), baud) {
+Interface::Interface(std::string devicePath, std::string portLabel, int baud)
+    : mSerialPort(std::move(devicePath), baud, std::move(portLabel)) {
 }
 
 void Interface::setDevicePath(std::string devicePath) {

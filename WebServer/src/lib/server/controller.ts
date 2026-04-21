@@ -1,4 +1,5 @@
 import { env } from '$env/dynamic/private';
+import type { LogEntry } from '$lib/logs';
 
 const DEFAULT_CONTROLLER_BASE_URL = 'http://127.0.0.1:8081';
 
@@ -56,6 +57,37 @@ export async function fetchControllerStatus(fetchImpl: typeof fetch): Promise<Co
 			error: error instanceof Error ? error.message : 'Failed to reach controller'
 		};
 	}
+}
+
+function isLogEntry(value: unknown): value is LogEntry {
+	if (typeof value !== 'object' || value === null) {
+		return false;
+	}
+
+	const entry = value as Record<string, unknown>;
+
+	return (
+		typeof entry.timestamp === 'string' &&
+		typeof entry.message === 'string' &&
+		(entry.type === 'INFO' || entry.type === 'WARN' || entry.type === 'ERR')
+	);
+}
+
+export async function fetchControllerLogs(fetchImpl: typeof fetch): Promise<LogEntry[]> {
+	const response = await fetchImpl(`${getControllerBaseUrl()}/logs`);
+	const payload = await parseJsonResponse(response);
+
+	if (!response.ok) {
+		throw new Error(
+			typeof payload?.error === 'string' ? payload.error : 'Failed to fetch controller logs'
+		);
+	}
+
+	if (!Array.isArray(payload?.entries) || !payload.entries.every(isLogEntry)) {
+		throw new Error('Controller log response did not include valid log entries');
+	}
+
+	return payload.entries;
 }
 
 export async function sendControllerCommand(
