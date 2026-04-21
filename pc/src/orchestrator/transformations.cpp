@@ -15,11 +15,18 @@ std::vector<std::vector<double>> Transformations::getCamToBaseTrans(){
     return camToBaseTransform;
 }
 
-std::vector<double> Transformations::getMovementVec(std::vector<std::vector<double>> endpoint) {
+std::vector<double> Transformations::getMovementVec(std::vector<std::vector<double>> endpoint, bool testWithoutCam) {
 	double posX,posY,posZ;
     if (endpoint.size() == 3){
         endpoint.push_back({1}); // add element for processing
-        std::vector<std::vector<double>> newPoint = matop.multMat(camToBaseTransform,endpoint);
+        std::vector<std::vector<double>> transform;
+        if (testWithoutCam) {
+            transform = matop.getWorldToBaseTrans();
+        }
+        else {
+            transform = camToBaseTransform;
+        }
+        std::vector<std::vector<double>> newPoint = matop.multMat(transform,endpoint);
         newPoint.pop_back(); // remove element
         posX = newPoint[0][0];
         posY = newPoint[1][0];
@@ -31,5 +38,5 @@ std::vector<double> Transformations::getMovementVec(std::vector<std::vector<doub
         posZ = 0.20;
     }
 
-	return {posX,posY,posZ, -0.001,3.12,0.04}; // posX, posY, posZ are coordinates in base frame (in m). Last three values are tool orientation (in rad)
+	return {posX,posY,posZ, 0.00,3.14159,0.00}; // posX, posY, posZ are coordinates in base frame (in m). Last three values are tool orientation (in rad)
 }
