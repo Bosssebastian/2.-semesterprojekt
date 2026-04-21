@@ -14,6 +14,7 @@ public:
     bool hasPackage();
     bool tryReadPackage(std::string& line, int timeoutMs);
     const std::string& identifiedDevice() const;
+    const std::string& lastProbeResponse() const;
     const std::string& devicePath() const;
 
 private:
@@ -21,6 +22,7 @@ private:
 
     std::string mDevicePath;
     std::string mIdentifiedDevice;
+    std::string mLastProbeResponse;
     int mBaud;
     std::string mRxBuffer;
     bool mPackageReady{false};

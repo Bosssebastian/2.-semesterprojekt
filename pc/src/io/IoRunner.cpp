@@ -3,7 +3,9 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdio>
+#ifndef _WIN32
 #include <dirent.h>
+#endif
 #include <string>
 #include <thread>
 #include <utility>
@@ -14,6 +16,14 @@ constexpr int kBaudRate = 115200;
 
 std::vector<std::string> discoverCandidatePorts() {
     std::vector<std::string> ports;
+
+#ifdef _WIN32
+    for (int i = 1; i <= 16; ++i) {
+        ports.push_back("\\\\.\\COM" + std::to_string(i));
+    }
+
+    return ports;
+#else
     DIR* dir = opendir("/dev");
     if (dir == nullptr) {
         std::printf("Failed to scan /dev for serial devices\n");
@@ -30,6 +40,7 @@ std::vector<std::string> discoverCandidatePorts() {
     closedir(dir);
     std::sort(ports.begin(), ports.end());
     return ports;
+#endif
 }
 }
 
@@ -46,8 +57,13 @@ void IoRunner::start() {
 
     const std::vector<std::string> ports = discoverCandidatePorts();
     if (ports.empty()) {
+#ifdef _WIN32
+        std::printf("No candidate Windows serial ports were generated\n");
+        std::printf("Set up serial port discovery or configure the COM port paths directly\n");
+#else
         std::printf("No serial devices found under /dev/ttyACM* or /dev/ttyUSB*\n");
         std::printf("Check that the Pico is connected and that this user can access serial devices\n");
+#endif
     } else {
         std::printf("Found %zu candidate serial port(s)\n", ports.size());
     }

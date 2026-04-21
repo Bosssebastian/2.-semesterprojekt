@@ -11,6 +11,10 @@ SerialPort::SerialPort(std::string devicePath, int baud)
     : mDevicePath(std::move(devicePath)), mBaud(baud) {
 }
 
+SerialPort::~SerialPort() {
+    closePort();
+}
+
 void SerialPort::setDevicePath(std::string devicePath) {
     mDevicePath = std::move(devicePath);
 }
@@ -40,6 +44,10 @@ bool SerialPort::tryReadPackage(std::string& line, int timeoutMs) {
 
 const std::string& SerialPort::identifiedDevice() const {
     return mIdentifiedDevice;
+}
+
+const std::string& SerialPort::lastProbeResponse() const {
+    return mLastProbeResponse;
 }
 
 const std::string& SerialPort::devicePath() const {
@@ -97,6 +105,7 @@ void SerialPort::setDevicePath(std::string devicePath) {
 void SerialPort::setup() {
     closePort();
     mIdentifiedDevice.clear();
+    mLastProbeResponse.clear();
 
     if (mDevicePath.empty()) {
         std::printf("No serial device path configured\n");
@@ -150,6 +159,7 @@ void SerialPort::setup() {
             continue;
         }
 
+        mLastProbeResponse = line;
         if (startsWith(line, "OK PING ")) {
             mIdentifiedDevice = line.substr(std::strlen("OK PING "));
         }
@@ -229,6 +239,10 @@ bool SerialPort::tryReadPackage(std::string& line, int timeoutMs) {
 
 const std::string& SerialPort::identifiedDevice() const {
     return mIdentifiedDevice;
+}
+
+const std::string& SerialPort::lastProbeResponse() const {
+    return mLastProbeResponse;
 }
 
 const std::string& SerialPort::devicePath() const {

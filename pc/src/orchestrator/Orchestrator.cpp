@@ -1,15 +1,26 @@
 #include "Orchestrator.h"
 #include "io/IoRunner.h"
+#include "web/WebServerRunner.h"
 #include "vision/VisionRunner.h"
 #include "Types.h"
-#include <iostream>
-#ifdef _WIN32
-#include <conio.h>
-#endif
+#include <chrono>
+#include <cstdio>
+#include <thread>
 
+namespace {
+constexpr auto kOrchestratorLoopDelay = std::chrono::milliseconds(10);
 
-Orchestrator::Orchestrator(IoRunner& io, VisionRunner& vision)
-    : mIo(io), mVision(vision), mGripper(io.gripper()), mStorage(io.storage()) {
+bool canStopFromState(OrchestratorState state) {
+    return state != OrchestratorState::Stopped &&
+           state != OrchestratorState::Stopping &&
+           state != OrchestratorState::Idle &&
+           state != OrchestratorState::Faulted;
+}
+}
+
+Orchestrator::Orchestrator(IoRunner& io, VisionRunner& vision, WebServerRunner& web)
+    : mIo(io), mVision(vision), mWeb(web), mGripper(io.gripper()), mStorage(io.storage()) {
+    mWeb.setState(mState);
 }
 
 void Orchestrator::run() {
@@ -17,26 +28,23 @@ void Orchestrator::run() {
 
     while (!mStopRequested) {
         update();
-
-        // Main loop
-        // Here all classes should have their update functions
-
-
+        std::this_thread::sleep_for(kOrchestratorLoopDelay);
     }
 }
 
 void Orchestrator::start() {
     mStopRequested = false;
     mFaultReason.clear();
-
-    // Start up
-    // Here all classes should have their start functions called
-
-    transitionTo(OrchestratorState::Idle);
+    mRequestedObjectId.clear();
+    transitionTo(OrchestratorState::Stopped);
 }
 
 
 void Orchestrator::update() {
+    if (mWeb.hasCommand()) {
+        handleWebCommand(mWeb.getCommand());
+    }
+
     switch (mState) {
         case OrchestratorState::Starting: handleStarting(); break;
         case OrchestratorState::Idle: handleIdle(); break;
@@ -88,6 +96,7 @@ const std::string& Orchestrator::getFaultReason() const {
 void Orchestrator::transitionTo(OrchestratorState newState) {
     mState = newState;
     mStateJustEntered = true;
+    mWeb.setState(mState);
 }
 
 void Orchestrator::transitionToFault(const std::string& reason) {
@@ -95,55 +104,63 @@ void Orchestrator::transitionToFault(const std::string& reason) {
     transitionTo(OrchestratorState::Faulted);
 }
 
-void Orchestrator::handleStarting() {
-    if (!onStateEnter("Orchestrator: Starting up...\n", true)) {
-        return;
+void Orchestrator::handleWebCommand(const WebCommand& command) {
+    switch (command.type) {
+        case WebCommandType::Start:
+            if (mState == OrchestratorState::Stopped) {
+                transitionTo(OrchestratorState::Idle);
+            }
+            break;
+        case WebCommandType::Stop:
+            if (canStopFromState(mState)) {
+                transitionTo(OrchestratorState::Stopping);
+            }
+            break;
+        case WebCommandType::GetObject:
+            if (mState == OrchestratorState::Idle && !command.objectId.empty()) {
+                mRequestedObjectId = command.objectId;
+                transitionTo(OrchestratorState::InStor_StorageMoveToSlot_Cmd);
+            }
+            break;
     }
-    transitionTo(OrchestratorState::Idle);
+}
+
+void Orchestrator::handleStarting() {
+    onStateEnter("Orchestrator: Starting up...\n");
+    transitionTo(OrchestratorState::Stopped);
 }
 
 void Orchestrator::handleIdle() {
-    if (!onStateEnter("Orchestrator: Idle. Waiting for cube on input...\n", true)) {
-        return;
-    }
-    transitionTo(OrchestratorState::InStor_StorageMoveToSlot_Cmd);
+    onStateEnter("Orchestrator: Idle. Waiting for web command...\n");
 }
 
 void Orchestrator::handleInStorStorageMoveToSlotCmd() {
-    if (!onStateEnter("Orchestrator: Reserving storage slot...\n", true)) {
-        return;
+    std::string message = "Orchestrator: Reserving storage slot";
+    if (!mRequestedObjectId.empty()) {
+        message += " for object " + mRequestedObjectId;
     }
+    message += "...\n";
+    onStateEnter(message.c_str());
     transitionTo(OrchestratorState::InStor_RobotOverInput_Cmd);
 }
 
 void Orchestrator::handleInStorRobotOverInputCmd() {
-    if (!onStateEnter("Orchestrator: Commanding move over input...\n", true)) {
-        return;
-    }
+    onStateEnter("Orchestrator: Commanding move over input...\n");
     transitionTo(OrchestratorState::InStor_RobotOverInput_Wait);
-
 }
 
 void Orchestrator::handleInStorRobotOverInputWait() {
-    if (!onStateEnter("Orchestrator: Waiting for move over input to complete...\n", true)) {
-        return;
-    }
+    onStateEnter("Orchestrator: Waiting for move over input to complete...\n");
     transitionTo(OrchestratorState::InStor_RobotToCube_Cmd);
-
 }
 
 void Orchestrator::handleInStorRobotToCubeCmd() {
-    if (!onStateEnter("Orchestrator: Commanding move to cube...\n", true)) {
-        return;
-    }
+    onStateEnter("Orchestrator: Commanding move to cube...\n");
     transitionTo(OrchestratorState::InStor_RobotToCube_Wait);
-
 }
 
 void Orchestrator::handleInStorRobotToCubeWait() {
-    if (!onStateEnter("Orchestrator: Waiting for move to cube to complete...\n", true)) {
-        return;
-    }
+    onStateEnter("Orchestrator: Waiting for move to cube to complete...\n");
     transitionTo(OrchestratorState::InStor_GripperClose_Cmd);
 }
 
@@ -157,11 +174,12 @@ void Orchestrator::handleInStorGripperCloseWait() {
     onStateEnter("Orchestrator: Waiting for gripper close to complete...\n");
     switch (mGripper.getStatus(CmdType::CLOSE)) {
         case CmdStatus::DONE:
-            printf("Gripper close completed successfully.\n");
+            std::printf("Gripper close completed successfully.\n");
             transitionTo(OrchestratorState::InStor_RobotOverStorage_Cmd);
             break;
         case CmdStatus::FAILED:
-            printf("Gripper close failed.\n");
+        case CmdStatus::TIMED_OUT:
+            std::printf("Gripper close failed.\n");
             transitionToFault("Gripper failed to close");
             break;
         default:
@@ -170,82 +188,67 @@ void Orchestrator::handleInStorGripperCloseWait() {
 }
 
 void Orchestrator::handleInStorRobotOverStorageCmd() {
-
+    onStateEnter("Orchestrator: Robot over storage placeholder state.\n");
 }
 
 void Orchestrator::handleInStorRobotOverStorageWait() {
-
+    onStateEnter("Orchestrator: Waiting over storage placeholder state.\n");
 }
 
 void Orchestrator::handleInStorStorageMoveToPosCmd() {
-
+    onStateEnter("Orchestrator: Storage move to position placeholder state.\n");
 }
 
 void Orchestrator::handleInStorStorageMoveToPosWait() {
-
+    onStateEnter("Orchestrator: Waiting for storage move placeholder state.\n");
 }
 
 void Orchestrator::handleInStorRobotDownToSlotCmd() {
-
+    onStateEnter("Orchestrator: Robot down to slot placeholder state.\n");
 }
 
 void Orchestrator::handleInStorRobotDownToSlotWait() {
-
+    onStateEnter("Orchestrator: Waiting for robot down to slot placeholder state.\n");
 }
 
 void Orchestrator::handleInStorGripperOpenCmd() {
-
+    onStateEnter("Orchestrator: Gripper open placeholder state.\n");
 }
 
 void Orchestrator::handleInStorGripperOpenWait() {
-
+    onStateEnter("Orchestrator: Waiting for gripper open placeholder state.\n");
 }
 
 void Orchestrator::handleInStorRobotUpFromSlotCmd() {
-
+    onStateEnter("Orchestrator: Robot up from slot placeholder state.\n");
 }
 
 void Orchestrator::handleInStorRobotUpFromSlotWait() {
-
+    onStateEnter("Orchestrator: Waiting for robot up from slot placeholder state.\n");
 }
 
 void Orchestrator::handleInStorComplete() {
-
+    onStateEnter("Orchestrator: Input-to-storage cycle complete.\n");
+    mRequestedObjectId.clear();
+    transitionTo(OrchestratorState::Idle);
 }
 
 void Orchestrator::handleStopping() {
-
+    onStateEnter("Orchestrator: Stopping system...\n");
+    mGripper.sendCommand(CmdType::STOP);
+    mStorage.sendCommand(CmdType::STOP);
+    mRequestedObjectId.clear();
+    transitionTo(OrchestratorState::Stopped);
 }
 
 
 bool Orchestrator::onStateEnter(const char* message, bool waitForEnter) {
+    (void)waitForEnter;
     if (mStateJustEntered) {
         std::printf("%s", message);
-        if (waitForEnter) {
-            std::printf("Press Enter to continue...\n");
-        }
         std::fflush(stdout);
         mStateJustEntered = false;
     }
 
-    if (!waitForEnter) {
-        return true;
-    }
-
-#ifdef _WIN32
-    while (_kbhit()) {
-        const int ch = _getch();
-        if (ch == '\r' || ch == '\n') {
-            return true;
-        }
-    }
-    return false;
-#else
-    std::string line;
-    if (!std::getline(std::cin, line)) {
-        return false;
-    }
     return true;
-#endif
 }
-

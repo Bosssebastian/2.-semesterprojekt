@@ -1,48 +1,16 @@
 #pragma once
+#include "OrchestratorState.h"
 #include "io/Interface.h"
 #include <string>
 
 class IoRunner;
 class VisionRunner;
-
-enum class OrchestratorState {
-    Starting,
-    Idle,
-    InStor_StorageMoveToSlot_Cmd,
-
-    InStor_RobotOverInput_Cmd,
-    InStor_RobotOverInput_Wait,
-
-    InStor_RobotToCube_Cmd,
-    InStor_RobotToCube_Wait,
-
-    InStor_GripperClose_Cmd,
-    InStor_GripperClose_Wait,
-
-    InStor_RobotOverStorage_Cmd,
-    InStor_RobotOverStorage_Wait,
-
-    InStor_StorageMoveToPos_Cmd,
-    InStor_StorageMoveToPos_Wait,
-
-    InStor_RobotDownToSlot_Cmd,
-    InStor_RobotDownToSlot_Wait,
-
-    InStor_GripperOpen_Cmd,
-    InStor_GripperOpen_Wait,
-
-    InStor_RobotUpFromSlot_Cmd,
-    InStor_RobotUpFromSlot_Wait,
-
-    InStor_Complete,
-    Stopping,
-    Stopped,
-    Faulted
-};
+class WebServerRunner;
+struct WebCommand;
 
 class Orchestrator {
 public:
-    Orchestrator(IoRunner& io, VisionRunner& vision);
+    Orchestrator(IoRunner& io, VisionRunner& vision, WebServerRunner& web);
 
     void run();
 
@@ -52,6 +20,7 @@ public:
 private:
     void start();
     void update();
+    void handleWebCommand(const WebCommand& command);
 
     void transitionTo(OrchestratorState newState);
     void transitionToFault(const std::string& reason);
@@ -91,11 +60,13 @@ private:
 private:
     IoRunner& mIo;
     VisionRunner& mVision;
+    WebServerRunner& mWeb;
     Interface& mGripper;
     Interface& mStorage;
 
     OrchestratorState mState{OrchestratorState::Starting};
     std::string mFaultReason;
+    std::string mRequestedObjectId;
     bool mStopRequested{false};
     bool mStateJustEntered{true};
 };
