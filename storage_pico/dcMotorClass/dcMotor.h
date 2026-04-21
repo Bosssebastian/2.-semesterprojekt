@@ -1,3 +1,4 @@
+#include "pico/stdlib.h"
 #ifndef DCMOTOR_H
 #define DCMOTOR_H
 
@@ -12,6 +13,8 @@ private:
     uint pwmPin;
     uint input1;
     uint input2;
+    uint slice;
+    uint duty;
 };
 
 #endif
