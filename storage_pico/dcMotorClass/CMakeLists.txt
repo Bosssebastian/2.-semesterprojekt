@@ -46,7 +46,9 @@ pico_enable_stdio_usb(dcMotor 0)
 
 # Add the standard library to the build
 target_link_libraries(dcMotor
-        pico_stdlib)
+        pico_stdlib
+        hardware_pwm
+        )
 
 # Add the standard include files to the build
 target_include_directories(dcMotor PRIVATE
