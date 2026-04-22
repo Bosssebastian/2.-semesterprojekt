@@ -1,14 +1,10 @@
 #pragma once
-#include "Uart.h"
-#include "Types.h"
-#include <cstdint>
+#include "../../../shared/Types.h"
+#include "serialPort.h"
 #include <string>
   
 class Interface {  
 public:  
-	void setup();
-	void update(); 
-  
 	bool hasCommand();       // Checks if a new command was received  
 	CmdType getCommand();    // Gets what type the received command is
   
@@ -18,5 +14,5 @@ public:
 	void sendEvent(CmdType, EventType, EventReason reason = EventReason::NONE);
 
 private:
-	Uart uart;
+    SerialPort mSerialPort;
 };

@@ -1,4 +1,5 @@
 #pragma once
+#include "io/Interface.h"
 #include <string>
 
 class IoRunner;
@@ -54,6 +55,7 @@ private:
 
     void transitionTo(OrchestratorState newState);
     void transitionToFault(const std::string& reason);
+    bool onStateEnter(const char* message, bool waitForEnter = false);
 
     void handleStarting();
     void handleIdle();
@@ -89,10 +91,11 @@ private:
 private:
     IoRunner& mIo;
     VisionRunner& mVision;
+    Interface& mGripper;
+    Interface& mStorage;
 
     OrchestratorState mState{OrchestratorState::Starting};
     std::string mFaultReason;
     bool mStopRequested{false};
-
-    void waitForEnter();
+    bool mStateJustEntered{true};
 };

@@ -14,14 +14,18 @@ file(GLOB_RECURSE SHARED_SOURCES CONFIGURE_DEPENDS
     "${SHARED_DIR}/*.cpp"
     "${SHARED_DIR}/*.cxx"
 )
+list(FILTER SHARED_SOURCES EXCLUDE REGEX ".*/[Uu]artClass\\.(c|cc|cpp|cxx)$")
+list(FILTER SHARED_SOURCES EXCLUDE REGEX ".*/serialPort\\.(c|cc|cpp|cxx)$")
 
 find_package(OpenCV REQUIRED)
 
 add_executable(pc
     src/app/main.cpp
     src/io/IoRunner.cpp
-    src/vision/VisionController.cpp
+    src/io/Interface.cpp
+    src/io/SerialPort.cpp
     src/vision/VisionRunner.cpp
+    src/vision/VisionController.cpp
     src/orchestrator/Orchestrator.cpp
     ${SHARED_SOURCES}
 )
@@ -35,10 +39,12 @@ target_include_directories(pc PRIVATE
     ${SHARED_DIR}
 )
 
-target_link_libraries(pc PRIVATE ${OpenCV_LIBS})
-
 if(MSVC)
     target_compile_options(pc PRIVATE /W4)
 else()
     target_compile_options(pc PRIVATE -Wall -Wextra -Wpedantic)
 endif()
+
+target_link_libraries(pc PRIVATE pthread)
+
+target_link_libraries(pc PRIVATE ${OpenCV_LIBS})
