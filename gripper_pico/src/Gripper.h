@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "Types.h"
+#include "../../shared/Types.h"
 #include "stepper/StepperAxis.h"
 #include "stepper/TMC2209Driver.h"
 
