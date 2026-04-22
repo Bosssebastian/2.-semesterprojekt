@@ -11,7 +11,7 @@ public:
 	std::vector<std::vector<double>> roty(double);
 	std::vector<std::vector<double>> toTrans(std::vector<std::vector<double>>  rot = { {1,0,0},{0,1,0},{0,0,1} }, std::vector<std::vector<double>> vec = { {0},{0},{0} });
 	std::vector<std::vector<double>> multMat(std::vector<std::vector<double>>, std::vector<std::vector<double>>);
-	std::vector<std::vector<double>> inverseMat(std::vector<std::vector<double>>);
+	std::vector<std::vector<double>> inverseTrans(std::vector<std::vector<double>>);
     double PI = 3.14159265358979323846;
     double PI_2 = 1.57079632679489661923;
     double PI_4 = 0.785398163397448309616;

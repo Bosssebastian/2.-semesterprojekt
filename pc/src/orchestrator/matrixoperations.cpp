@@ -80,7 +80,7 @@ std::vector<std::vector<double>> MatrixOperations::multMat(std::vector<std::vect
 	return rsltmat;
 }
 
-std::vector<std::vector<double>> MatrixOperations::inverseMat(std::vector<std::vector<double>> mat) {
+std::vector<std::vector<double>> MatrixOperations::inverseTrans(std::vector<std::vector<double>> mat) {
 	std::vector<std::vector<double>> inverseMat;
 	std::vector<double> newRow;
 	for (int i = 0;i < 3;i++) { // run for each column in rotation matrix

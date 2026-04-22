@@ -4,7 +4,7 @@ Transformations::Transformations(){}
 
 Transformations::Transformations(double upZ,bool isInwards, double rotZ){
     baseToCamTransform = matop.findBaseToCamTrans(upZ, isInwards, rotZ);
-    camToBaseTransform = matop.inverseMat(baseToCamTransform); // is not used (could be removed)
+    camToBaseTransform = matop.inverseTrans(baseToCamTransform); // is not used (could be removed)
 }
 
 std::vector<std::vector<double>> Transformations::getBaseToCamTrans(){
@@ -38,5 +38,5 @@ std::vector<double> Transformations::getMovementVec(std::vector<std::vector<doub
         posZ = 0.20;
     }
 
-	return {posX,posY,posZ, 0.00,3.14159,0.00}; // posX, posY, posZ are coordinates in base frame (in m). Last three values are tool orientation (in rad)
+	return {posX,posY,posZ, -0.6127,-3.0812,0.00}; // posX, posY, posZ are coordinates in base frame (in m). Last three values are tool orientation (in rad in axis-angle representation)
 }
