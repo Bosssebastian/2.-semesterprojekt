@@ -24,9 +24,25 @@ void VisionRunner::stop() {
     }
 }
 
+void VisionRunner::test()
+{
+    for (int i = 0; i < 1000; i++)
+    {
+        mVision.scanForObject();
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        if(!(i % 50))
+        {
+            std::cout << i << "\n";
+        }
+    }
+    std::cout << "Spotted: " << mVision.spot_test << "/1000\n" << "Read: " << mVision.read_test << "/1000\n";
+    mVision.spot_test = 0;
+    mVision.read_test = 0;
+}
+
 void VisionRunner::run() {
     while (mRunning) {
         mVision.scanForObject();
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
 }

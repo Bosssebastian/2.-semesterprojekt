@@ -10,11 +10,14 @@ int main() {
     //Orchestrator orchestrator(io, vision);
 
     //io.start();
-    vision.start();
+    //vision.start();
     //orchestrator.run();
+    vision.test();
 
     std::cout << "VisionRunner started. Press Enter to stop..." << std::endl;
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+    vision.test();
 
     //io.stop();
     vision.stop();

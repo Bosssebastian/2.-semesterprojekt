@@ -10,6 +10,8 @@ public:
 
     void start();
     void stop();
+
+    void test();
     
 private:
     void run();

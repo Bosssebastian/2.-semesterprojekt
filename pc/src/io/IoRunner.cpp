@@ -51,7 +51,7 @@ void IoRunner::start() {
     } else {
         std::printf("Found %zu candidate serial port(s)\n", ports.size());
     }
-
+    /*
     for (const std::string& portPath : ports) {
         std::printf("Probing %s...\n", portPath.c_str());
         SerialPort port(portPath, kBaudRate);
@@ -76,7 +76,7 @@ void IoRunner::start() {
 
     mGripper.setup();
     mStorage.setup();
-    mWorker = std::thread(&IoRunner::run, this);
+    mWorker = std::thread(&IoRunner::run, this);*/
 }
 
 void IoRunner::stop() {

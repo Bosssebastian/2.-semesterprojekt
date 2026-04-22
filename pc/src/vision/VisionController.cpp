@@ -66,8 +66,8 @@ VisionController::VisionController()
         mCam->grab(); // Just grab the data, don't decode it yet to save time
     }
 
-    mCam->retrieve(mFrame);
-    cv::imwrite("fixed_capture.jpg", mFrame);
+    //mCam->retrieve(mFrame);
+    //cv::imwrite("fixed_capture.jpg", mFrame);
   
 }
 
@@ -123,8 +123,9 @@ void VisionController::scanForObject()
         if (pointCount == 4) {
             mX /= static_cast<double>(4);
             mY /= static_cast<double>(4);
-            std::cout << "x: " << mX << "\ny: " << mY << "\n";
+            //std::cout << "x: " << mX << "\ny: " << mY << "\n";
         }
+        spot_test++;
     }
 
     if (!mData.empty()) {
@@ -137,7 +138,8 @@ void VisionController::scanForObject()
         mColor = getJsonValue(mData, "color");
         */
         mStatus = true;
-        std::cout << "object: " << mObject << "\nsize: " << mSize << "\ncolor: " << mColor << "\n";
+        //std::cout << "object: " << mObject << "\nsize: " << mSize << "\ncolor: " << mColor << "\n";
+        read_test++;
     }
 }
 

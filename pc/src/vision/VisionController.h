@@ -13,6 +13,9 @@ public:
     void getObjectPosition(std::vector<std::vector<double>> outputPos);
     void getObjectInfo(std::string&, std::string&, std::string&);
 
+    int spot_test = 0; 
+    int read_test = 0;
+
 private:
     cv::VideoCapture* mCam;
     cv::QRCodeDetector mQR;
