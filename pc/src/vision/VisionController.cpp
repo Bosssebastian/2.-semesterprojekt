@@ -150,6 +150,7 @@ void VisionController::getObjectPosition(std::vector<std::vector<double>> output
 {
     outputPos[0][0] = mX;
     outputPos[1][0] = mY;
+    outputPos[2][0] = 2.5; // const z value
     mStatus = false;
     return;
 }
