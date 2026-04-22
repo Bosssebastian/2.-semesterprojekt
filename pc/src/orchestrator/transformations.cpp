@@ -4,7 +4,7 @@ Transformations::Transformations(){}
 
 Transformations::Transformations(double upZ,bool isInwards, double rotZ){
     baseToCamTransform = matop.findBaseToCamTrans(upZ, isInwards, rotZ);
-    camToBaseTransform = matop.inverseMat(baseToCamTransform);
+    camToBaseTransform = matop.inverseMat(baseToCamTransform); // is not used (could be removed)
 }
 
 std::vector<std::vector<double>> Transformations::getBaseToCamTrans(){
@@ -21,10 +21,10 @@ std::vector<double> Transformations::getMovementVec(std::vector<std::vector<doub
         endpoint.push_back({1}); // add element for processing
         std::vector<std::vector<double>> transform;
         if (testWithoutCam) {
-            transform = matop.getWorldToBaseTrans();
+            transform = matop.getBaseToWorldTrans();
         }
         else {
-            transform = camToBaseTransform;
+            transform = baseToCamTransform;
         }
         std::vector<std::vector<double>> newPoint = matop.multMat(transform,endpoint);
         newPoint.pop_back(); // remove element

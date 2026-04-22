@@ -19,6 +19,6 @@ public:
     std::vector<std::vector<double>> rot0 = {{1,0,0},{0,1,0},{0,0,1}};
     std::vector<std::vector<double>> vec0 = {{0},{0},{0}};
     std::vector<std::vector<double>> findBaseToCamTrans(double, bool = false, double rotationZ = 22.5);
-    std::vector<std::vector<double>> getWorldToBaseTrans();
+    std::vector<std::vector<double>> getBaseToWorldTrans();
     void printMat(std::vector<std::vector<double>>); // For debugging
 };

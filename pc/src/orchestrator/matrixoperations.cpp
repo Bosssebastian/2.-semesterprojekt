@@ -101,11 +101,11 @@ std::vector<std::vector<double>> MatrixOperations::inverseMat(std::vector<std::v
 }
 
 std::vector<std::vector<double>> MatrixOperations::findBaseToCamTrans(double upZ, bool inwardsY, double rotationZ) {
-	double totalZ = (50.*upZ-32)/1000.; // add 50mm for each hole from table surface (first half hole does not count), -32 to account for raised base plane
+	double totalZ = (50.*upZ-32)/1000.; // add 50mm for each hole from table surface (first half hole does not count), -32 to account for raised base plane, +200 to account for tool length
 	double totalY = -(600.+50./2.0+12.); // length from base center first hole before sidebar middle, plus half the distance between two holes, plus width of camera mount
 	double cameraOffset = (42-29)+(29/2); // onboard mount width, plus distance to middle of camera lens
 	std::vector<std::vector<double>> rot;
-	std::vector<std::vector<double>> wToBTrans = getWorldToBaseTrans();
+	std::vector<std::vector<double>> bToWTrans = getBaseToWorldTrans(); // transformation matrix from base frame to world frame
 	if (inwardsY) { // add/subtract cameraOffset if camera is mounted inwards/outwards, and rotate to match orientation (using euler angles)
 		totalY += cameraOffset;
 		//rot = multMat(rotz(degToRad(rotationZ)),roty(PI));
@@ -119,10 +119,12 @@ std::vector<std::vector<double>> MatrixOperations::findBaseToCamTrans(double upZ
 	totalY /= 1000.; // convert to m
 	double totalX = -(425.-158.-92.)/1000.; // distance from base center to table side, minus mounting arm link to camera center, minus distance from sidebar to mounting arm link
 	std::vector<std::vector<double>> vec = {{totalX},{totalY},{totalZ}}; // vector from world frame origin to camera frame origin
-	return multMat(inverseMat(toTrans(rot,vec)),wToBTrans); // TODO: check results
+	std::vector<std::vector<double>> wToCTrans = toTrans(rot,vec); // transformation matrix from world frame to camera frame
+	std::vector<std::vector<double>> bToCTrans = multMat(bToWTrans,wToCTrans); // transformation matrix from base frame to camera frame
+	return bToCTrans;
 }
 
-std::vector<std::vector<double>> MatrixOperations::getWorldToBaseTrans() { // TODO: check results
+std::vector<std::vector<double>> MatrixOperations::getBaseToWorldTrans() {
 		std::vector<std::vector<double>> rot = rotz(degToRad(22.5));
 		return toTrans(rot,vec0);
 }
