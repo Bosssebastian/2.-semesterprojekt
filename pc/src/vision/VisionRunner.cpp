@@ -2,6 +2,8 @@
 #include <chrono>
 #include <thread>
 
+using namespace std;
+
 VisionRunner::VisionRunner() = default;
 
 VisionRunner::~VisionRunner() {
@@ -12,7 +14,6 @@ void VisionRunner::start() {
     if (mRunning.exchange(true)) {
         return;
     }
-
     mWorker = std::thread(&VisionRunner::run, this);
 }
 
@@ -25,6 +26,7 @@ void VisionRunner::stop() {
 
 void VisionRunner::run() {
     while (mRunning) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        mVision.scanForObject();
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 }
