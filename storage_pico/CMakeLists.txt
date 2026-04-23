@@ -37,6 +37,7 @@ pico_sdk_init()
 
 add_executable(storage_pico
         src/Main.cpp
+        src/dcMotor.cpp
 )
 
 pico_set_program_name(storage_pico "storage_pico")
@@ -49,6 +50,10 @@ pico_enable_stdio_usb(storage_pico 1)
 # Add the standard library to the build
 target_link_libraries(storage_pico
         pico_stdlib
+        hardware_pwm
+        hardware_gpio
+
+
 )
 
 # Add the standard include files to the build
