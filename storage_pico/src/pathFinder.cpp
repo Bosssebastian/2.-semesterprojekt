@@ -10,6 +10,13 @@ pathFinder::pathFinder(int target, int currentPosition, int maxPosition) {
 	this->maxPosition = maxPosition;
 }
 
+void pathFinder::setCurrentPosition(int pos) {
+	currentPosition = pos;
+}
+void pathFinder::setTarget(int t) {
+	target = t;
+}
+
 int pathFinder::getCircularPosition(int input) const {
 	return (input + (maxPosition - 1)) % (maxPosition)+1;
 }
@@ -61,20 +68,3 @@ float pathFinder::getClosestPosition() const {
 	return delta;
 }
 
-int main()
-{
-	while (true)
-	{
-		std::cout << "Enter current position: ";
-		std::cin >> currentPosition;
-
-		std::cout << std::endl;
-
-		std::cout << "Enter the target position: ";
-		std::cin >> target;
-
-		getClosestPosition(target, currentPosition);
-		std::cout << "Need to move: " << getClosestPosition(target, currentPosition) << std::endl;
-	}
-	
-}

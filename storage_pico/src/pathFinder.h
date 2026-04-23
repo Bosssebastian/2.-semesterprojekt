@@ -11,6 +11,8 @@ public:
 
     int getCircularPosition(int input) const;
     float getClosestPosition() const;
+    void setCurrentPosition(int pos);
+    void setTarget(int t);
 
 
 
