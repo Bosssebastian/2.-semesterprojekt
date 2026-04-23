@@ -36,7 +36,7 @@ pico_sdk_init()
 # Add executable. Default name is the project name, version 0.1
 
 add_executable(storage_pico
-        src/Main.cpp
+        src/maintest.cpp
         src/dcMotor.cpp
         src/pathFinder.cpp
         )
