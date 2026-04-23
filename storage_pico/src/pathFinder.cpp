@@ -1,19 +1,20 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <cmath>
+#include "pathFinder.h"
 
-int target;
-int currentPosition;
+pathFinder::pathFinder(int target, int currentPosition, int maxPosition) {
+	this->target = target;
+	this->currentPosition = currentPosition;
+	this->maxPosition = maxPosition;
+}
 
-int maxPosition = 8;
-
-int getCircularPosition(int input)
-{
+int pathFinder::getCircularPosition(int input) const {
 	return (input + (maxPosition - 1)) % (maxPosition)+1;
 }
 
-float getClosestPosition(int target, int currentPosition)
-{
+float pathFinder::getClosestPosition() const {
 	//return getCircularPosition(target) - getCircularPosition(currentPosition);
 	//return 8 - (abs(getCircularPosition(target) - (getCircularPosition(currentPosition))));
 	

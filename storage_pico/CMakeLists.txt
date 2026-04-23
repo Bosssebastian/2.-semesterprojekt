@@ -38,7 +38,8 @@ pico_sdk_init()
 add_executable(storage_pico
         src/Main.cpp
         src/dcMotor.cpp
-)
+        src/pathFinder.cpp
+        )
 
 pico_set_program_name(storage_pico "storage_pico")
 pico_set_program_version(storage_pico "0.1")
