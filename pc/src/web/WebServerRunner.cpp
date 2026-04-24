@@ -213,6 +213,10 @@ HttpResponse makeJsonResponse(int statusCode, const std::string& statusText, con
     return HttpResponse{statusCode, statusText, body};
 }
 
+HttpResponse makeEmptyResponse(int statusCode, const std::string& statusText) {
+    return HttpResponse{statusCode, statusText, ""};
+}
+
 bool recvAll(int socketFd, std::string& rawRequest) {
     char buffer[4096];
     std::size_t headersEnd = std::string::npos;
@@ -384,6 +388,13 @@ bool canAcceptStop(OrchestratorState state) {
 bool canAcceptGetObject(OrchestratorState state) {
     return state == OrchestratorState::Idle;
 }
+
+bool canAcceptSkipReq(OrchestratorState state) {
+    return state != OrchestratorState::Stopped &&
+           state != OrchestratorState::Stopping &&
+           state != OrchestratorState::Starting &&
+           state != OrchestratorState::Faulted;
+}
 }
 
 WebServerRunner::WebServerRunner() = default;
@@ -516,7 +527,8 @@ void WebServerRunner::run() {
                 response = makeJsonResponse(
                     200,
                     "OK",
-                    std::string("{\"state\":\"") + jsonEscape(toString(getState())) + "\"}"
+                    std::string("{\"state\":\"") + jsonEscape(toString(getState())) +
+                        "\",\"stateLabel\":\"" + jsonEscape(toUiString(getState())) + "\"}"
                 );
             } else if (request.method == "GET" && request.path == "/logs") {
                 response = makeJsonResponse(200, "OK", buildLogsJsonBody());
@@ -546,6 +558,14 @@ void WebServerRunner::run() {
                     response = makeJsonResponse(409, "Conflict", "{\"error\":\"Another command is already pending\"}");
                 } else {
                     response = makeJsonResponse(202, "Accepted", "{\"status\":\"accepted\"}");
+                }
+            } else if (request.method == "POST" && request.path == "/cmdSkipReq") {
+                if (!canAcceptSkipReq(getState())) {
+                    response = makeEmptyResponse(409, "Conflict");
+                } else if (!tryStoreCommand(WebCommand{WebCommandType::SkipReq, ""})) {
+                    response = makeEmptyResponse(409, "Conflict");
+                } else {
+                    response = makeEmptyResponse(204, "No Content");
                 }
             } else {
                 response = makeJsonResponse(404, "Not Found", "{\"error\":\"Unknown endpoint\"}");

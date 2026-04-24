@@ -36,11 +36,16 @@ export async function fetchControllerState(fetchImpl: typeof fetch) {
 		);
 	}
 
-	if (typeof payload?.state !== 'string' || payload.state.length === 0) {
+	const uiState =
+		typeof payload?.stateLabel === 'string' && payload.stateLabel.length > 0
+			? payload.stateLabel
+			: payload?.state;
+
+	if (typeof uiState !== 'string' || uiState.length === 0) {
 		throw new Error('Controller state response did not include a valid state');
 	}
 
-	return payload.state;
+	return uiState;
 }
 
 export async function fetchControllerStatus(fetchImpl: typeof fetch): Promise<ControllerStatus> {
@@ -92,10 +97,11 @@ export async function fetchControllerLogs(fetchImpl: typeof fetch): Promise<LogE
 
 export async function sendControllerCommand(
 	fetchImpl: typeof fetch,
-	command: 'start' | 'stop'
+	command: 'start' | 'stop' | 'skip'
 ) {
 	try {
-		const path = command === 'start' ? '/cmdStart' : '/cmdStop';
+		const path =
+			command === 'start' ? '/cmdStart' : command === 'stop' ? '/cmdStop' : '/cmdSkipReq';
 		const response = await fetchImpl(`${getControllerBaseUrl()}${path}`, {
 			method: 'POST'
 		});

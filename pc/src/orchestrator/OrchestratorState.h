@@ -87,3 +87,56 @@ inline const char* toString(OrchestratorState state) {
 
     return "Unknown";
 }
+
+inline const char* toUiString(OrchestratorState state) {
+    switch (state) {
+        case OrchestratorState::Starting:
+            return "Starting up";
+        case OrchestratorState::Idle:
+            return "Waiting for input";
+        case OrchestratorState::InStor_StorageMoveToSlot_Cmd:
+            return "Storage move to slot";
+        case OrchestratorState::InStor_RobotOverInput_Cmd:
+            return "Moving robot over input";
+        case OrchestratorState::InStor_RobotOverInput_Wait:
+            return "Waiting for robot over input";
+        case OrchestratorState::InStor_RobotToCube_Cmd:
+            return "Moving robot to cube";
+        case OrchestratorState::InStor_RobotToCube_Wait:
+            return "Waiting for robot to cube";
+        case OrchestratorState::InStor_GripperClose_Cmd:
+            return "Closing gripper";
+        case OrchestratorState::InStor_GripperClose_Wait:
+            return "Waiting for gripper close";
+        case OrchestratorState::InStor_RobotOverStorage_Cmd:
+            return "Moving robot over storage";
+        case OrchestratorState::InStor_RobotOverStorage_Wait:
+            return "Waiting over storage";
+        case OrchestratorState::InStor_StorageMoveToPos_Cmd:
+            return "Storage move to position";
+        case OrchestratorState::InStor_StorageMoveToPos_Wait:
+            return "Waiting for storage move";
+        case OrchestratorState::InStor_RobotDownToSlot_Cmd:
+            return "Robot down to slot";
+        case OrchestratorState::InStor_RobotDownToSlot_Wait:
+            return "Waiting for robot down to slot";
+        case OrchestratorState::InStor_GripperOpen_Cmd:
+            return "Opening gripper";
+        case OrchestratorState::InStor_GripperOpen_Wait:
+            return "Waiting for gripper open";
+        case OrchestratorState::InStor_RobotUpFromSlot_Cmd:
+            return "Robot up from slot";
+        case OrchestratorState::InStor_RobotUpFromSlot_Wait:
+            return "Waiting for robot up from slot";
+        case OrchestratorState::InStor_Complete:
+            return "Input-to-storage complete";
+        case OrchestratorState::Stopping:
+            return "Stopping system";
+        case OrchestratorState::Stopped:
+            return "Stopped";
+        case OrchestratorState::Faulted:
+            return "Fault";
+    }
+
+    return "Unknown";
+}

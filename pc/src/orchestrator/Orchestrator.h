@@ -21,10 +21,11 @@ private:
     void start();
     void update();
     void handleWebCommand(const WebCommand& command);
+    bool skipRequested();
 
     void transitionTo(OrchestratorState newState);
     void transitionToFault(const std::string& reason);
-    bool onStateEnter(const char* message, bool waitForEnter = false);
+    void onStateEnter(const char* message);
 
     void handleStarting();
     void handleIdle();
@@ -68,5 +69,6 @@ private:
     std::string mFaultReason;
     std::string mRequestedObjectId;
     bool mStopRequested{false};
+    bool mPendingSkipRequest{false};
     bool mStateJustEntered{true};
 };

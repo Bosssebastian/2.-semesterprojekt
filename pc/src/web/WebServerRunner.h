@@ -10,7 +10,8 @@
 enum class WebCommandType {
     Start,
     Stop,
-    GetObject
+    GetObject,
+    SkipReq
 };
 
 struct WebCommand {

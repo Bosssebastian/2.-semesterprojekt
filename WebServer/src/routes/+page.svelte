@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { NextIcon } from "@hugeicons/core-free-icons";
+	import { HugeiconsIcon } from "@hugeicons/svelte";
 	import { onMount } from "svelte";
 	import { LogViewer } from "$lib/components/log";
 	import type { LogEntry } from "$lib/logs";
@@ -13,8 +15,6 @@
 	type PageData = {
 		initialStatus: ControllerStatus;
 	};
-
-	type CommandName = "start" | "stop";
 
 	let { data } = $props<{ data: PageData }>();
 
@@ -45,12 +45,26 @@
 	});
 
 	function isRunningState(state: string) {
-		return !["Stopped", "Idle", "Faulted", "Unavailable"].includes(state);
+		return !["Stopped", "Waiting for input", "Fault", "Unavailable"].includes(state);
+	}
+
+	function canSkipState(state: string) {
+		return !["Stopped", "Starting up", "Stopping system", "Fault", "Unavailable"].includes(state);
+	}
+
+	function normalizeState(state: string) {
+		return state.trim().toLowerCase();
 	}
 
 	const stateClasses = $derived.by(() => {
-		if (controllerState === "Stopped" || controllerState === "Faulted" || controllerState === "Unavailable") {
+		const normalizedState = normalizeState(controllerState);
+
+		if (["stopped", "fault", "faulted", "unavailable"].includes(normalizedState)) {
 			return "border-destructive/20 bg-destructive/10 text-destructive";
+		}
+
+		if (["idle", "waiting for input"].includes(normalizedState)) {
+			return "border-emerald-700/20 bg-emerald-700/12 text-emerald-800";
 		}
 
 		if (isRunningState(controllerState)) {
@@ -59,6 +73,21 @@
 
 		return "border-border/80 bg-muted/70 text-foreground";
 	});
+
+	const skipEnabled = $derived.by(() => controllerOnline && canSkipState(controllerState));
+
+	async function parseOptionalJson(response: Response) {
+		const contentType = response.headers.get("content-type") ?? "";
+		if (!contentType.includes("application/json")) {
+			return null;
+		}
+
+		try {
+			return await response.json();
+		} catch {
+			return null;
+		}
+	}
 
 	async function refreshControllerStatus() {
 		const response = await fetch("/api/controller/status");
@@ -111,25 +140,71 @@
 		logInterval = null;
 	}
 
-	async function sendCommand(command: CommandName) {
+	async function sendStartCommand() {
 		if (!controllerOnline) {
 			return;
 		}
 
 		try {
-			const response = await fetch(`/api/controller/${command}`, {
+			const response = await fetch("/api/controller/start", {
 				method: "POST"
 			});
-			const payload = await response.json();
+			const payload = await parseOptionalJson(response);
 
 			if (!response.ok) {
 				throw new Error(
-					typeof payload?.error === "string" ? payload.error : "Failed to fetch controller state"
+					typeof payload?.error === "string" ? payload.error : "Failed to send start command"
 				);
 			}
 
 			await refreshControllerStatus();
-		} catch (error) {
+		} catch {
+			await refreshControllerStatus();
+		}
+	}
+
+	async function sendStopCommand() {
+		if (!controllerOnline) {
+			return;
+		}
+
+		try {
+			const response = await fetch("/api/controller/stop", {
+				method: "POST"
+			});
+			const payload = await parseOptionalJson(response);
+
+			if (!response.ok) {
+				throw new Error(
+					typeof payload?.error === "string" ? payload.error : "Failed to send stop command"
+				);
+			}
+
+			await refreshControllerStatus();
+		} catch {
+			await refreshControllerStatus();
+		}
+	}
+
+	async function sendSkipCommand() {
+		if (!controllerOnline) {
+			return;
+		}
+
+		try {
+			const response = await fetch("/api/controller/skip", {
+				method: "POST"
+			});
+			const payload = await parseOptionalJson(response);
+
+			if (!response.ok) {
+				throw new Error(
+					typeof payload?.error === "string" ? payload.error : "Failed to send skip command"
+				);
+			}
+
+			await refreshControllerStatus();
+		} catch {
 			await refreshControllerStatus();
 		}
 	}
@@ -224,23 +299,39 @@
 										State
 									</span>
 									<div
-										class={`min-w-0 flex-1 rounded-[1.2rem] border px-5 py-4 text-center font-semibold uppercase tracking-[0.24em] shadow-inner ${stateClasses}`}
+										class={`relative min-w-0 flex-1 rounded-[1.2rem] border px-5 py-4 shadow-inner ${stateClasses}`}
 									>
-										{controllerState}
+										<span class="block w-full text-center font-semibold uppercase tracking-[0.24em]">
+											{controllerState}
+										</span>
+										{#if skipEnabled}
+											<div class="absolute inset-y-0 right-2 z-10 flex items-center">
+													<Button
+														onclick={() => void sendSkipCommand()}
+													variant="ghost"
+													size="icon-sm"
+													aria-label="Skip to next step"
+													title="Skip to next step"
+													class="text-slate-500 hover:text-slate-900"
+												>
+													<HugeiconsIcon icon={NextIcon} size={18} />
+												</Button>
+											</div>
+										{/if}
 									</div>
 								</div>
 							</div>
 
 							<div class="grid flex-1 gap-4 sm:grid-cols-2">
 								<Button
-									onclick={() => void sendCommand("start")}
+									onclick={() => void sendStartCommand()}
 									size="lg"
 									class="h-24 rounded-[1.9rem] border border-emerald-700/20 bg-emerald-700 text-2xl font-semibold uppercase tracking-[0.16em] text-white shadow-[0_18px_36px_-22px_rgba(4,120,87,0.9)] hover:bg-emerald-600 sm:h-28 lg:h-full lg:min-h-[8.75rem]"
 								>
 									Start
 								</Button>
 								<Button
-									onclick={() => void sendCommand("stop")}
+									onclick={() => void sendStopCommand()}
 									variant="destructive"
 									size="lg"
 									class="h-24 rounded-[1.9rem] border border-destructive/20 bg-destructive text-2xl font-semibold uppercase tracking-[0.16em] text-white shadow-[0_18px_36px_-22px_rgba(185,28,28,0.85)] hover:bg-red-600 sm:h-28 lg:h-full lg:min-h-[8.75rem]"
