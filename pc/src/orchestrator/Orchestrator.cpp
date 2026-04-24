@@ -20,6 +20,7 @@ constexpr auto kOrchestratorLoopDelay = std::chrono::milliseconds(10);
 
 bool canStopFromState(OrchestratorState state) {
     return state != OrchestratorState::Stopped &&
+           state != OrchestratorState::Resetting &&
            state != OrchestratorState::Stopping &&
            state != OrchestratorState::Faulted;
 }
@@ -96,6 +97,7 @@ void Orchestrator::update() {
         case OrchestratorState::Starting: handleStarting(); break;
         case OrchestratorState::Idle: handleIdle(); break;
 
+        case OrchestratorState::Resetting: handleResetting(); break;
         case OrchestratorState::Stopping: handleStopping(); break;
         case OrchestratorState::Stopped: break;
         case OrchestratorState::Faulted: break;
@@ -149,6 +151,7 @@ void Orchestrator::transitionTo(OrchestratorState newState) {
 void Orchestrator::transitionToFault(const std::string& reason) {
     LOG_ERROR(reason);
     mFaultReason = reason;
+    stopMotion();
     transitionTo(OrchestratorState::Faulted);
 }
 
@@ -156,12 +159,20 @@ void Orchestrator::handleWebCommand(const WebCommand& command) {
     switch (command.type) {
         case WebCommandType::Start:
             if (mState == OrchestratorState::Stopped) {
+                LOG_INFO("Start command received");
                 transitionTo(OrchestratorState::Idle);
             }
             break;
         case WebCommandType::Stop:
             if (canStopFromState(mState)) {
+                LOG_INFO("Stop command received");
                 transitionTo(OrchestratorState::Stopping);
+            }
+            break;
+        case WebCommandType::Reset:
+            if (mState == OrchestratorState::Faulted) {
+                LOG_INFO("Reset command received");
+                transitionTo(OrchestratorState::Resetting);
             }
             break;
         case WebCommandType::GetObject:
@@ -326,14 +337,26 @@ void Orchestrator::handleInStorComplete() {
     transitionTo(OrchestratorState::Idle);
 }
 
-void Orchestrator::handleStopping() {
-    onStateEnter("Orchestrator: Stopping system...\n");
-    mGripper.sendCommand(CmdType::STOP);
-    mStorage.sendCommand(CmdType::STOP);
-    //Robot stop
+void Orchestrator::handleResetting() {
+    onStateEnter("Orchestrator: Resetting system...\n");
+    stopMotion();
+    mFaultReason.clear();
+    mPendingSkipRequest = false;
+    mRequestedObjectId.clear();
     transitionTo(OrchestratorState::Stopped);
 }
 
+void Orchestrator::handleStopping() {
+    onStateEnter("Orchestrator: Stopping system...\n");
+    stopMotion();
+    transitionTo(OrchestratorState::Stopped);
+}
+
+void Orchestrator::stopMotion() {
+    mGripper.sendCommand(CmdType::STOP);
+    mStorage.sendCommand(CmdType::STOP);
+    //Robot stop
+}
 
 void Orchestrator::onStateEnter(const char* message) {
     if (mStateJustEntered) {

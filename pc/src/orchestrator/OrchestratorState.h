@@ -30,6 +30,7 @@ enum class OrchestratorState {
     InStor_RobotUpFromSlot_Wait,
 
     InStor_Complete,
+    Resetting,
     Stopping,
     Stopped,
     Faulted
@@ -77,6 +78,8 @@ inline const char* toString(OrchestratorState state) {
             return "InStor_RobotUpFromSlot_Wait";
         case OrchestratorState::InStor_Complete:
             return "InStor_Complete";
+        case OrchestratorState::Resetting:
+            return "Resetting";
         case OrchestratorState::Stopping:
             return "Stopping";
         case OrchestratorState::Stopped:
@@ -130,6 +133,8 @@ inline const char* toUiString(OrchestratorState state) {
             return "Waiting for robot up from slot";
         case OrchestratorState::InStor_Complete:
             return "Input-to-storage complete";
+        case OrchestratorState::Resetting:
+            return "Resetting system";
         case OrchestratorState::Stopping:
             return "Stopping system";
         case OrchestratorState::Stopped:

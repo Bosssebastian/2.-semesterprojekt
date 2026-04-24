@@ -45,11 +45,11 @@
 	});
 
 	function isRunningState(state: string) {
-		return !["Stopped", "Waiting for input", "Fault", "Unavailable"].includes(state);
+		return !["Stopped", "Waiting for input", "Resetting system", "Fault", "Unavailable"].includes(state);
 	}
 
 	function canSkipState(state: string) {
-		return !["Stopped", "Starting up", "Stopping system", "Fault", "Unavailable"].includes(state);
+		return !["Stopped", "Starting up", "Resetting system", "Stopping system", "Fault", "Unavailable"].includes(state);
 	}
 
 	function normalizeState(state: string) {
@@ -75,6 +75,7 @@
 	});
 
 	const skipEnabled = $derived.by(() => controllerOnline && canSkipState(controllerState));
+	const faulted = $derived.by(() => controllerOnline && controllerState === "Fault");
 
 	async function parseOptionalJson(response: Response) {
 		const contentType = response.headers.get("content-type") ?? "";
@@ -209,6 +210,29 @@
 		}
 	}
 
+	async function sendResetCommand() {
+		if (!controllerOnline) {
+			return;
+		}
+
+		try {
+			const response = await fetch("/api/controller/reset", {
+				method: "POST"
+			});
+			const payload = await parseOptionalJson(response);
+
+			if (!response.ok) {
+				throw new Error(
+					typeof payload?.error === "string" ? payload.error : "Failed to send reset command"
+				);
+			}
+
+			await refreshControllerStatus();
+		} catch {
+			await refreshControllerStatus();
+		}
+	}
+
 	onMount(() => {
 		const interval = window.setInterval(() => {
 			void refreshControllerStatus();
@@ -330,14 +354,24 @@
 								>
 									Start
 								</Button>
-								<Button
-									onclick={() => void sendStopCommand()}
-									variant="destructive"
-									size="lg"
-									class="h-24 rounded-[1.9rem] border border-destructive/20 bg-destructive text-2xl font-semibold uppercase tracking-[0.16em] text-white shadow-[0_18px_36px_-22px_rgba(185,28,28,0.85)] hover:bg-red-600 sm:h-28 lg:h-full lg:min-h-[8.75rem]"
-								>
-									Stop
-								</Button>
+								{#if faulted}
+									<Button
+										onclick={() => void sendResetCommand()}
+										size="lg"
+										class="h-24 rounded-[1.9rem] border border-amber-600/20 bg-amber-600 text-2xl font-semibold uppercase tracking-[0.16em] text-white shadow-[0_18px_36px_-22px_rgba(217,119,6,0.85)] hover:bg-amber-500 sm:h-28 lg:h-full lg:min-h-[8.75rem]"
+									>
+										Reset
+									</Button>
+								{:else}
+									<Button
+										onclick={() => void sendStopCommand()}
+										variant="destructive"
+										size="lg"
+										class="h-24 rounded-[1.9rem] border border-destructive/20 bg-destructive text-2xl font-semibold uppercase tracking-[0.16em] text-white shadow-[0_18px_36px_-22px_rgba(185,28,28,0.85)] hover:bg-red-600 sm:h-28 lg:h-full lg:min-h-[8.75rem]"
+									>
+										Stop
+									</Button>
+								{/if}
 							</div>
 						</div>
 					</Card.Content>

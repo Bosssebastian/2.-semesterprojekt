@@ -10,6 +10,7 @@
 enum class WebCommandType {
     Start,
     Stop,
+    Reset,
     GetObject,
     SkipReq
 };

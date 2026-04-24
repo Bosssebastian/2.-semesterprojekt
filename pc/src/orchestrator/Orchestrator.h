@@ -56,7 +56,9 @@ private:
     void handleInStorRobotUpFromSlotWait();
 
     void handleInStorComplete();
+    void handleResetting();
     void handleStopping();
+    void stopMotion();
 
 private:
     IoRunner& mIo;

@@ -381,8 +381,11 @@ bool canAcceptStart(OrchestratorState state) {
 bool canAcceptStop(OrchestratorState state) {
     return state != OrchestratorState::Stopped &&
            state != OrchestratorState::Stopping &&
-           state != OrchestratorState::Idle &&
            state != OrchestratorState::Faulted;
+}
+
+bool canAcceptReset(OrchestratorState state) {
+    return state == OrchestratorState::Faulted;
 }
 
 bool canAcceptGetObject(OrchestratorState state) {
@@ -544,6 +547,14 @@ void WebServerRunner::run() {
                 if (!canAcceptStop(getState())) {
                     response = makeJsonResponse(409, "Conflict", "{\"error\":\"cmdStop is not valid in the current state\"}");
                 } else if (!tryStoreCommand(WebCommand{WebCommandType::Stop, ""})) {
+                    response = makeJsonResponse(409, "Conflict", "{\"error\":\"Another command is already pending\"}");
+                } else {
+                    response = makeJsonResponse(202, "Accepted", "{\"status\":\"accepted\"}");
+                }
+            } else if (request.method == "POST" && request.path == "/cmdReset") {
+                if (!canAcceptReset(getState())) {
+                    response = makeJsonResponse(409, "Conflict", "{\"error\":\"cmdReset is not valid in the current state\"}");
+                } else if (!tryStoreCommand(WebCommand{WebCommandType::Reset, ""})) {
                     response = makeJsonResponse(409, "Conflict", "{\"error\":\"Another command is already pending\"}");
                 } else {
                     response = makeJsonResponse(202, "Accepted", "{\"status\":\"accepted\"}");

@@ -97,11 +97,17 @@ export async function fetchControllerLogs(fetchImpl: typeof fetch): Promise<LogE
 
 export async function sendControllerCommand(
 	fetchImpl: typeof fetch,
-	command: 'start' | 'stop' | 'skip'
+	command: 'start' | 'stop' | 'skip' | 'reset'
 ) {
 	try {
 		const path =
-			command === 'start' ? '/cmdStart' : command === 'stop' ? '/cmdStop' : '/cmdSkipReq';
+			command === 'start'
+				? '/cmdStart'
+				: command === 'stop'
+					? '/cmdStop'
+					: command === 'skip'
+						? '/cmdSkipReq'
+						: '/cmdReset';
 		const response = await fetchImpl(`${getControllerBaseUrl()}${path}`, {
 			method: 'POST'
 		});
