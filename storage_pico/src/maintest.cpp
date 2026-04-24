@@ -7,17 +7,19 @@
 
 int main() {
     stdio_init_all();
+    sleep_ms(100);
     DcMotor motor(0, 1, 11);
-    motor.forwards();
-    sleep_ms(3000);
-    motor.stop();
-    sleep_ms(2000);
-    motor.backwards();
-    sleep_ms(3000);
-    motor.stop();
+    
+
+
 
 
     while (true) {
+    motor.backwards();
+    sleep_ms(3000);
+    motor.forwards();
+    sleep_ms(3000);
         tight_loop_contents();
+    
     }
 }
