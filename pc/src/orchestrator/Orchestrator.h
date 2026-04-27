@@ -69,7 +69,6 @@ private:
 
     OrchestratorState mState{OrchestratorState::Stopped};
     std::string mFaultReason;
-    std::string mRequestedObjectId;
     bool mStopRequested{false};
     bool mPendingSkipRequest{false};
     bool mStateJustEntered{true};

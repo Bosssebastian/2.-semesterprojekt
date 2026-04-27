@@ -77,19 +77,6 @@
 	const skipEnabled = $derived.by(() => controllerOnline && canSkipState(controllerState));
 	const faulted = $derived.by(() => controllerOnline && controllerState === "Fault");
 
-	async function parseOptionalJson(response: Response) {
-		const contentType = response.headers.get("content-type") ?? "";
-		if (!contentType.includes("application/json")) {
-			return null;
-		}
-
-		try {
-			return await response.json();
-		} catch {
-			return null;
-		}
-	}
-
 	async function refreshControllerStatus() {
 		const response = await fetch("/api/controller/status");
 		const payload = await response.json();
@@ -150,12 +137,9 @@
 			const response = await fetch("/api/controller/start", {
 				method: "POST"
 			});
-			const payload = await parseOptionalJson(response);
 
 			if (!response.ok) {
-				throw new Error(
-					typeof payload?.error === "string" ? payload.error : "Failed to send start command"
-				);
+				throw new Error("Failed to send start command");
 			}
 
 			await refreshControllerStatus();
@@ -173,12 +157,9 @@
 			const response = await fetch("/api/controller/stop", {
 				method: "POST"
 			});
-			const payload = await parseOptionalJson(response);
 
 			if (!response.ok) {
-				throw new Error(
-					typeof payload?.error === "string" ? payload.error : "Failed to send stop command"
-				);
+				throw new Error("Failed to send stop command");
 			}
 
 			await refreshControllerStatus();
@@ -196,12 +177,9 @@
 			const response = await fetch("/api/controller/skip", {
 				method: "POST"
 			});
-			const payload = await parseOptionalJson(response);
 
 			if (!response.ok) {
-				throw new Error(
-					typeof payload?.error === "string" ? payload.error : "Failed to send skip command"
-				);
+				throw new Error("Failed to send skip command");
 			}
 
 			await refreshControllerStatus();
@@ -219,12 +197,9 @@
 			const response = await fetch("/api/controller/reset", {
 				method: "POST"
 			});
-			const payload = await parseOptionalJson(response);
 
 			if (!response.ok) {
-				throw new Error(
-					typeof payload?.error === "string" ? payload.error : "Failed to send reset command"
-				);
+				throw new Error("Failed to send reset command");
 			}
 
 			await refreshControllerStatus();

@@ -29,6 +29,10 @@ add_executable(pc
     ${SHARED_SOURCES}
 )
 
+set_target_properties(pc PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+)
+
 target_include_directories(pc PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/core
@@ -48,4 +52,6 @@ endif()
 
 if(NOT WIN32)
     target_link_libraries(pc PRIVATE pthread)
+else()
+    target_link_libraries(pc PRIVATE ws2_32)
 endif()

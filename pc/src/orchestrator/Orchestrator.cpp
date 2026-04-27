@@ -83,7 +83,6 @@ void Orchestrator::run() {
 void Orchestrator::start() {
     mStopRequested = false;
     mFaultReason.clear();
-    mRequestedObjectId.clear();
     transitionTo(OrchestratorState::Stopped);
 }
 
@@ -174,9 +173,6 @@ void Orchestrator::handleWebCommand(const WebCommand& command) {
                 LOG_INFO("Reset command received");
                 transitionTo(OrchestratorState::Resetting);
             }
-            break;
-        case WebCommandType::GetObject:
-            //TODO
             break;
         case WebCommandType::SkipReq:
             mPendingSkipRequest = true;
@@ -342,7 +338,6 @@ void Orchestrator::handleResetting() {
     stopMotion();
     mFaultReason.clear();
     mPendingSkipRequest = false;
-    mRequestedObjectId.clear();
     transitionTo(OrchestratorState::Stopped);
 }
 

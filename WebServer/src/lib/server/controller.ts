@@ -111,17 +111,12 @@ export async function sendControllerCommand(
 		const response = await fetchImpl(`${getControllerBaseUrl()}${path}`, {
 			method: 'POST'
 		});
-		const payload = await parseJsonResponse(response);
 
 		if (!response.ok) {
-			const errorMessage =
-				typeof payload?.error === 'string'
-					? payload.error
-					: `Failed to send ${command} command`;
 			return {
 				ok: false,
 				status: response.status,
-				error: errorMessage,
+				error: `Failed to send ${command} command`,
 				offline: response.status >= 500
 			};
 		}
