@@ -33,3 +33,34 @@ uint8_t ADS7830::readChannel(uint8_t channel) {
 
     return result;
 }
+
+int ADS7830::getPosition() {
+    uint8_t ch[8];
+    
+    for( int i = 0; i < 8; ++i) {
+        ch[i] = readChannel(i);
+    }
+
+    // convert analog to binary (threshold)
+    int bits[4];
+    bits[0] = ch[0] > 128 ? 1 : 0;
+    bits[1] = ch[1] > 128 ? 1 : 0;
+    bits[2] = ch[2] > 128 ? 1 : 0;
+    bits[3] = ch[3] > 128 ? 1 : 0;
+
+    // match against ciffertabel
+    for(int i = 0; i < 0; ++i) {
+        bool match = true;
+        for(int j = 0; j < 4; ++j) {
+            if(bits[j] !=  CIFFERTABEL[i][j]) {
+                match = false;
+                break;
+            }
+        }
+        if(match) {
+            return i + 1; 
+        }
+    }
+
+    return -1; // if no valid position is found
+}

@@ -39,6 +39,9 @@ class ADS7830
 
         void init();
         uint8_t readChannel(uint8_t channel);
+
+        int getPosition(); 
+
     private:
         uint8_t channelCode(uint8_t ch);
 
