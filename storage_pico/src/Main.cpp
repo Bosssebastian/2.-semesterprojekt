@@ -35,9 +35,9 @@ int main() {
 
     while (true) {
         std::cout << "what is the target: \n";
-        std::cin >> target;
-        shortcut.setTarget(target);
-		std::cout << "Need to move: " << shortcut.getClosestPosition() << std::endl;
+        //std::cin >> target;
+        //shortcut.setTarget(target);
+		//std::cout << "Need to move: " << shortcut.getClosestPosition() << std::endl;
 
         uint8_t channel1 = ads1.readChannel(0);
         uint8_t channel2 = ads1.readChannel(1);

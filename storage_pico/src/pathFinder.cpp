@@ -4,9 +4,6 @@
 #include <cmath>
 #include "pathFinder.h"
 
-
-int target;
-int currentPosition;
 pathFinder::pathFinder(int target, int currentPosition, int maxPosition) {
 	this->target = target;
 	this->currentPosition = currentPosition;
@@ -70,4 +67,3 @@ float pathFinder::getClosestPosition() const {
 
 	return delta;
 }
-
