@@ -256,10 +256,10 @@ void Orchestrator::handleInStorRobotOverStorage() {
         LOG_INFO("Orchestrator: Robot over storage placeholder state.");
     });
 
-    if (!skipRequested()) {
+    if (skipRequested()) {
+        transitionTo(OrchestratorState::InStor_StorageMoveToPos);
         return;
     }
-    transitionTo(OrchestratorState::InStor_StorageMoveToPos);
 }
 
 void Orchestrator::handleInStorStorageMoveToPos() {
@@ -267,10 +267,10 @@ void Orchestrator::handleInStorStorageMoveToPos() {
         LOG_INFO("Orchestrator: Storage move to position placeholder state.");
     });
 
-    if (!skipRequested()) {
+    if (skipRequested()) {
+        transitionTo(OrchestratorState::InStor_RobotDownToSlot);
         return;
     }
-    transitionTo(OrchestratorState::InStor_RobotDownToSlot);
 }
 
 void Orchestrator::handleInStorRobotDownToSlot() {
@@ -278,21 +278,37 @@ void Orchestrator::handleInStorRobotDownToSlot() {
         LOG_INFO("Orchestrator: Robot down to slot placeholder state.");
     });
 
-    if (!skipRequested()) {
+    if (skipRequested()) {   
+        transitionTo(OrchestratorState::InStor_GripperOpen);
         return;
     }
-    transitionTo(OrchestratorState::InStor_GripperOpen);
 }
 
 void Orchestrator::handleInStorGripperOpen() {
-    onEnter([] {
-        LOG_INFO("Orchestrator: Gripper open placeholder state.");
+    onEnter([this] {
+        LOG_INFO("Orchestrator: Commanding gripper open...");
+        mGripper.sendCommand(CmdType::OPEN);
     });
 
-    if (!skipRequested()) {
+    if (skipRequested()) {
+        transitionTo(OrchestratorState::InStor_RobotUpFromSlot);
         return;
     }
-    transitionTo(OrchestratorState::InStor_RobotUpFromSlot);
+
+    switch (mGripper.getStatus(CmdType::OPEN)) {
+        case CmdStatus::DONE:
+            LOG_INFO("Gripper open completed successfully.");
+            transitionTo(OrchestratorState::InStor_RobotUpFromSlot);
+            break;
+        case CmdStatus::FAILED:
+            transitionToFault("Gripper failed to open");
+            break;
+        case CmdStatus::TIMED_OUT:
+            transitionToFault("Gripper open timed out");
+            break;
+        default:
+            break;
+    }
 }
 
 void Orchestrator::handleInStorRobotUpFromSlot() {
@@ -300,10 +316,10 @@ void Orchestrator::handleInStorRobotUpFromSlot() {
         LOG_INFO("Orchestrator: Robot up from slot placeholder state.");
     });
 
-    if (!skipRequested()) {
+    if (skipRequested()) {
+        transitionTo(OrchestratorState::InStor_Complete);
         return;
     }
-    transitionTo(OrchestratorState::InStor_Complete);
 }
 
 void Orchestrator::handleInStorComplete() {
