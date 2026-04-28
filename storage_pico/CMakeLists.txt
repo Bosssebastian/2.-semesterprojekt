@@ -40,6 +40,8 @@ add_executable(storage_pico
         src/dcMotor.cpp
         src/pathFinder.cpp
         src/encoder.cpp
+        src/ldrSensors.cpp
+        src/drejeBaenkDecoder.cpp
 )
 
 pico_set_program_name(storage_pico "storage_pico")
