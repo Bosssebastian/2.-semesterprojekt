@@ -6,12 +6,12 @@
 #include "web/WebServerRunner.h"
 
 int main() {
-    //IoRunner io;
+    IoRunner io;
     VisionRunner vision;
     WebServerRunner web;
     Orchestrator orchestrator(io, vision, web);
 
-    //io.start();
+    io.start();
     vision.start();
     web.start();
     orchestrator.run();
@@ -19,7 +19,7 @@ int main() {
     std::cout << "VisionRunner started. Press Enter to stop..." << std::endl;
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
-    //io.stop();
+    io.stop();
     vision.stop();
     web.stop();
     return 0;
