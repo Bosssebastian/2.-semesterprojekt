@@ -38,6 +38,7 @@ pico_sdk_init()
 add_executable(storage_pico
         src/Main.cpp
         src/dcMotor.cpp
+        src/encoder.cpp
 )
 
 pico_set_program_name(storage_pico "storage_pico")
@@ -52,6 +53,7 @@ target_link_libraries(storage_pico
         pico_stdlib
         hardware_pwm
         hardware_gpio
+        hardware_i2c
 
 
 )
