@@ -24,18 +24,26 @@ add_executable(pc
     src/io/IoRunner.cpp
     src/io/Interface.cpp
     src/io/SerialPort.cpp
+    src/logging/Logger.cpp
     src/vision/VisionRunner.cpp
     src/vision/VisionController.cpp
     src/orchestrator/Orchestrator.cpp
+    src/web/WebServerRunner.cpp
     ${SHARED_SOURCES}
+)
+
+set_target_properties(pc PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
 
 target_include_directories(pc PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/core
     ${CMAKE_CURRENT_SOURCE_DIR}/src/io
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/logging
     ${CMAKE_CURRENT_SOURCE_DIR}/src/vision
     ${CMAKE_CURRENT_SOURCE_DIR}/src/orchestrator
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/web
     ${SHARED_DIR}
 )
 
@@ -45,6 +53,10 @@ else()
     target_compile_options(pc PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
-target_link_libraries(pc PRIVATE pthread)
+if(NOT WIN32)
+    target_link_libraries(pc PRIVATE pthread)
+else()
+    target_link_libraries(pc PRIVATE ws2_32)
+endif()
 
 target_link_libraries(pc PRIVATE ${OpenCV_LIBS})
