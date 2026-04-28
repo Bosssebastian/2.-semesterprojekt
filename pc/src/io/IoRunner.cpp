@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdio>
+#include <filesystem>
+#include <fstream>
 #ifndef _WIN32
 #include <dirent.h>
 #endif
@@ -14,6 +16,39 @@
 
 namespace {
 constexpr int kBaudRate = 115200;
+constexpr char kPicoVendorId[] = "2e8a";
+
+bool isRaspberryPiPicoPort(const std::string& portPath) {
+#ifdef _WIN32
+    (void)portPath;
+    return true;
+#else
+    namespace fs = std::filesystem;
+
+    const fs::path ttyName = fs::path(portPath).filename();
+    const fs::path sysfsDevicePath = fs::path("/sys/class/tty") / ttyName / "device";
+
+    std::error_code error;
+    fs::path devicePath = fs::canonical(sysfsDevicePath, error);
+    if (error) {
+        return true;
+    }
+
+    while (!devicePath.empty() && devicePath != devicePath.parent_path()) {
+        const fs::path vendorFile = devicePath / "idVendor";
+        std::ifstream vendorStream(vendorFile);
+        if (vendorStream.is_open()) {
+            std::string vendorId;
+            std::getline(vendorStream, vendorId);
+            return vendorId == kPicoVendorId;
+        }
+
+        devicePath = devicePath.parent_path();
+    }
+
+    return true;
+#endif
+}
 
 std::vector<std::string> discoverCandidatePorts() {
     std::vector<std::string> ports;
@@ -68,6 +103,11 @@ void IoRunner::start() {
     }
 
     for (const std::string& portPath : ports) {
+        if (!isRaspberryPiPicoPort(portPath)) {
+            LOG_WARN(("Ignoring " + portPath + " because it is not a Raspberry Pi Pico serial device").c_str());
+            continue;
+        }
+
         SerialPort port(portPath, kBaudRate);
         port.setup();
 
