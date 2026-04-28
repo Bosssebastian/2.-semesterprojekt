@@ -17,8 +17,8 @@ public:
     std::vector<std::vector<double>> factorMult(std::vector<std::vector<double>>, double); // Multiply all elemnts of a matrix with a factor
     std::vector<std::vector<double>> powerMat(std::vector<std::vector<double>>, double n = 0.5); // Each element of a matrix to the power of n
     double trace(std::vector<std::vector<double>>); // Adds diagonal elements of a nxn matrix
-	std::vector<std::vector<double>> inverseTrans(std::vector<std::vector<double>>); // Invert direction of transformation matrix
-    std::vector<std::vector<double>> inverseMatrix(std::vector<std::vector<double>>); // Transpose a matrix
+	std::vector<std::vector<double>> transposeTrans(std::vector<std::vector<double>>); // Invert direction of transformation matrix
+    std::vector<std::vector<double>> transposeMatrix(std::vector<std::vector<double>>); // Transpose a matrix
     std::vector<std::vector<double>> diag(std::vector<std::vector<double>>); // Get diagonal values of a nxn matrix
     std::vector<std::vector<double>> maxMat(std::vector<std::vector<double>>, double limit = 0); // Compare each element of a vector with a limit and choose the greater
     double PI = 3.14159265358979323846; // Pi

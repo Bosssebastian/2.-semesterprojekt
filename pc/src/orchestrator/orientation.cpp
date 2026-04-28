@@ -29,7 +29,7 @@ std::vector<double> Orientation::rotMat2rv(std::vector<std::vector<double>> rotm
     std::vector<std::vector<double>> axis;
     if (abs(angle - matop.PI) < 0.0001) { // Check for and handle near-180 degrees (alternative extraction)
         // extract axis from symmetric part of R
-        std::vector<std::vector<double>> B = matop.factorMult(matop.addMat(rotmat, matop.inverseMatrix(rotmat)), 1. / 2.); // (R+R')/2
+        std::vector<std::vector<double>> B = matop.factorMult(matop.addMat(rotmat, matop.transposeMatrix(rotmat)), 1. / 2.); // (R+R')/2
         std::vector<std::vector<double>> BRHS = matop.factorMult(matop.rot0, -cos(angle)); // -eye(3)*cos(angle)
         B = matop.addMat(B, BRHS);
         B = matop.factorMult(B, 1. / (1. - cos(angle))); // B/(1-cos(angle))

@@ -4,7 +4,7 @@ Transformations::Transformations(){}
 
 Transformations::Transformations(double upZ,bool isInwards, double rotZ){
     baseToCamTransform = matop.findBaseToCamTrans(upZ, isInwards, rotZ);
-    camToBaseTransform = matop.inverseTrans(baseToCamTransform); // is not used (could be removed)
+    camToBaseTransform = matop.transposeTrans(baseToCamTransform); // is not used (could be removed)
 }
 
 std::vector<std::vector<double>> Transformations::getBaseToCamTrans(){

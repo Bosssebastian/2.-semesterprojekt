@@ -136,37 +136,37 @@ double MatrixOperations::trace(std::vector<std::vector<double>> matrix) {
 	return res;
 }
 
-std::vector<std::vector<double>> MatrixOperations::inverseMatrix(std::vector<std::vector<double>> mat) {
-	std::vector<std::vector<double>> inverseMat;
+std::vector<std::vector<double>> MatrixOperations::transposeMatrix(std::vector<std::vector<double>> mat) {
+	std::vector<std::vector<double>> transposeMat;
 	std::vector<double> newRow;
 	for (int i = 0; i < mat.size(); i++) { // run for each column in rotation matrix
 		newRow.clear();
 		for (int j = 0; j < mat[i].size(); j++) { // run for each row in rotation matrix
 			newRow.push_back(mat[j][i]); // add column value to new row
 		}
-		inverseMat.push_back(newRow); // add new row to transformation matrix
+		transposeMat.push_back(newRow); // add new row to transformation matrix
 	}
-	return inverseMat;
+	return transposeMat;
 }
 
-std::vector<std::vector<double>> MatrixOperations::inverseTrans(std::vector<std::vector<double>> mat) {
-	std::vector<std::vector<double>> inverseMat;
+std::vector<std::vector<double>> MatrixOperations::transposeTrans(std::vector<std::vector<double>> mat) {
+	std::vector<std::vector<double>> transposeMat;
 	std::vector<double> newRow;
 	for (int i = 0;i < 3;i++) { // run for each column in rotation matrix
 		newRow.clear();
 		for (int j = 0;j < 3;j++) { // run for each row in rotation matrix
 			newRow.push_back(mat[j][i]); // add column value to new row
 		}
-		inverseMat.push_back(newRow); // add new row to transformation matrix
+		transposeMat.push_back(newRow); // add new row to transformation matrix
 	}
 	std::vector<std::vector<double>> revVec = { {-mat[0][3]},{-mat[1][3]},{-mat[2][3]} }; // create reverse vector
-	std::vector<std::vector<double>> newVec = multMat(inverseMat, revVec); // calculate transformation vector
-	for (int i = 0;i < 3;i++) { // add transformation vector rows to inverse matrix rows
-		inverseMat[i].push_back(newVec[i][0]);
+	std::vector<std::vector<double>> newVec = multMat(transposeMat, revVec); // calculate transformation vector
+	for (int i = 0;i < 3;i++) { // add transformation vector rows to transposed matrix rows
+		transposeMat[i].push_back(newVec[i][0]);
 	}
-	inverseMat.push_back({ 0,0,0,1 }); // add shearing and scaling factors (constant)
-	//std::cout << "inverseMat works\n";
-	return inverseMat;
+	transposeMat.push_back({ 0,0,0,1 }); // add shearing and scaling factors (constant)
+	//std::cout << "transposeMat works\n";
+	return transposeMat;
 }
 
 std::vector<std::vector<double>> MatrixOperations::diag(std::vector<std::vector<double>> mat) {
