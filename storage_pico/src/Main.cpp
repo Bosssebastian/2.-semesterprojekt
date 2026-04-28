@@ -7,11 +7,9 @@
 
 int main() {
     stdio_init_all();
+    sleep_ms(100);
+
     DcMotor motor(0, 1, 11);
-    motor.forwards();
-    sleep_ms(5000);
-    motor.forwards();
-    sleep_ms(5000);
     pathFinder shortcut(0, 3, 8);
     int target;
     //in shortcut first number is target position, second number is current position and last number
