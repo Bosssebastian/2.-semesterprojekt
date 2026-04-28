@@ -38,6 +38,7 @@ pico_sdk_init()
 add_executable(storage_pico
         src/Main.cpp
         src/dcMotor.cpp
+        src/pathFinder.cpp
         src/encoder.cpp
 )
 

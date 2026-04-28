@@ -1,20 +1,30 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <cmath>
+#include "pathFinder.h"
 
 
 int target;
 int currentPosition;
+pathFinder::pathFinder(int target, int currentPosition, int maxPosition) {
+	this->target = target;
+	this->currentPosition = currentPosition;
+	this->maxPosition = maxPosition;
+}
 
-int maxPosition = 8;
+void pathFinder::setCurrentPosition(int pos) {
+	currentPosition = pos;
+}
+void pathFinder::setTarget(int t) {
+	target = t;
+}
 
-int getCircularPosition(int input)
-{
+int pathFinder::getCircularPosition(int input) const {
 	return (input + (maxPosition - 1)) % (maxPosition)+1;
 }
 
-float getClosestPosition(int target, int currentPosition)
-{
+float pathFinder::getClosestPosition() const {
 	//return getCircularPosition(target) - getCircularPosition(currentPosition);
 	//return 8 - (abs(getCircularPosition(target) - (getCircularPosition(currentPosition))));
 	
@@ -61,20 +71,3 @@ float getClosestPosition(int target, int currentPosition)
 	return delta;
 }
 
-int main()
-{
-	while (true)
-	{
-		std::cout << "Enter current position: ";
-		std::cin >> currentPosition;
-
-		std::cout << std::endl;
-
-		std::cout << "Enter the target position: ";
-		std::cin >> target;
-
-		getClosestPosition(target, currentPosition);
-		std::cout << "Need to move: " << getClosestPosition(target, currentPosition) << std::endl;
-	}
-	
-}
