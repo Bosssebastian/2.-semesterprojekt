@@ -14,7 +14,7 @@ public:
     void setCurrentPosition(int pos);
     void setTarget(int t);
 
-
+    
 
     ~pathFinder() = default;
 };
