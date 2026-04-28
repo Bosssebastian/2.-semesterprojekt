@@ -67,4 +67,3 @@ float pathFinder::getClosestPosition() const {
 
 	return delta;
 }
-

@@ -36,10 +36,11 @@ pico_sdk_init()
 # Add executable. Default name is the project name, version 0.1
 
 add_executable(storage_pico
-        src/maintest.cpp
+        src/Main.cpp
         src/dcMotor.cpp
         src/pathFinder.cpp
-        )
+        src/encoder.cpp
+)
 
 pico_set_program_name(storage_pico "storage_pico")
 pico_set_program_version(storage_pico "0.1")
@@ -53,6 +54,7 @@ target_link_libraries(storage_pico
         pico_stdlib
         hardware_pwm
         hardware_gpio
+        hardware_i2c
 
 
 )
