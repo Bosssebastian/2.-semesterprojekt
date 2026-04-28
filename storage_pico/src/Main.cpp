@@ -16,7 +16,7 @@
 
 
 int main() {
-    srand(time(NULL)); //for the random target generator to stress test
+    srand(time(0)); //for the random target generator to stress test
     
     stdio_init_all();
     sleep_ms(2000); // Wait for USB serial to initialize
@@ -25,15 +25,14 @@ int main() {
     gpio_set_dir(LED_PIN, GPIO_OUT);
     gpio_put(LED_PIN, 1);
 
-    int target = 0; //making it global to use it more than just in one function
+    int target = 1; //making it global to use it more than just in one function
 
 
     DcMotor motor(4, 5, 6);
     pathFinder shortcut(0, 3, 8); //in shortcut first number is target position, second number is current position and last number is max number og positions
-    ADS7830 ads1(i2c0, 0, 1, 100000, 0x48);
-    ads1.init();
+
     ADS7830 ads1(i2c0, 0, 1, 100000, 0x48, 10);
-    ads1.init();
+    ads1.init(); //IMPORTANT without nothing is initialised 
     
     
     ldrSensors ldr1(ads1, 1);
@@ -49,32 +48,42 @@ int main() {
     ldr3.calibrateValue();
     ldr4.calibrateValue();
 
+    target = (rand() % 8) +1; // for the random target generator, 8 different targets
+    shortcut.setTarget(target); //setting target via setter in pathFinder for random target generator
+    printf("SUCESS!!: New target: %d\n", target);
+
     while (true) {
+
+        int currentPos = decoder.decipher();
+
+        if(currentPos != -1) {
+            shortcut.setCurrentPosition(currentPos);
+
+        }
 
         float move = shortcut.getClosestPosition(); //finding closest path to target
 
         if(move == 0){
             motor.stop();
-            printf("already at target\n");
+            printf("SUCCES!!: already at target\n");
 
             sleep_ms(500);
 
-        int target = (rand() % 8) +1; // for the random target generator, 8 different targets
-        shortcut.setTarget(target); //setting target via setter in pathFinder for random target generator
-        printf("New target: %d\n", target);
+            target = (rand() % 8) +1; // for the random target generator, 8 different targets
+            shortcut.setTarget(target); //setting target via setter in pathFinder for random target generator
+            printf("New target: %d\n", target);
         }
         else if(move > 0) {
             motor.forwards();
+
+
         }
-        else {
+        else if(move < 0) {
             motor.backwards();
+            
         }
 
-        int currentPos = encoder.getPosition();
-        if(currentPos != -1) {
-            shortcut.setCurrentPosition(currentPos);
 
-        }
         //std::cout << "what is the target: \n";
         //std::cin >> target;
         //shortcut.setTarget(target);
@@ -124,14 +133,18 @@ int main() {
 
         int decoded = decoder.decipher();
 
-        printf(
+     /*   printf(
             "RAW: %3d %3d %3d %3d | BITS: %d %d %d %d | DEC: %d\n",
             raw1, raw2, raw3, raw4,
             bit1, bit2, bit3, bit4,
             decoded
-        );
+        );*/
+        //std::cout << "target is: " << target << std::endl;
+        if(currentPos != -1) {
+            std::cout << "current position is: " << currentPos << std::endl;
 
-        sleep_ms(1000);
+        }
+        sleep_ms(100);
         tight_loop_contents();
     }   
     return 0;

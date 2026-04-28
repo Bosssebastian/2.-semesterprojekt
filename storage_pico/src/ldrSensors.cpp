@@ -29,7 +29,7 @@ float ldrSensors::readAverage()
 
 uint8_t ldrSensors::readRaw()
 {
-    return _ads1.readChannel(_channel);
+    return _ads1.readChannel(_channel); 
 }
 
 void ldrSensors::calibrateValue()

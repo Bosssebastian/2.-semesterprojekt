@@ -9,7 +9,7 @@ DcMotor::DcMotor(uint pwmPin, uint input1, uint input2) {
     this->input1 = input1; //pin 1 from the pico this is 1Y from the L293D
     this->input2 = input2; //pin 11 from the pico this is 2Y from the L293D
     this->slice = pwm_gpio_to_slice_num(pwmPin);
-    this->duty = 500; // divide by 1000 to find duty cycle in %
+    this->duty = 650; // divide by 1000 to find duty cycle in %
 
     //initializing pwm in the following block
     gpio_init(this->pwmPin);
