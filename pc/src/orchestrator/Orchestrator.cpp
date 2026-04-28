@@ -103,31 +103,15 @@ void Orchestrator::update() {
 
 
         // Input to storage cycle states
-        case OrchestratorState::InStor_StorageMoveToSlot_Cmd: handleInStorStorageMoveToSlotCmd(); break;
-
-        case OrchestratorState::InStor_RobotOverInput_Cmd: handleInStorRobotOverInputCmd(); break;
-        case OrchestratorState::InStor_RobotOverInput_Wait: handleInStorRobotOverInputWait(); break;
-
-        case OrchestratorState::InStor_RobotToCube_Cmd: handleInStorRobotToCubeCmd(); break;
-        case OrchestratorState::InStor_RobotToCube_Wait: handleInStorRobotToCubeWait(); break;
-
-        case OrchestratorState::InStor_GripperClose_Cmd: handleInStorGripperCloseCmd(); break;
-        case OrchestratorState::InStor_GripperClose_Wait: handleInStorGripperCloseWait(); break;
-
-        case OrchestratorState::InStor_RobotOverStorage_Cmd: handleInStorRobotOverStorageCmd(); break;
-        case OrchestratorState::InStor_RobotOverStorage_Wait: handleInStorRobotOverStorageWait(); break;
-
-        case OrchestratorState::InStor_StorageMoveToPos_Cmd: handleInStorStorageMoveToPosCmd(); break;
-        case OrchestratorState::InStor_StorageMoveToPos_Wait: handleInStorStorageMoveToPosWait(); break;
-
-        case OrchestratorState::InStor_RobotDownToSlot_Cmd: handleInStorRobotDownToSlotCmd(); break;
-        case OrchestratorState::InStor_RobotDownToSlot_Wait: handleInStorRobotDownToSlotWait(); break;
-
-        case OrchestratorState::InStor_GripperOpen_Cmd: handleInStorGripperOpenCmd(); break;
-        case OrchestratorState::InStor_GripperOpen_Wait: handleInStorGripperOpenWait(); break;
-
-        case OrchestratorState::InStor_RobotUpFromSlot_Cmd: handleInStorRobotUpFromSlotCmd(); break;
-        case OrchestratorState::InStor_RobotUpFromSlot_Wait: handleInStorRobotUpFromSlotWait(); break;
+        case OrchestratorState::InStor_StorageMoveToSlot: handleInStorStorageMoveToSlot(); break;
+        case OrchestratorState::InStor_RobotOverInput: handleInStorRobotOverInput(); break;
+        case OrchestratorState::InStor_RobotToCube: handleInStorRobotToCube(); break;
+        case OrchestratorState::InStor_GripperClose: handleInStorGripperClose(); break;
+        case OrchestratorState::InStor_RobotOverStorage: handleInStorRobotOverStorage(); break;
+        case OrchestratorState::InStor_StorageMoveToPos: handleInStorStorageMoveToPos(); break;
+        case OrchestratorState::InStor_RobotDownToSlot: handleInStorRobotDownToSlot(); break;
+        case OrchestratorState::InStor_GripperOpen: handleInStorGripperOpen(); break;
+        case OrchestratorState::InStor_RobotUpFromSlot: handleInStorRobotUpFromSlot(); break;
 
         case OrchestratorState::InStor_Complete: handleInStorComplete(); break;
     }
@@ -190,76 +174,71 @@ bool Orchestrator::skipRequested() {
 }
 
 void Orchestrator::handleStarting() {
-    onStateEnter("Orchestrator: Starting up...\n");
+    onEnter([] {
+        LOG_INFO("Orchestrator: Starting up...");
+    });
     transitionTo(OrchestratorState::Stopped);
 }
 
 void Orchestrator::handleIdle() {
-    onStateEnter("Orchestrator: Idle. Waiting for input...\n");
+    onEnter([] {
+        LOG_INFO("Orchestrator: Idle. Waiting for input...");
+    });
+
     if (skipRequested()) {
-        transitionTo(OrchestratorState::InStor_StorageMoveToSlot_Cmd);
+        transitionTo(OrchestratorState::InStor_StorageMoveToSlot);
         return;
     }
 }
 
-void Orchestrator::handleInStorStorageMoveToSlotCmd() {
-    onStateEnter("Orchestrator: Storage move to slot placeholder state.\n");
+void Orchestrator::handleInStorStorageMoveToSlot() {
+    onEnter([] {
+        LOG_INFO("Orchestrator: Storage move to slot placeholder state.");
+    });
+
     if (skipRequested()) {
-        transitionTo(OrchestratorState::InStor_RobotOverInput_Cmd);
+        transitionTo(OrchestratorState::InStor_RobotOverInput);
         return;
     }
 }
 
-void Orchestrator::handleInStorRobotOverInputCmd() {
-    onStateEnter("Orchestrator: Commanding move over input...\n");
+void Orchestrator::handleInStorRobotOverInput() {
+    onEnter([] {
+        LOG_INFO("Orchestrator: Commanding move over input...");
+    });
+
     if (skipRequested()) {
-        transitionTo(OrchestratorState::InStor_RobotOverInput_Wait);
+        transitionTo(OrchestratorState::InStor_RobotToCube);
         return;
     }
 }
 
-void Orchestrator::handleInStorRobotOverInputWait() {
-    onStateEnter("Orchestrator: Waiting for move over input to complete...\n");
+void Orchestrator::handleInStorRobotToCube() {
+    onEnter([] {
+        LOG_INFO("Orchestrator: Commanding move to cube...");
+    });
+
     if (skipRequested()) {
-        transitionTo(OrchestratorState::InStor_RobotToCube_Cmd);
+        transitionTo(OrchestratorState::InStor_GripperClose);
         return;
     }
 }
 
-void Orchestrator::handleInStorRobotToCubeCmd() {
-    onStateEnter("Orchestrator: Commanding move to cube...\n");
-    if (skipRequested()) {
-        transitionTo(OrchestratorState::InStor_RobotToCube_Wait);
-        return;
-    }
-}
-
-void Orchestrator::handleInStorRobotToCubeWait() {
-    onStateEnter("Orchestrator: Waiting for move to cube to complete...\n");
-    if (skipRequested()) {
-        transitionTo(OrchestratorState::InStor_GripperClose_Cmd);
-        return;
-    }
-}
-
-void Orchestrator::handleInStorGripperCloseCmd() {
-    onStateEnter("Orchestrator: Commanding gripper close...\n");
-    mGripper.sendCommand(CmdType::CLOSE);
-    transitionTo(OrchestratorState::InStor_GripperClose_Wait);
-}
-
-void Orchestrator::handleInStorGripperCloseWait() {
-    onStateEnter("Orchestrator: Waiting for gripper close to complete...\n");
+void Orchestrator::handleInStorGripperClose() {
+    onEnter([this] {
+        LOG_INFO("Orchestrator: Commanding gripper close...");
+        mGripper.sendCommand(CmdType::CLOSE);
+    });
 
     if (skipRequested()) {
-        transitionTo(OrchestratorState::InStor_RobotOverStorage_Cmd);
+        transitionTo(OrchestratorState::InStor_RobotOverStorage);
         return;
     }
 
     switch (mGripper.getStatus(CmdType::CLOSE)) {
         case CmdStatus::DONE:
             LOG_INFO("Gripper close completed successfully.");
-            transitionTo(OrchestratorState::InStor_RobotOverStorage_Cmd);
+            transitionTo(OrchestratorState::InStor_RobotOverStorage);
             break;
         case CmdStatus::FAILED:
             transitionToFault("Gripper failed to close");
@@ -272,69 +251,72 @@ void Orchestrator::handleInStorGripperCloseWait() {
     }
 }
 
-void Orchestrator::handleInStorRobotOverStorageCmd() {
-    onStateEnter("Orchestrator: Robot over storage placeholder state.\n");
+void Orchestrator::handleInStorRobotOverStorage() {
+    onEnter([] {
+        LOG_INFO("Orchestrator: Robot over storage placeholder state.");
+    });
+
     if (!skipRequested()) {
         return;
     }
-    transitionTo(OrchestratorState::InStor_RobotOverStorage_Wait);
+    transitionTo(OrchestratorState::InStor_StorageMoveToPos);
 }
 
-void Orchestrator::handleInStorRobotOverStorageWait() {
-    onStateEnter("Orchestrator: Waiting over storage placeholder state.\n");
+void Orchestrator::handleInStorStorageMoveToPos() {
+    onEnter([] {
+        LOG_INFO("Orchestrator: Storage move to position placeholder state.");
+    });
+
     if (!skipRequested()) {
         return;
     }
-    transitionTo(OrchestratorState::InStor_StorageMoveToPos_Cmd);
+    transitionTo(OrchestratorState::InStor_RobotDownToSlot);
 }
 
-void Orchestrator::handleInStorStorageMoveToPosCmd() {
-    onStateEnter("Orchestrator: Storage move to position placeholder state.\n");
+void Orchestrator::handleInStorRobotDownToSlot() {
+    onEnter([] {
+        LOG_INFO("Orchestrator: Robot down to slot placeholder state.");
+    });
+
     if (!skipRequested()) {
         return;
     }
-    transitionTo(OrchestratorState::InStor_StorageMoveToPos_Wait);
+    transitionTo(OrchestratorState::InStor_GripperOpen);
 }
 
-void Orchestrator::handleInStorStorageMoveToPosWait() {
-    onStateEnter("Orchestrator: Waiting for storage move placeholder state.\n");
+void Orchestrator::handleInStorGripperOpen() {
+    onEnter([] {
+        LOG_INFO("Orchestrator: Gripper open placeholder state.");
+    });
+
     if (!skipRequested()) {
         return;
     }
-    transitionTo(OrchestratorState::InStor_RobotDownToSlot_Cmd);
+    transitionTo(OrchestratorState::InStor_RobotUpFromSlot);
 }
 
-void Orchestrator::handleInStorRobotDownToSlotCmd() {
-    onStateEnter("Orchestrator: Robot down to slot placeholder state.\n");
-}
+void Orchestrator::handleInStorRobotUpFromSlot() {
+    onEnter([] {
+        LOG_INFO("Orchestrator: Robot up from slot placeholder state.");
+    });
 
-void Orchestrator::handleInStorRobotDownToSlotWait() {
-    onStateEnter("Orchestrator: Waiting for robot down to slot placeholder state.\n");
-}
-
-void Orchestrator::handleInStorGripperOpenCmd() {
-    onStateEnter("Orchestrator: Gripper open placeholder state.\n");
-}
-
-void Orchestrator::handleInStorGripperOpenWait() {
-    onStateEnter("Orchestrator: Waiting for gripper open placeholder state.\n");
-}
-
-void Orchestrator::handleInStorRobotUpFromSlotCmd() {
-    onStateEnter("Orchestrator: Robot up from slot placeholder state.\n");
-}
-
-void Orchestrator::handleInStorRobotUpFromSlotWait() {
-    onStateEnter("Orchestrator: Waiting for robot up from slot placeholder state.\n");
+    if (!skipRequested()) {
+        return;
+    }
+    transitionTo(OrchestratorState::InStor_Complete);
 }
 
 void Orchestrator::handleInStorComplete() {
-    onStateEnter("Orchestrator: Input-to-storage cycle complete.\n");
+    onEnter([] {
+        LOG_INFO("Orchestrator: Input-to-storage cycle complete.");
+    });
     transitionTo(OrchestratorState::Idle);
 }
 
 void Orchestrator::handleResetting() {
-    onStateEnter("Orchestrator: Resetting system...\n");
+    onEnter([] {
+        LOG_INFO("Orchestrator: Resetting system...");
+    });
     stopMotion();
     mFaultReason.clear();
     mPendingSkipRequest = false;
@@ -342,7 +324,9 @@ void Orchestrator::handleResetting() {
 }
 
 void Orchestrator::handleStopping() {
-    onStateEnter("Orchestrator: Stopping system...\n");
+    onEnter([] {
+        LOG_INFO("Orchestrator: Stopping system...");
+    });
     stopMotion();
     transitionTo(OrchestratorState::Stopped);
 }
@@ -351,11 +335,4 @@ void Orchestrator::stopMotion() {
     mGripper.sendCommand(CmdType::STOP);
     mStorage.sendCommand(CmdType::STOP);
     //Robot stop
-}
-
-void Orchestrator::onStateEnter(const char* message) {
-    if (mStateJustEntered) {
-        LOG_INFO(message);
-        mStateJustEntered = false;
-    }
 }

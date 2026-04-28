@@ -25,35 +25,28 @@ private:
 
     void transitionTo(OrchestratorState newState);
     void transitionToFault(const std::string& reason);
-    void onStateEnter(const char* message);
+
+    template <typename Func>
+    void onEnter(Func&& func) {
+        if (!mStateJustEntered) {
+            return;
+        }
+
+        func();
+        mStateJustEntered = false;
+    }
 
     void handleStarting();
     void handleIdle();
-    void handleInStorStorageMoveToSlotCmd();
-
-    void handleInStorRobotOverInputCmd();
-    void handleInStorRobotOverInputWait();
-
-    void handleInStorRobotToCubeCmd();
-    void handleInStorRobotToCubeWait();
-
-    void handleInStorGripperCloseCmd();
-    void handleInStorGripperCloseWait();
-
-    void handleInStorRobotOverStorageCmd();
-    void handleInStorRobotOverStorageWait();
-
-    void handleInStorStorageMoveToPosCmd();
-    void handleInStorStorageMoveToPosWait();
-
-    void handleInStorRobotDownToSlotCmd();
-    void handleInStorRobotDownToSlotWait();
-
-    void handleInStorGripperOpenCmd();
-    void handleInStorGripperOpenWait();
-
-    void handleInStorRobotUpFromSlotCmd();
-    void handleInStorRobotUpFromSlotWait();
+    void handleInStorStorageMoveToSlot();
+    void handleInStorRobotOverInput();
+    void handleInStorRobotToCube();
+    void handleInStorGripperClose();
+    void handleInStorRobotOverStorage();
+    void handleInStorStorageMoveToPos();
+    void handleInStorRobotDownToSlot();
+    void handleInStorGripperOpen();
+    void handleInStorRobotUpFromSlot();
 
     void handleInStorComplete();
     void handleResetting();
