@@ -41,6 +41,7 @@ std::vector<double> Orientation::rotMat2rv(std::vector<std::vector<double>> rotm
         axis[0][0] *= matop.sign((rotmat[2][1] - rotmat[1][2]));
         axis[1][0] *= matop.sign((rotmat[0][2] - rotmat[2][0]));
         axis[2][0] *= matop.sign((rotmat[1][0] - rotmat[0][1]));
+
     }
     else {
         std::vector<std::vector<double>> B = { {rotmat[2][1] - rotmat[1][2]}, {rotmat[0][2] - rotmat[2][0]}, {rotmat[1][0] - rotmat[0][1]} };
@@ -48,15 +49,12 @@ std::vector<double> Orientation::rotMat2rv(std::vector<std::vector<double>> rotm
     }
     double n = sqrt(pow(axis[0][0], 2) + pow(axis[1][0], 2) + pow(axis[2][0], 2));
 
-    /*
-    if (angle < 0) { // Try implementing if rotation turns out to be wrong. Ensures positive sign
-        angle = -angle;
-        n = -n;   // flipping n is equivalent to flipping all axis components
-    }
-    */
-
     std::vector<double> rv = { (axis[0][0] / n * angle), (axis[1][0] / n * angle), (axis[2][0] / n * angle) };
+    for (int i = 0; i < rv.size(); i++) {
+        rv[i] = abs(rv[i]);
+    }
     return rv;
+    
 }
 
 std::vector<std::vector<double>> Orientation::compose(std::vector<std::vector<double>> A, std::vector<std::vector<double>> B) {

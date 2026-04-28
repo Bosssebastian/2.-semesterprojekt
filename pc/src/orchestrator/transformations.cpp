@@ -15,7 +15,7 @@ std::vector<std::vector<double>> Transformations::getCamToBaseTrans(){
     return camToBaseTransform;
 }
 
-std::vector<double> Transformations::getMovementVec(std::vector<std::vector<double>> endpoint, bool testWithoutCam) {
+std::vector<double> Transformations::getMovementVec(std::vector<std::vector<double>> endpoint, double toolAngleRot, bool testWithoutCam) {
 	double posX,posY,posZ;
     if (endpoint.size() == 3){
         endpoint.push_back({1}); // add element for processing
@@ -38,5 +38,13 @@ std::vector<double> Transformations::getMovementVec(std::vector<std::vector<doub
         posZ = 0.20;
     }
 
-	return {posX,posY,posZ, -0.6127,-3.0812,0.00}; // posX, posY, posZ are coordinates in base frame (in m). Last three values are tool orientation (in rad in axis-angle representation)
+    // Backup values for orientation
+    double rx = -0.6127;
+    double ry = -3.0812;
+    double rz = 0.00;
+
+    Orientation orient;
+    std::vector<double> axisAngleRot = orient.getAngleAxisVector(toolAngleRot);
+
+	return {posX,posY,posZ, axisAngleRot[0],axisAngleRot[1],axisAngleRot[2]}; // posX, posY, posZ are coordinates in base frame (in m). Last three values are tool orientation (in rad in axis-angle representation)
 }
