@@ -33,7 +33,7 @@ uint8_t ADS7830::readChannel(uint8_t channel) {
 
     return result;
 }
-
+/*
 int ADS7830::getPosition() {
     uint8_t ch[8];
     
@@ -62,5 +62,6 @@ int ADS7830::getPosition() {
         }
     }
 
-    return -1; // if no valid position is found
+    return 0; // if no valid position is found
 }
+    */

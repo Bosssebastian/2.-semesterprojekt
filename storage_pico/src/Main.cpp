@@ -19,6 +19,8 @@ int main() {
     gpio_set_dir(LED_PIN, GPIO_OUT);
     gpio_put(LED_PIN, 1);
 
+    int target = 0; //making it global to use it more than just in one function
+
 
     DcMotor motor(4, 5, 6);
     pathFinder shortcut(0, 3, 8); //in shortcut first number is target position, second number is current position and last number is max number og positions
@@ -48,7 +50,10 @@ int main() {
         }
 
         int currentPos = encoder.getPosition();
-        shortcut.setCurrentPosition(currentPos);
+        if(currentPos != -1) {
+            shortcut.setCurrentPosition(currentPos);
+
+        }
         //std::cout << "what is the target: \n";
         //std::cin >> target;
         //shortcut.setTarget(target);
@@ -64,10 +69,11 @@ int main() {
         uint8_t channel8 = encoder.readChannel(7);
 
         printf("Channels: %d %d %d %d %d %d %d %d\n", channel1, channel2, channel3, channel4, channel5, channel6, channel7, channel8);
+        printf("current position: %d\n", currentPos);
+        printf("Target %d | currentpos %d | move %d \n", target, currentPos, move);
 
-
-        sleep_ms(100);
+        sleep_ms(1000);
         tight_loop_contents();
-    }
+    }   
     return 0;
 }
