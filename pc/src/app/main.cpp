@@ -8,7 +8,7 @@
 int main() {
     IoRunner io;
     VisionRunner vision;
-    WebServerRunner web;
+    WebServerRunner web(io.gripper());
     Orchestrator orchestrator(io, vision, web);
 
     io.start();

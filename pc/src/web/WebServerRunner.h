@@ -1,5 +1,6 @@
 #pragma once
 
+#include "io/Interface.h"
 #include "orchestrator/OrchestratorState.h"
 #include <atomic>
 #include <memory>
@@ -27,7 +28,7 @@ struct WebCommand {
 
 class WebServerRunner {
 public:
-    WebServerRunner();
+    explicit WebServerRunner(Interface& gripper);
     ~WebServerRunner();
 
     void start();
@@ -47,6 +48,7 @@ private:
 
     void handleGetState(const httplib::Request& request, httplib::Response& response) const;
     void handleGetLogs(const httplib::Request& request, httplib::Response& response) const;
+    void handleGetGripperCurrent(const httplib::Request& request, httplib::Response& response) const;
     void handleStart(const httplib::Request& request, httplib::Response& response);
     void handleStop(const httplib::Request& request, httplib::Response& response);
     void handleReset(const httplib::Request& request, httplib::Response& response);
@@ -60,4 +62,5 @@ private:
     std::optional<WebCommand> mPendingCommand;
     mutable std::mutex mStateMutex;
     OrchestratorState mState{OrchestratorState::Stopped};
+    Interface& mGripper;
 };

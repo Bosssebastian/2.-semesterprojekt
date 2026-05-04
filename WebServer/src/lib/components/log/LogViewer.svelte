@@ -9,6 +9,16 @@
 		emptyMessage?: string;
 	} = $props();
 
+	let scrollContainer: HTMLDivElement | null = null;
+	const entryCount = $derived(entries.length);
+
+	$effect(() => {
+		entryCount;
+		if (scrollContainer) {
+			scrollContainer.scrollTop = scrollContainer.scrollHeight;
+		}
+	});
+
 	function typeClass(level: LogLevel) {
 		switch (level) {
 			case "INFO":
@@ -22,7 +32,7 @@
 </script>
 
 <div class="flex h-full min-h-72 flex-1 flex-col font-mono text-slate-900">
-	<div class="flex min-h-0 flex-1 flex-col overflow-y-auto">
+	<div bind:this={scrollContainer} class="flex min-h-0 flex-1 flex-col overflow-y-auto">
 		<div class="mt-auto flex flex-col gap-1.5">
 			{#if entries.length === 0}
 				<p class="text-sm text-slate-500">{emptyMessage}</p>

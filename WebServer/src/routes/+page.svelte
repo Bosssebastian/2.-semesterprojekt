@@ -6,9 +6,11 @@
 	import type { LogEntry } from "$lib/logs";
 	import { Button } from "$lib/components/ui/button";
 	import * as Card from "$lib/components/ui/card";
+	import * as Chart from "$lib/components/ui/chart";
 	import * as Dialog from "$lib/components/ui/dialog";
 	import * as Tabs from "$lib/components/ui/tabs";
-	import type { ControllerStatus } from "$lib/server/controller";
+	import { LineChart } from "layerchart";
+	import type { ControllerStatus, CurrentSample } from "$lib/server/controller";
 
 	type ChartTab = "chart-a" | "chart-b" | "chart-c";
 	type ObjectTab = "objects" | "log";
@@ -19,7 +21,7 @@
 	let { data } = $props<{ data: PageData }>();
 
 	const chartTabs: Array<{ value: ChartTab; label: string }> = [
-		{ value: "chart-a", label: "Chart A" },
+		{ value: "chart-a", label: "Gripper Current" },
 		{ value: "chart-b", label: "Chart B" },
 		{ value: "chart-c", label: "Chart C" },
 	];
@@ -37,6 +39,9 @@
 	let logEntries = $state<LogEntry[]>([]);
 	let logError = $state<string | null>(null);
 	let logInterval: number | null = null;
+	let currentSamples = $state<CurrentSample[]>([]);
+	let currentError = $state<string | null>(null);
+	let currentInterval: number | null = null;
 
 	$effect(() => {
 		controllerOnline = data.initialStatus.online;
@@ -76,6 +81,29 @@
 
 	const skipEnabled = $derived.by(() => controllerOnline && canSkipState(controllerState));
 	const faulted = $derived.by(() => controllerOnline && controllerState === "Fault");
+	const currentChartConfig = {
+		amps: {
+			label: "Current",
+			color: "rgb(5 150 105)"
+		}
+	} satisfies Chart.ChartConfig;
+	const currentChartData = $derived.by(() => {
+		const newestTime = currentSamples[currentSamples.length - 1]?.t ?? 0;
+		const windowStart = Math.max(0, newestTime - 180000);
+		return currentSamples.map((sample) => ({
+			timeSeconds: (sample.t - windowStart) / 1000,
+			amps: sample.a
+		}));
+	});
+	const currentYMax = $derived.by(() =>
+		Math.max(0.25, ...currentSamples.map((sample) => sample.a))
+	);
+	const latestCurrent = $derived.by(() =>
+		currentSamples.length > 0 ? currentSamples[currentSamples.length - 1].a : null
+	);
+	const peakCurrent = $derived.by(() =>
+		currentSamples.length > 0 ? Math.max(...currentSamples.map((sample) => sample.a)) : null
+	);
 
 	async function refreshControllerStatus() {
 		const response = await fetch("/api/controller/status");
@@ -106,6 +134,46 @@
 			logEntries = [];
 			logError = error instanceof Error ? error.message : "Failed to fetch controller logs";
 		}
+	}
+
+	async function refreshCurrent() {
+		try {
+			const response = await fetch("/api/controller/current");
+			const payload = await response.json();
+
+			if (!response.ok) {
+				currentSamples = [];
+				currentError =
+					typeof payload?.error === "string" ? payload.error : "Failed to fetch gripper current";
+				return;
+			}
+
+			currentSamples = Array.isArray(payload?.samples) ? payload.samples : [];
+			currentError = null;
+		} catch (error) {
+			currentSamples = [];
+			currentError = error instanceof Error ? error.message : "Failed to fetch gripper current";
+		}
+	}
+
+	function startCurrentPolling() {
+		if (typeof window === "undefined" || currentInterval !== null) {
+			return;
+		}
+
+		void refreshCurrent();
+		currentInterval = window.setInterval(() => {
+			void refreshCurrent();
+		}, 500);
+	}
+
+	function stopCurrentPolling() {
+		if (typeof window === "undefined" || currentInterval === null) {
+			return;
+		}
+
+		window.clearInterval(currentInterval);
+		currentInterval = null;
 	}
 
 	function startLogPolling() {
@@ -214,9 +282,13 @@
 		}, 1000);
 
 		void refreshControllerStatus();
+		if (activeChartTab === "chart-a") {
+			startCurrentPolling();
+		}
 
 		return () => {
 			stopLogPolling();
+			stopCurrentPolling();
 			window.clearInterval(interval);
 		};
 	});
@@ -228,6 +300,15 @@
 		}
 
 		stopLogPolling();
+	});
+
+	$effect(() => {
+		if (activeChartTab === "chart-a") {
+			startCurrentPolling();
+			return;
+		}
+
+		stopCurrentPolling();
 	});
 </script>
 
@@ -282,7 +363,72 @@
 						<Card.Content class="flex min-h-0 flex-1 pt-8">
 							{#each chartTabs as tab}
 								<Tabs.Content value={tab.value} class="flex min-h-0 flex-1">
-									<div class="min-h-72 flex-1 lg:min-h-0"></div>
+									{#if tab.value === "chart-a"}
+										<div class="flex min-h-72 flex-1 flex-col gap-4 lg:min-h-0">
+											<div class="flex items-end justify-between gap-4">
+												<div>
+													<p class="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+														Gripper current
+													</p>
+												</div>
+												<div class="flex items-end gap-6 text-right">
+													<div>
+														<p class="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+															Current
+														</p>
+														<p class="text-3xl font-semibold text-slate-950">
+															{latestCurrent === null ? "0.000" : latestCurrent.toFixed(3)} A
+														</p>
+													</div>
+													<div>
+														<p class="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+															Peak
+														</p>
+														<p class="text-2xl font-semibold text-slate-700">
+															{peakCurrent === null ? "0.000" : peakCurrent.toFixed(3)} A
+														</p>
+													</div>
+												</div>
+											</div>
+
+											<div class="min-h-0 flex-1">
+												{#if currentChartData.length > 0}
+													<Chart.Container
+														config={currentChartConfig}
+														class="h-full min-h-52 w-full aspect-auto px-2 pb-2"
+													>
+														<LineChart
+															data={currentChartData}
+															x="timeSeconds"
+															y="amps"
+															xDomain={[0, 180]}
+															yDomain={[0, currentYMax]}
+															axis={true}
+															highlight={{ points: true, lines: true }}
+															series={[
+																{
+																	key: "amps",
+																	label: "Current (A)",
+																	value: "amps",
+																	color: "var(--color-amps)"
+																}
+															]}
+														>
+															{#snippet tooltip()}
+																<Chart.Tooltip />
+															{/snippet}
+														</LineChart>
+													</Chart.Container>
+												{:else}
+													<div class="flex h-full min-h-52 items-center justify-center text-sm text-muted-foreground">
+														{currentError ?? "Waiting for current samples"}
+													</div>
+												{/if}
+											</div>
+										</div>
+									{:else}
+										<div class="min-h-72 flex-1 lg:min-h-0"></div>
+									{/if}
 								</Tabs.Content>
 							{/each}
 						</Card.Content>
@@ -362,11 +508,7 @@
 					</Tabs.List>
 				</div>
 
-				<Card.Root
-					class={`flex min-h-0 flex-1 flex-col overflow-hidden border-slate-300/70 ${
-						activeObjectTab === "log" ? "bg-slate-50 text-slate-900" : "bg-white/92"
-					}`}
-				>
+				<Card.Root class="flex min-h-0 flex-1 flex-col overflow-hidden border-slate-300/70 bg-white/92">
 					<Card.Content
 						class={`flex min-h-0 flex-1 ${activeObjectTab === "log" ? "p-6 pt-6" : "pt-8"}`}
 					>

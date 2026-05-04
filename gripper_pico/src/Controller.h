@@ -10,8 +10,8 @@ public:
 	void update();
 
 private:
-    Gripper& mGripper;
     Interface& mInterface;
+    Gripper& mGripper;
 
     void openCommand();
     void closeCommand();

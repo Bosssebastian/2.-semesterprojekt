@@ -4,6 +4,7 @@
 #include "logging/Logger.h"
 
 #include <ctime>
+#include <cstdlib>
 #include <iomanip>
 #include <sstream>
 #include <stdexcept>
@@ -87,9 +88,48 @@ std::string buildStateJsonBody(OrchestratorState state) {
     return stream.str();
 }
 
+std::string buildCurrentJsonBody(const std::vector<CurrentSample>& samples) {
+    std::ostringstream stream;
+    stream << "{\"samples\":[";
+
+    for (std::size_t index = 0; index < samples.size(); ++index) {
+        const CurrentSample& sample = samples[index];
+        if (index > 0) {
+            stream << ',';
+        }
+
+        stream << "{\"t\":" << sample.timestampMs
+               << ",\"a\":" << std::fixed << std::setprecision(3) << sample.amps << "}";
+    }
+
+    stream << "]}";
+    return stream.str();
 }
 
-WebServerRunner::WebServerRunner() = default;
+uint32_t currentWindowFromRequest(const httplib::Request& request) {
+    constexpr uint32_t DefaultWindowMs = 30000;
+    constexpr uint32_t MaxWindowMs = 600000;
+
+    if (!request.has_param("windowMs")) {
+        return DefaultWindowMs;
+    }
+
+    try {
+        const unsigned long parsed = std::stoul(request.get_param_value("windowMs"));
+        if (parsed > MaxWindowMs) {
+            return MaxWindowMs;
+        }
+        return static_cast<uint32_t>(parsed);
+    } catch (const std::exception&) {
+        return DefaultWindowMs;
+    }
+}
+
+}
+
+WebServerRunner::WebServerRunner(Interface& gripper)
+    : mGripper(gripper) {
+}
 
 WebServerRunner::~WebServerRunner() {
     stop();
@@ -168,6 +208,12 @@ void WebServerRunner::handleGetLogs(const httplib::Request&, httplib::Response& 
     response.set_header("Access-Control-Allow-Origin", "*");
 }
 
+void WebServerRunner::handleGetGripperCurrent(const httplib::Request& request, httplib::Response& response) const {
+    const uint32_t windowMs = currentWindowFromRequest(request);
+    response.set_content(buildCurrentJsonBody(mGripper.getRecentCurrentSamples(windowMs)), "application/json");
+    response.set_header("Access-Control-Allow-Origin", "*");
+}
+
 void WebServerRunner::handleStart(const httplib::Request&, httplib::Response& response) {
     if (!queueCommand(WebCommandType::Start)) {
         response.status = 409;
@@ -215,6 +261,9 @@ void WebServerRunner::run() {
     });
     server->Get("/logs", [this](const httplib::Request& request, httplib::Response& response) {
         handleGetLogs(request, response);
+    });
+    server->Get("/gripper/current", [this](const httplib::Request& request, httplib::Response& response) {
+        handleGetGripperCurrent(request, response);
     });
     server->Post("/cmdStart", [this](const httplib::Request& request, httplib::Response& response) {
         handleStart(request, response);

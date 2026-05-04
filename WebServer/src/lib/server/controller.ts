@@ -9,6 +9,11 @@ export type ControllerStatus = {
 	error: string | null;
 };
 
+export type CurrentSample = {
+	t: number;
+	a: number;
+};
+
 function getControllerBaseUrl() {
 	return env.CONTROLLER_BASE_URL ?? DEFAULT_CONTROLLER_BASE_URL;
 }
@@ -93,6 +98,35 @@ export async function fetchControllerLogs(fetchImpl: typeof fetch): Promise<LogE
 	}
 
 	return payload.entries;
+}
+
+function isCurrentSample(value: unknown): value is CurrentSample {
+	if (typeof value !== 'object' || value === null) {
+		return false;
+	}
+
+	const sample = value as Record<string, unknown>;
+	return typeof sample.t === 'number' && typeof sample.a === 'number';
+}
+
+export async function fetchGripperCurrent(
+	fetchImpl: typeof fetch,
+	windowMs = 180000
+): Promise<CurrentSample[]> {
+	const response = await fetchImpl(`${getControllerBaseUrl()}/gripper/current?windowMs=${windowMs}`);
+	const payload = await parseJsonResponse(response);
+
+	if (!response.ok) {
+		throw new Error(
+			typeof payload?.error === 'string' ? payload.error : 'Failed to fetch gripper current'
+		);
+	}
+
+	if (!Array.isArray(payload?.samples) || !payload.samples.every(isCurrentSample)) {
+		throw new Error('Gripper current response did not include valid samples');
+	}
+
+	return payload.samples;
 }
 
 export async function sendControllerCommand(
