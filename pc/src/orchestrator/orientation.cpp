@@ -69,9 +69,16 @@ std::vector<std::vector<double>> Orientation::compose(std::vector<std::vector<do
     return C;
 }
 
-std::vector<double> Orientation::getAngleAxisVector(double rotationZ) { // takes input in degrees
+std::vector<double> Orientation::getAngleAxisVector(double rotationZ, bool deg) { // takes input in degrees
+    double rotRad;
+    if (deg){
+        rotRad = matop.degToRad(rotationZ);
+    }
+    else{
+        rotRad = rotationZ;
+    }
     std::vector<std::vector<double>> r1 = getRotMat({ 0,1,0 }, matop.PI);
-    std::vector<std::vector<double>> r2 = getRotMat({ 0,0,1 }, matop.degToRad(rotationZ));
+    std::vector<std::vector<double>> r2 = getRotMat({ 0,0,1 }, rotRad);
     std::vector<std::vector<double>> r = compose(r2, r1);
     std::vector<double> rv = rotMat2rv(r);
     // Determine clockwise/counter-clockwise rotation (NEEDS TESTING)
