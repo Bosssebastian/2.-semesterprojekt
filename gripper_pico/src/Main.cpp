@@ -1,7 +1,6 @@
 #include <stdio.h>
 
 #include "Controller.h"
-#include "CurrentSensor.h"
 #include "Gripper.h"
 #include "interface/Interface.h"
 #include "interface/TestInterface.h"
@@ -14,21 +13,17 @@ int main() {
     Gripper gripper;
     gripper.setup();
 
-    CurrentSensor currentSensor;
-    currentSensor.setup();
+    //Interface interface;
 
-    Interface interface;
+    TestInterface testInterface;
+    testInterface.setup();
+    testInterface.setDriver(gripper.driver());
 
-    //TestInterface testInterface;
-    //testInterface.setup();
-    //testInterface.setDriver(gripper.driver());
-
-    Controller controller(interface, gripper);
+    Controller controller(testInterface, gripper);
 
     while (true) {
         gripper.update();
-        currentSensor.update();
-        //testInterface.update();
+        testInterface.update();
         controller.update();
 
         tight_loop_contents();

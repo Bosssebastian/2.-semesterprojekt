@@ -1,16 +1,17 @@
 #pragma once
 #include "Gripper.h"
 #include "interface/Interface.h"
+#include "interface/TestInterface.h"
 
 
 class Controller {
 public:
-    Controller(Interface& interface, Gripper& gripper) : mInterface(interface), mGripper(gripper) {};
+    Controller(TestInterface& testInterface, Gripper& gripper) : mInterface(testInterface), mGripper(gripper) {};
     
 	void update();
 
 private:
-    Interface& mInterface;
+    TestInterface& mInterface;
     Gripper& mGripper;
 
     void openCommand();
