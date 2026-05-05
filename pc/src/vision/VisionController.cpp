@@ -57,14 +57,16 @@ VisionController::VisionController()
     // turn off autofocus
     mCam->set(cv::CAP_PROP_AUTOFOCUS, 0);
 
-
-    //
-    //mCam->set(cv::CAP_PROP_SATURATION,)
-
     // give the camera time to start correctly
     for (int i = 0; i < 30; i++) {
         mCam->grab(); // Just grab the data, don't decode it yet to save time
     }
+
+    float S = 0.045; // Example: 5cm QR code
+    mObjectPoints.push_back(cv::Point3f(0, 0, 0));       // Top-Left
+    mObjectPoints.push_back(cv::Point3f(S, 0, 0));       // Top-Right
+    mObjectPoints.push_back(cv::Point3f(S, S, 0));       // Bottom-Right
+    mObjectPoints.push_back(cv::Point3f(0, S, 0));       // Bottom-Left
 
     mCam->retrieve(mFrame);
     cv::imwrite("fixed_capture.jpg", mFrame);
@@ -109,8 +111,11 @@ void VisionController::scanForObject()
     mY = 0;
     int pointCount = 0;
 
+    cv::solvePnP(mObjectPoints, mCorners, mCameraMatrix, mDistCoeffs, mRotVec, mTransVec);
+
+    std::cout << mTransVec << "\n";
     // find the center of the QR code
-    if (!mCorners.empty() && mCorners.total() >= 4) {
+    /*if (!mCorners.empty() && mCorners.total() >= 4) {
         for (int row = 0; row < mCorners.rows; ++row) {
             for (int col = 0; col < mCorners.cols; ++col) {
                 cv::Point2f pt = mCorners.at<cv::Point2f>(row, col);
@@ -125,7 +130,7 @@ void VisionController::scanForObject()
             mY /= static_cast<double>(4);
             std::cout << "x: " << mX << "\ny: " << mY << "\n";
         }
-    }
+    } */
 
     if (!mData.empty()) {
 

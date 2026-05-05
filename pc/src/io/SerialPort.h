@@ -15,12 +15,14 @@ public:
     bool tryReadPackage(std::string& line, int timeoutMs);
     const std::string& identifiedDevice() const;
     const std::string& devicePath() const;
+    const std::string& lastProbeResponse() const;
 
 private:
     void closePort();
 
     std::string mDevicePath;
     std::string mIdentifiedDevice;
+    std::string mLastProbeResponse;
     int mBaud;
     std::string mRxBuffer;
     bool mPackageReady{false};
