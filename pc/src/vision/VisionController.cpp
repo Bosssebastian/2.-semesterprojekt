@@ -130,7 +130,7 @@ void VisionController::scanForObject()
 
     if (!mData.empty()) {
 
-        getValue(mData, mObject, mColor, mSize);
+        //getValue(mData, mObject, mColor, mSize);
 
         /*
         mObject = getJsonValue(mData, "object");
