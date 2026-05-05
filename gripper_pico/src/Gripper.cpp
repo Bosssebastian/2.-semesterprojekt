@@ -48,6 +48,7 @@ bool Gripper::close(bool stopOnStall) {
 
 void Gripper::stop() {
     if (!mIsBusy) {
+        mAxis.setEnabled(false);
         return;
     }
 

@@ -1,14 +1,28 @@
 #include "SerialPort.h"
-
+#include "logging/Logger.h"
 #include <chrono>
 #include <cstdio>
 #include <thread>
 #include <utility>
 
+namespace {
+std::string prefixLogMessage(const std::string& portLabel, std::string message) {
+    if (portLabel.empty()) {
+        return message;
+    }
+
+    return "[" + portLabel + "] " + message;
+}
+}
+
 #ifdef _WIN32
 
-SerialPort::SerialPort(std::string devicePath, int baud)
-    : mDevicePath(std::move(devicePath)), mBaud(baud) {
+SerialPort::SerialPort(std::string devicePath, int baud, std::string portLabel)
+    : mDevicePath(std::move(devicePath)), mPortLabel(std::move(portLabel)), mBaud(baud) {
+}
+
+SerialPort::~SerialPort() {
+    closePort();
 }
 
 void SerialPort::setDevicePath(std::string devicePath) {
@@ -16,7 +30,7 @@ void SerialPort::setDevicePath(std::string devicePath) {
 }
 
 void SerialPort::setup() {
-    std::printf("PC serial transport is not implemented for Windows\n");
+    LOG_WARN(prefixLogMessage(mPortLabel, "PC serial transport is not implemented for Windows").c_str());
 }
 
 void SerialPort::writePackage(std::string line) {
@@ -40,6 +54,10 @@ bool SerialPort::tryReadPackage(std::string& line, int timeoutMs) {
 
 const std::string& SerialPort::identifiedDevice() const {
     return mIdentifiedDevice;
+}
+
+const std::string& SerialPort::lastProbeResponse() const {
+    return mLastProbeResponse;
 }
 
 const std::string& SerialPort::devicePath() const {
@@ -82,8 +100,8 @@ bool startsWith(const std::string& value, const std::string& prefix) {
 }
 }
 
-SerialPort::SerialPort(std::string devicePath, int baud)
-    : mDevicePath(std::move(devicePath)), mBaud(baud) {
+SerialPort::SerialPort(std::string devicePath, int baud, std::string portLabel)
+    : mDevicePath(std::move(devicePath)), mPortLabel(std::move(portLabel)), mBaud(baud) {
 }
 
 SerialPort::~SerialPort() {
@@ -97,21 +115,28 @@ void SerialPort::setDevicePath(std::string devicePath) {
 void SerialPort::setup() {
     closePort();
     mIdentifiedDevice.clear();
+    mLastProbeResponse.clear();
 
     if (mDevicePath.empty()) {
-        std::printf("No serial device path configured\n");
+        LOG_WARN(prefixLogMessage(mPortLabel, "No serial device path configured").c_str());
         return;
     }
 
     mFd = open(mDevicePath.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
     if (mFd < 0) {
-        std::printf("Failed to open serial device %s: %s\n", mDevicePath.c_str(), std::strerror(errno));
+        LOG_ERROR(prefixLogMessage(
+                      mPortLabel,
+                      std::string("Failed to open serial device ") + mDevicePath + ": " + std::strerror(errno))
+                      .c_str());
         return;
     }
 
     termios tty{};
     if (tcgetattr(mFd, &tty) != 0) {
-        std::printf("Failed to read serial attributes for %s: %s\n", mDevicePath.c_str(), std::strerror(errno));
+        LOG_ERROR(prefixLogMessage(
+                      mPortLabel,
+                      std::string("Failed to read serial attributes for ") + mDevicePath + ": " + std::strerror(errno))
+                      .c_str());
         close(mFd);
         mFd = -1;
         return;
@@ -136,7 +161,10 @@ void SerialPort::setup() {
     tty.c_cc[VTIME] = 0;
 
     if (tcsetattr(mFd, TCSANOW, &tty) != 0) {
-        std::printf("Failed to configure serial device %s: %s\n", mDevicePath.c_str(), std::strerror(errno));
+        LOG_ERROR(prefixLogMessage(
+                      mPortLabel,
+                      std::string("Failed to configure serial device ") + mDevicePath + ": " + std::strerror(errno))
+                      .c_str());
         close(mFd);
         mFd = -1;
         return;
@@ -150,6 +178,7 @@ void SerialPort::setup() {
             continue;
         }
 
+        mLastProbeResponse = line;
         if (startsWith(line, "OK PING ")) {
             mIdentifiedDevice = line.substr(std::strlen("OK PING "));
         }
@@ -165,7 +194,10 @@ void SerialPort::writePackage(std::string line) {
 
     const ssize_t bytesWritten = write(mFd, line.c_str(), line.size());
     if (bytesWritten < 0) {
-        std::printf("Failed to write serial package to %s: %s\n", mDevicePath.c_str(), std::strerror(errno));
+        LOG_ERROR(prefixLogMessage(
+                      mPortLabel,
+                      std::string("Failed to write serial package to ") + mDevicePath + ": " + std::strerror(errno))
+                      .c_str());
     }
 }
 
@@ -229,6 +261,10 @@ bool SerialPort::tryReadPackage(std::string& line, int timeoutMs) {
 
 const std::string& SerialPort::identifiedDevice() const {
     return mIdentifiedDevice;
+}
+
+const std::string& SerialPort::lastProbeResponse() const {
+    return mLastProbeResponse;
 }
 
 const std::string& SerialPort::devicePath() const {

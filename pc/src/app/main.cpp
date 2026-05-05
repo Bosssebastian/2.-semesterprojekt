@@ -3,14 +3,17 @@
 #include "io/IoRunner.h"
 #include "vision/VisionRunner.h"
 #include "orchestrator/Orchestrator.h"
+#include "web/WebServerRunner.h"
 
 int main() {
     IoRunner io;
     VisionRunner vision;
-    Orchestrator orchestrator(io, vision);
+    WebServerRunner web(io.gripper());
+    Orchestrator orchestrator(io, vision, web);
 
     io.start();
     vision.start();
+    web.start();
     orchestrator.run();
 
     std::cout << "VisionRunner started. Press Enter to stop..." << std::endl;
@@ -18,5 +21,6 @@ int main() {
 
     io.stop();
     vision.stop();
+    web.stop();
     return 0;
 }
