@@ -18,6 +18,7 @@ std::vector<std::vector<double>> Transformations::getCamToBaseTrans(){
 std::vector<double> Transformations::getMovementVec(std::vector<std::vector<double>> endpoint, double toolAngleRot, bool testWithoutCam) {
 	double posX,posY,posZ;
     if (endpoint.size() == 3){
+        endpoint[2][0] += 115./1000.; // +115 to account for tool length
         endpoint.push_back({1}); // add element for processing
         std::vector<std::vector<double>> transform;
         if (testWithoutCam) {
