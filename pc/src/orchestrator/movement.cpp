@@ -1,7 +1,7 @@
 #include "movement.h"
 
-void Movement::move(std::vector<std::vector<double>> inputCoord, double speed, double acc, bool isWorldFrame){
-    std::vector<double> goal = transform.getMovementVec(inputCoord,isWorldFrame);
+void Movement::move(std::vector<std::vector<double>> inputCoord, double rotZ, double speed, double acc, bool isWorldFrame){
+    std::vector<double> goal = transform.getMovementVec(inputCoord, rotZ, isWorldFrame);
     rtde_control.moveL(goal,speed,acc);
 }
 

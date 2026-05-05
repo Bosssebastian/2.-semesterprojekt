@@ -39,9 +39,9 @@ std::vector<double> Transformations::getMovementVec(std::vector<std::vector<doub
     }
 
     // Backup values for orientation
-    double rx = -0.6127;
-    double ry = -3.0812;
-    double rz = 0.00;
+    //double rx = -0.6127;
+    //double ry = -3.0812;
+    //double rz = 0.00;
 
     Orientation orient;
     std::vector<double> axisAngleRot = orient.getAngleAxisVector(toolAngleRot);
