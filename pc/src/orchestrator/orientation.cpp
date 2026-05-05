@@ -53,6 +53,9 @@ std::vector<double> Orientation::rotMat2rv(std::vector<std::vector<double>> rotm
     for (int i = 0; i < rv.size(); i++) {
         rv[i] = abs(rv[i]);
     }
+    // sign(rv[0]) == sign(rv[0]) => rotate clockwise
+    // sign(rv[0]) != sign(rv[0]) => rotate counter-clockwise
+
     return rv;
     
 }
@@ -70,5 +73,10 @@ std::vector<double> Orientation::getAngleAxisVector(double rotationZ) { // takes
     std::vector<std::vector<double>> r1 = getRotMat({ 0,1,0 }, matop.PI);
     std::vector<std::vector<double>> r2 = getRotMat({ 0,0,1 }, matop.degToRad(rotationZ));
     std::vector<std::vector<double>> r = compose(r2, r1);
-    return rotMat2rv(r);
+    std::vector<double> rv = rotMat2rv(r);
+    // Determine clockwise/counter-clockwise rotation (NEEDS TESTING)
+    if (rotationZ >= 0){
+        rv[1] = -rv[1];
+    }
+    return rv;
 }
