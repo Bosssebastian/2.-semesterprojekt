@@ -12,11 +12,12 @@ public:
     void stop();
 
     void test();
+
+    VisionController mVision;
     
 private:
     void run();
 
-    VisionController mVision;
     std::thread mWorker;
     std::atomic<bool> mRunning{false};
 };
