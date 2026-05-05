@@ -95,6 +95,10 @@ void TestInterface::parseCommand(const std::string& line) {
         printf("CMD STOP\n");
         commandQueue.push(CmdType::STOP);
     }
+    else if (line == "r") {
+        printf("CMD RESET\n");
+        commandQueue.push(CmdType::RESET);
+    }
     else if (line == "t") {
         if (mDriver == nullptr) {
             printf("DRIVER UART TEST UNAVAILABLE\n");
@@ -163,6 +167,7 @@ void TestInterface::parseCommand(const std::string& line) {
         printf("  o = OPEN\n");
         printf("  c = CLOSE\n");
         printf("  s = STOP\n");
+        printf("  r = RESET\n");
         printf("  t = DRIVER UART TEST\n");
         printf("  d = STALL DEBUG TOGGLE\n");
         printf("  h = HELP\n");

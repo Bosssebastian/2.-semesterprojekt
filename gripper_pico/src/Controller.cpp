@@ -20,6 +20,9 @@ void Controller::update() {
                 mGripper.stop();
                 mInterface.sendResponse(CmdType::STOP, ResponseType::OK);
                 break;
+            case CmdType::RESET:
+                resetCommand();
+                break;
             case CmdType::STATUS:
                 // ToDo
                 break;
@@ -50,6 +53,14 @@ void Controller::closeCommand() {
         mInterface.sendResponse(CmdType::CLOSE, ResponseType::OK);
     } else {
         mInterface.sendResponse(CmdType::CLOSE, ResponseType::ERROR, "BUSY");
+    }
+}
+
+void Controller::resetCommand() {
+    if (mGripper.reset()) {
+        mInterface.sendResponse(CmdType::RESET, ResponseType::OK);
+    } else {
+        mInterface.sendResponse(CmdType::RESET, ResponseType::ERROR, "BUSY");
     }
 }
 

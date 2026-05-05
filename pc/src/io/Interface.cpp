@@ -10,7 +10,7 @@ namespace {
 constexpr double kCommandTimeoutSeconds = 5.0;
 
 bool commandWaitsForEvent(CmdType command) {
-    return command == CmdType::OPEN || command == CmdType::CLOSE || command == CmdType::GOTO;
+    return command == CmdType::OPEN || command == CmdType::CLOSE || command == CmdType::GOTO || command == CmdType::RESET;
 }
 }
 

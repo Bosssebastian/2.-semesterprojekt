@@ -26,6 +26,8 @@ constexpr uint16_t DRIVER_STALL_PRIME_COMPARE_MARGIN = 20;
 constexpr uint16_t DRIVER_STALL_PRIME_DROP_DELTA = 8;
 constexpr uint32_t DRIVER_STALL_BRAKE_MARGIN_STEPS = 1000;
 
-constexpr int32_t GRIPPER_CLOSE_STEPS = 2800000;                   // Steps to fully close the gripper. 
-constexpr int32_t GRIPPER_OPEN_STEPS = 2800000;                    // Steps to fully open the gripper.
+constexpr int32_t GRIPPER_CLOSE_STEPS = 2300000;                   // Steps to fully close the gripper. 
+constexpr int32_t GRIPPER_OPEN_STEPS = 1000000;                    // Steps to fully open the gripper.
+constexpr int32_t GRIPPER_RESET_OPEN_STEPS = 5000000;              // Homing travel used to guarantee a stall at the open limit.
+constexpr int32_t GRIPPER_RESET_FORWARD_STEPS = 500000;              // Steps forward after homing against the open limit.
 }
