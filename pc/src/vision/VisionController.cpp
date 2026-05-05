@@ -42,24 +42,19 @@ VisionController::VisionController()
     for (int i = 0; i < 30; i++) {
         mCam->grab(); // Just grab the data, don't decode it yet to save time
     }
-
+/*
     // use a calibriation already made
     cv::FileStorage fs("camera_params.yaml", cv::FileStorage::READ);
     fs["camera_matrix"] >> mCameraMatrix;
     fs["distortion_coefficients"] >> mDistCoeffs;
     fs.release();
+*/
 
     float S = 0.045; // size of the qr Code
     mObjectPoints.push_back(cv::Point3f(0, 0, 0));       // Top-Left
     mObjectPoints.push_back(cv::Point3f(S, 0, 0));       // Top-Right
     mObjectPoints.push_back(cv::Point3f(S, S, 0));       // Bottom-Right
     mObjectPoints.push_back(cv::Point3f(0, S, 0));       // Bottom-Left
-
-    /* 
-    // save the first image
-    mCam->retrieve(mFrame);
-    cv::imwrite("fixed_capture.jpg", mFrame);
-    */
 }
 
 VisionController::~VisionController()
@@ -80,13 +75,13 @@ void VisionController::scanForObject(){
 
     cv::Mat transDiff = mOldTransVec;
 
-    while(sameSpot < 5){
+    while(sameSpot < 5 && !mData.empty()){
         // take an image and save it as mTempFrame
         mCam->grab();
         mCam->retrieve(mTempFrame);
 
         // checks if an image was taken if not then returns
-        if (mFrame.empty()) {
+        if (mTempFrame.empty()) {
             std::cerr << "VisionController: failed to capture image\n";
             return;
         }
@@ -105,9 +100,14 @@ void VisionController::scanForObject(){
         }
 
         // Check if we have exactly 4 corners for solvePnP
-        if (mCorners.rows != 4) {
-            std::cerr << "VisionController: Not enough corners detected (" << mCorners.rows << ")\n";
+        if (mCorners.empty() || mCorners.total() != 4) {
+            std::cerr << "VisionController: Not enough corners detected (" << mCorners.total() << ")\n";
+            sameSpot = 0;
             continue;  // Continue the loop to try again
+        }
+
+        if (mCorners.rows != 4) {
+            mCorners = mCorners.reshape(2, 4);
         }
 
         try {
@@ -117,13 +117,23 @@ void VisionController::scanForObject(){
             continue;
         }
 
-        std::cout << mTransVec << "\n";
+        // just for testing
+        //std::cout << mTransVec << "\n";
 
         if (!mData.empty()) {
+            try{
             getValue(mData, mObject, mColor, mSize);
 
-            mStatus = true;
-            std::cout << "object: " << mObject << "\nsize: " << mSize << "\ncolor: " << mColor << "\n";
+            // just for testing
+            //std::cout << "object: " << mObject << "\nsize: " << mSize << "\ncolor: " << mColor << "\n";
+            
+            }
+            catch (const cv::Exception& e) {
+            std::cerr << "VisionController: get value failed: " << e.what() << "\n";
+            mData.clear();
+            mCorners.release();
+            return;
+        }
         }
         
         transDiff = OldTransVec - mTransVec;
@@ -137,6 +147,8 @@ void VisionController::scanForObject(){
         OldTransVec = mTransVec;
     }
     std::cout << "a object was found\n";
+    std::cout << mTransVec << "\n";
+    mStatus = true;
 }
 
 bool VisionController::objectReady(){
