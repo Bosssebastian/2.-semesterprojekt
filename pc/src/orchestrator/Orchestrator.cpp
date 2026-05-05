@@ -143,7 +143,7 @@ void Orchestrator::handleWebCommand(const WebCommand& command) {
         case WebCommandType::Start:
             if (mState == OrchestratorState::Stopped) {
                 LOG_INFO("Start command received");
-                transitionTo(OrchestratorState::Idle);
+                transitionTo(OrchestratorState::Starting);
             }
             break;
         case WebCommandType::Stop:
@@ -177,7 +177,7 @@ void Orchestrator::handleStarting() {
     onEnter([] {
         LOG_INFO("Orchestrator: Starting up...");
     });
-    transitionTo(OrchestratorState::Stopped);
+    transitionTo(OrchestratorState::Idle);
 }
 
 void Orchestrator::handleIdle() {

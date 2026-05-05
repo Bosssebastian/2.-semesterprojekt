@@ -30,6 +30,9 @@ void SerialPort::setDevicePath(std::string devicePath) {
 }
 
 void SerialPort::setup() {
+    mRxBuffer.clear();
+    mPackages.clear();
+    mPackageReady = false;
     LOG_WARN(prefixLogMessage(mPortLabel, "PC serial transport is not implemented for Windows").c_str());
 }
 
@@ -38,8 +41,15 @@ void SerialPort::writePackage(std::string line) {
 }
 
 std::string SerialPort::readPackage() {
-    mPackageReady = false;
-    return "";
+    if (mPackages.empty()) {
+        mPackageReady = false;
+        return "";
+    }
+
+    std::string line = std::move(mPackages.front());
+    mPackages.pop_front();
+    mPackageReady = !mPackages.empty();
+    return line;
 }
 
 bool SerialPort::hasPackage() {
@@ -116,6 +126,9 @@ void SerialPort::setup() {
     closePort();
     mIdentifiedDevice.clear();
     mLastProbeResponse.clear();
+    mRxBuffer.clear();
+    mPackages.clear();
+    mPackageReady = false;
 
     if (mDevicePath.empty()) {
         LOG_WARN(prefixLogMessage(mPortLabel, "No serial device path configured").c_str());
@@ -205,9 +218,9 @@ std::string SerialPort::readPackage() {
     while (!hasPackage()) {
     }
 
-    std::string line = mRxBuffer;
-    mRxBuffer.clear();
-    mPackageReady = false;
+    std::string line = std::move(mPackages.front());
+    mPackages.pop_front();
+    mPackageReady = !mPackages.empty();
     return line;
 }
 
@@ -235,14 +248,16 @@ bool SerialPort::hasPackage() {
         }
 
         if (c == '\n') {
-            mPackageReady = true;
-            return true;
+            mPackages.push_back(std::move(mRxBuffer));
+            mRxBuffer.clear();
+            continue;
         }
 
         mRxBuffer += c;
     }
 
-    return false;
+    mPackageReady = !mPackages.empty();
+    return mPackageReady;
 }
 
 bool SerialPort::tryReadPackage(std::string& line, int timeoutMs) {
