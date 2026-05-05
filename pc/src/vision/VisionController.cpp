@@ -1,22 +1,6 @@
 #include "VisionController.h"
 #include <iostream>
 
-/* just in case
-std::string getJsonValue(const std::string& json, const std::string& key) {
-    std::string searchKey = "\"" + key + "\":";
-    size_t startPos = json.find(searchKey);
-    if (startPos == std::string::npos) return "";
-
-    startPos += searchKey.length();
-    
-    // Skip optional whitespace and look for value
-    size_t valStart = json.find_first_not_of(" \"", startPos);
-    size_t valEnd = json.find_first_of("\",}", valStart);
-    
-    return json.substr(valStart, valEnd - valStart);
-}
-*/
-
 void getValue(std::string& value, std::string& object, std::string& color, int& size)
 /*input string, object type string, color string, size int*/
 {
@@ -34,9 +18,6 @@ void getValue(std::string& value, std::string& object, std::string& color, int& 
 
 VisionController::VisionController()
     : mCam(nullptr)
-    , mPos(0, 0)
-    , mX(0)
-    , mY(0)
 {
     mCam = new cv::VideoCapture(0, cv::CAP_V4L2); // uses default camera on PC
     if (!mCam->isOpened()) {
@@ -62,15 +43,23 @@ VisionController::VisionController()
         mCam->grab(); // Just grab the data, don't decode it yet to save time
     }
 
-    float S = 0.045; // Example: 5cm QR code
+    // use a calibriation already made
+    cv::FileStorage fs("camera_params.yaml", cv::FileStorage::READ);
+    fs["camera_matrix"] >> mCameraMatrix;
+    fs["distortion_coefficients"] >> mDistCoeffs;
+    fs.release();
+
+    float S = 0.045; // size of the qr Code
     mObjectPoints.push_back(cv::Point3f(0, 0, 0));       // Top-Left
     mObjectPoints.push_back(cv::Point3f(S, 0, 0));       // Top-Right
     mObjectPoints.push_back(cv::Point3f(S, S, 0));       // Bottom-Right
     mObjectPoints.push_back(cv::Point3f(0, S, 0));       // Bottom-Left
 
+    /* 
+    // save the first image
     mCam->retrieve(mFrame);
     cv::imwrite("fixed_capture.jpg", mFrame);
-  
+    */
 }
 
 VisionController::~VisionController()
@@ -78,90 +67,79 @@ VisionController::~VisionController()
     delete mCam;
 }
 
-void VisionController::scanForObject()
-{
+void VisionController::scanForObject(){
+    // checks if the camera is open
     if (!mCam || !mCam->isOpened()) {
         std::cerr << "VisionController: camera unavailable\n";
         return;
     }
 
-    // take an image and save it as mFrame
-    mCam->grab();
-    mCam->retrieve(mTempFrame);
+    int sameSpot = 0;
 
-     cv::cvtColor(mTempFrame, mFrame, cv::COLOR_BGR2GRAY);
+    cv::Mat OldTransVec = (cv::Mat_<double>(3,1) <<  0, 0, 0);
 
-    // checks if an image was taken if not then returns
-    if (mFrame.empty()) {
-        std::cerr << "VisionController: failed to capture image\n";
-        return;
-    }
+    cv::Mat transDiff = mOldTransVec;
 
-    // detects the QR code in mFrame, then returns the decoded message to mData and the corners to mCorners
-    try {
-        mData = mQR.detectAndDecodeCurved(mFrame, mCorners);
-    } catch (const cv::Exception& e) {
-        std::cerr << "VisionController: QR decode failed: " << e.what() << "\n";
-        mData.clear();
-        mCorners.release();
-        return;
-    }
+    while(sameSpot < 5){
+        // take an image and save it as mTempFrame
+        mCam->grab();
+        mCam->retrieve(mTempFrame);
 
-    mX = 0;
-    mY = 0;
-    int pointCount = 0;
-
-    cv::solvePnP(mObjectPoints, mCorners, mCameraMatrix, mDistCoeffs, mRotVec, mTransVec);
-
-    std::cout << mTransVec << "\n";
-    // find the center of the QR code
-    /*if (!mCorners.empty() && mCorners.total() >= 4) {
-        for (int row = 0; row < mCorners.rows; ++row) {
-            for (int col = 0; col < mCorners.cols; ++col) {
-                cv::Point2f pt = mCorners.at<cv::Point2f>(row, col);
-                mX += pt.x;
-                mY += pt.y;
-                ++pointCount;
-            }
+        // checks if an image was taken if not then returns
+        if (mFrame.empty()) {
+            std::cerr << "VisionController: failed to capture image\n";
+            return;
         }
 
-        if (pointCount == 4) {
-            mX /= static_cast<double>(4);
-            mY /= static_cast<double>(4);
-            std::cout << "x: " << mX << "\ny: " << mY << "\n";
+        // then convert the image into grayscale
+        cv::cvtColor(mTempFrame, mFrame, cv::COLOR_BGR2GRAY);
+
+        // detects the QR code in mFrame, then returns the decoded message to mData and the corners to mCorners
+        try {
+            mData = mQR.detectAndDecodeCurved(mFrame, mCorners);
+        } catch (const cv::Exception& e) {
+            std::cerr << "VisionController: QR decode failed: " << e.what() << "\n";
+            mData.clear();
+            mCorners.release();
+            return;
         }
-    } */
 
-    if (!mData.empty()) {
+        cv::solvePnP(mObjectPoints, mCorners, mCameraMatrix, mDistCoeffs, mRotVec, mTransVec);
 
-        getValue(mData, mObject, mColor, mSize);
+        std::cout << mTransVec << "\n";
 
-        /*
-        mObject = getJsonValue(mData, "object");
-        mSize = getJsonValue(mData, "size");
-        mColor = getJsonValue(mData, "color");
-        */
-        mStatus = true;
-        std::cout << "object: " << mObject << "\nsize: " << mSize << "\ncolor: " << mColor << "\n";
+        if (!mData.empty()) {
+            getValue(mData, mObject, mColor, mSize);
+
+            mStatus = true;
+            std::cout << "object: " << mObject << "\nsize: " << mSize << "\ncolor: " << mColor << "\n";
+        }
+        
+        transDiff = OldTransVec - mTransVec;
+
+        if (transDiff.at<double>(0,0) > -mMaxOff && transDiff.at<double>(0,0) < mMaxOff && transDiff.at<double>(1,0) > -mMaxOff && transDiff.at<double>(1,0) < mMaxOff){
+            sameSpot++;
+        }
+        else{
+            sameSpot = 0;
+        }
+        OldTransVec = mTransVec;
     }
 }
 
-bool VisionController::objectReady()
-{
+bool VisionController::objectReady(){
     return mStatus;
 }
 
-void VisionController::getObjectPosition(std::vector<std::vector<double>> outputPos)
-{
-    outputPos[0][0] = mX;
-    outputPos[1][0] = mY;
+void VisionController::getObjectPosition(std::vector<std::vector<double>> outputPos){
+    outputPos[0][0] = mTransVec.at<double>(0,0);
+    outputPos[1][0] = mTransVec.at<double>(1,0);
     mStatus = false;
     return;
 }
 
 
-void VisionController::getObjectInfo(std::string& object, std::string& size, std::string& color)
-{
+void VisionController::getObjectInfo(std::string& object, std::string& size, std::string& color){
     object = mObject;
     size = mSize;
     color = mColor;

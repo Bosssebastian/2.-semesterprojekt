@@ -16,7 +16,7 @@ public:
 private:
     cv::VideoCapture* mCam;
     cv::QRCodeDetector mQR;
-    cv::Mat mTempFrame, mFrame, mCorners, mRotVec, mTransVec;
+    cv::Mat mTempFrame, mFrame, mCorners, mRotVec, mTransVec, mOldTransVec;
     std::vector<cv::Point3f> mObjectPoints;
 
     bool mStatus = false;    
@@ -24,9 +24,8 @@ private:
     std::string mData;
     std::string mObject, mColor;
     int mSize;
-    
-    cv::Point2d mPos;
-    double mX, mY;
+
+    double mMaxOff = 0.005;
 
     double fx = 1920.0; 
     double fy = 1920.0;
