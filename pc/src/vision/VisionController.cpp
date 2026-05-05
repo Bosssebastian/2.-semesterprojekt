@@ -110,7 +110,12 @@ void VisionController::scanForObject(){
             continue;  // Continue the loop to try again
         }
 
-        cv::solvePnP(mObjectPoints, mCorners, mCameraMatrix, mDistCoeffs, mRotVec, mTransVec);
+        try {
+            cv::solvePnP(mObjectPoints, mCorners, mCameraMatrix, mDistCoeffs, mRotVec, mTransVec);
+        } catch (const cv::Exception& e) {
+            std::cerr << "VisionController: solvePnP failed: " << e.what() << "\n";
+            continue;
+        }
 
         std::cout << mTransVec << "\n";
 
