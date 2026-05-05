@@ -104,6 +104,12 @@ void VisionController::scanForObject(){
             return;
         }
 
+        // Check if we have exactly 4 corners for solvePnP
+        if (mCorners.rows != 4) {
+            std::cerr << "VisionController: Not enough corners detected (" << mCorners.rows << ")\n";
+            continue;  // Continue the loop to try again
+        }
+
         cv::solvePnP(mObjectPoints, mCorners, mCameraMatrix, mDistCoeffs, mRotVec, mTransVec);
 
         std::cout << mTransVec << "\n";
@@ -125,6 +131,7 @@ void VisionController::scanForObject(){
         }
         OldTransVec = mTransVec;
     }
+    std::cout << "a object was found\n";
 }
 
 bool VisionController::objectReady(){
