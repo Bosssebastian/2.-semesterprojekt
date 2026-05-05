@@ -31,3 +31,9 @@ void Movement::home() {
     double wrist3 = 0.170344;
     rtde_control.moveJ({base,shoulder,elbow,wrist1,wrist2,wrist3},0.5,0.2);
 }
+
+void Movement::moveZ(double diffZ, double speed, double acc){
+    std::vector<double> curPos = rtde_control.getForwardKinematics();
+    curPos[2] += diffZ;
+    rtde_control.moveL(curPos,speed,acc);
+}
