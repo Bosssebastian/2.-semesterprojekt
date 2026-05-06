@@ -1,5 +1,6 @@
 #include "VisionController.h"
 #include <iostream>
+#include <filesystem>
 
 void getValue(std::string& value, std::string& object, std::string& color, int& size)
 /*input string, object type string, color string, size int*/
@@ -42,15 +43,15 @@ VisionController::VisionController()
     for (int i = 0; i < 30; i++) {
         mCam->grab(); // Just grab the data, don't decode it yet to save time
     }
-/*
+
     // use a calibriation already made
-    cv::FileStorage fs("camera_params.yaml", cv::FileStorage::READ);
+    cv::FileStorage fs("../src/vision/camera_params.yaml", cv::FileStorage::READ);
     fs["camera_matrix"] >> mCameraMatrix;
     fs["distortion_coefficients"] >> mDistCoeffs;
     fs.release();
-*/
 
-    float S = 0.045; // size of the qr Code
+
+    float S = 0.05; // size of the qr Code
     mObjectPoints.push_back(cv::Point3f(0, 0, 0));       // Top-Left
     mObjectPoints.push_back(cv::Point3f(S, 0, 0));       // Top-Right
     mObjectPoints.push_back(cv::Point3f(S, S, 0));       // Bottom-Right
