@@ -42,6 +42,8 @@ add_executable(storage_pico
         src/encoder.cpp
         src/ldrSensors.cpp
         src/drejeBaenkDecoder.cpp
+
+        src/Interface.cpp
 )
 
 pico_set_program_name(storage_pico "storage_pico")
@@ -65,6 +67,7 @@ target_link_libraries(storage_pico
 target_include_directories(storage_pico PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
         ${CMAKE_CURRENT_LIST_DIR}/src
+        ${CMAKE_CURRENT_LIST_DIR}/../shared
 )
 
 pico_add_extra_outputs(storage_pico)

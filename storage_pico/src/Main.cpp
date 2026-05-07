@@ -49,6 +49,27 @@ int main() {
     ldr4.calibrateValue();
 
     target = (rand() % 8) +1; // for the random target generator, 8 different targets
+    
+    int position;
+    
+    if (mInterface.hasCommand()) 
+    {
+        CmdType cmd = mInterface.getCMD()
+        switch (cmd) 
+        {
+            case CMDType::PING:
+            mInterface.sendResponse(cmdType::PING, ResponseType::OK)
+            
+            ///ping tilbage
+            case CMDType::GOTO:
+            positon = mInterface.getPosition()
+            mInterface.sendResponse(cmdType::GOTO, ResponseType::OK)
+            ///Run goto command
+            case CMDType::STOP:
+            ////
+            
+    }   
+
     shortcut.setTarget(target); //setting target via setter in pathFinder for random target generator
     printf("SUCESS!!: New target: %d\n", target);
 
@@ -120,7 +141,7 @@ int main() {
 
         
 
-
+        
         int raw1 = ldr1.readAverage();
         int raw2 = ldr2.readAverage();
         int raw3 = ldr3.readAverage();
@@ -130,6 +151,8 @@ int main() {
         int bit2 = ldr2.interpretValue();
         int bit3 = ldr3.interpretValue();
         int bit4 = ldr4.interpretValue();
+
+        
 
         int decoded = decoder.decipher();
 
