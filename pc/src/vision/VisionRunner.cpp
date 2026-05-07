@@ -1,28 +1,32 @@
 #include "VisionRunner.h"
+#include <chrono>
 #include <thread>
-#include <atomic>
+
 using namespace std;
 
-class Vision {
-public:
-    void start() {
-        running = true;
-        worker = thread(&Vision::run, this);
-    }
+VisionRunner::VisionRunner() = default;
 
-    void stop() {
-        running = false;
-        if (worker.joinable())
-            worker.join();
-    }
+VisionRunner::~VisionRunner() {
+    stop();
+}
 
-private:
-    void run() {
-        while (running) {
-            // vision loop
-        }
+void VisionRunner::start() {
+    if (mRunning.exchange(true)) {
+        return;
     }
+    mWorker = std::thread(&VisionRunner::run, this);
+}
 
-    thread worker;
-    atomic<bool> running{false};
-};
+void VisionRunner::stop() {
+    mRunning = false;
+    if (mWorker.joinable()) {
+        mWorker.join();
+    }
+}
+
+void VisionRunner::run() {
+    while (mRunning) {
+        mVision.scanForObject();
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+}

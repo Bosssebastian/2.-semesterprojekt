@@ -1,79 +1,41 @@
 #include "Interface.h"
-#include "uartClass.h"
-#include "Types.h"
 #include <string>
-#include <vector>
 
-Interface::Interface()
-    : uart(0, 0, 1, 115200) {
-}
-
-void Interface::setup() {
-    uart.setup();
-}
 
 bool Interface::hasCommand() {
-    return uart.hasPackage();
+    return mSerialPort.hasLine();
 }
 
 CmdType Interface::getCommand() {
-    std::vector<std::string> parts;
-    std::string current = "";
-
-    std::string package = uart.readPackage();
-
-    // split package into parts
-    for (char c : package) {
-        if (c == ' ')
-        {
-            if (current != "")
-            {
-                parts.push_back(current);
-                current = "";
-            }
-        }
-        else
-        {
-            current += c;
-        }
-    }
-
-    // add last char 
-    if (current != "")
-    {
-        parts.push_back(current);
-    }
+    const std::string line = mSerialPort.getLine();
+    const std::vector<std::string> parts = mSerialPort.split(line);
 
     if (parts.size() < 2 || parts[0] != "CMD") {
         return CmdType::NONE;
     }
 
-    const std::string& command = parts[1];
-
-    if (command == "PING") {
-        return CmdType::PING;
+    const CmdType command = toCmdType(parts[1]);
+    switch (command) {
+        case CmdType::PING:
+        case CmdType::OPEN:
+        case CmdType::CLOSE:
+        case CmdType::STOP:
+        case CmdType::STATUS:
+        case CmdType::STATISTICS:
+        case CmdType::RESET:
+            return command;
+        default:
+            return CmdType::NONE;
     }
-    if (command == "OPEN") {
-        return CmdType::OPEN;
-    }
-    if (command == "CLOSE") {
-        return CmdType::CLOSE;
-    }
-    if (command == "STOP") {
-        return CmdType::STOP;
-    }
-    if (command == "STATUS") {
-        return CmdType::STATUS;
-    }
-    if (command == "STATISTICS") {
-        return CmdType::STATISTICS;
-    }
-
-    return CmdType::NONE;
 }
 
-void Interface::sendResponse(CmdType cmd, ResponseType response) {
-    uart.writePackage(std::string(toString(response)) + " " + toString(cmd));
+void Interface::sendResponse(CmdType cmd, ResponseType response, const std::string& reason) {
+    std::string line = std::string(toString(response)) + " " + toString(cmd);
+    if (!reason.empty()) {
+        line += " " + reason;
+    }
+    line += "\n";
+    mSerialPort.sendLine(line);
 }
 
 void Interface::sendStatus() {
@@ -85,5 +47,5 @@ void Interface::sendStatistics() {
 }
 
 void Interface::sendEvent(CmdType cmd, EventType type, EventReason reason) {
-    uart.writePackage(std::string("EVENT ") + toString(type) + " " + toString(cmd) + " " + toString(reason));
+    mSerialPort.sendLine(std::string("EVENT ") + toString(type) + " " + toString(cmd) + " " + toString(reason) + "\n");
 }

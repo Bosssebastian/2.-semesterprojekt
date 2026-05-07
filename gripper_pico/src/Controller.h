@@ -1,21 +1,21 @@
 #pragma once
 #include "Gripper.h"
 #include "interface/Interface.h"
-#include "interface/TestInterface.h"
 
 
 class Controller {
 public:
-    Controller(TestInterface& testInterface, Gripper& gripper) : mInterface(testInterface), mGripper(gripper) {};
-	void setup(); 
+    Controller(Interface& interface, Gripper& gripper) : mInterface(interface), mGripper(gripper) {};
+    
 	void update();
 
 private:
+    Interface& mInterface;
     Gripper& mGripper;
-    TestInterface& mInterface;
 
     void openCommand();
     void closeCommand();
+    void resetCommand();
     void sendMoveCompletionEvent(const GripperMoveEvent& moveEvent);
 
 };

@@ -2,9 +2,10 @@
 
 #include <cstdint>
 
-#include "Types.h"
+#include "../../shared/Types.h"
 #include "stepper/StepperAxis.h"
 #include "stepper/TMC2209Driver.h"
+#include "pico/time.h"
 
 enum class GripperMoveResult : uint8_t {None, Done, Stalled, Stopped, Error};
 
@@ -38,6 +39,7 @@ public:
 
     bool open(bool stopOnStall = false);
     bool close(bool stopOnStall = false);
+    bool reset();
     void stop();
     TMC2209Driver& driver();
     const TMC2209Driver& driver() const;
@@ -50,17 +52,22 @@ public:
     GripperMoveEvent getMoveEvent();
 
 private:
-    enum class MoveStep : uint8_t {Idle, Close, Open};
+    enum class MoveStep : uint8_t {Idle, Close, Open, OpenResetPause, ResetOpen, ResetForward};
 
     TMC2209Driver mDriver;
     StepperAxis mAxis;
     MoveStep mMoveStep = MoveStep::Idle;
     CmdType mActiveCommand = CmdType::NONE;
+    absolute_time_t mPauseUntil = {};
+    bool mSilentReset = false;
     bool mIsBusy = false;
     GripperMoveResult mLastResult = GripperMoveResult::None;
     bool mHasMoveEvent = false;
     GripperMoveEvent mMoveEvent = {};
 
     bool startMoveStep(MoveStep moveStep, int32_t steps, bool stopOnStall);
+    void startOpenResetPause();
+    bool startResetSequence(bool silent);
     void endMove(GripperMoveResult result, bool keepMotorEnabled);
+    void publishMoveEvent(CmdType cmd, GripperMoveResult result);
 };

@@ -1,18 +1,14 @@
 #include "Controller.h"
 #include "Gripper.h"
 #include "interface/Interface.h"
-#include "interface/TestInterface.h"
-#include "Types.h"
-
-void Controller::setup() {  
-}
+#include "../../shared/Types.h"
 
 void Controller::update() {  
     if (mInterface.hasCommand()) {
         CmdType cmd = mInterface.getCommand();
         switch (cmd) {
             case CmdType::PING:
-                mInterface.sendResponse(CmdType::PING, ResponseType::OK);
+                mInterface.sendResponse(CmdType::PING, ResponseType::OK, "GRIPPER");
                 break;
             case CmdType::OPEN:
                 openCommand();
@@ -23,6 +19,9 @@ void Controller::update() {
             case CmdType::STOP:
                 mGripper.stop();
                 mInterface.sendResponse(CmdType::STOP, ResponseType::OK);
+                break;
+            case CmdType::RESET:
+                resetCommand();
                 break;
             case CmdType::STATUS:
                 // ToDo
@@ -42,7 +41,7 @@ void Controller::update() {
 }
 
 void Controller::openCommand() {
-    if (mGripper.open()) {
+    if (mGripper.open(true)) {
         mInterface.sendResponse(CmdType::OPEN, ResponseType::OK);
     } else {
         mInterface.sendResponse(CmdType::OPEN, ResponseType::ERROR, "BUSY");
@@ -50,10 +49,18 @@ void Controller::openCommand() {
 }
 
 void Controller::closeCommand() {
-    if (mGripper.close()) {
+    if (mGripper.close(true)) {
         mInterface.sendResponse(CmdType::CLOSE, ResponseType::OK);
     } else {
         mInterface.sendResponse(CmdType::CLOSE, ResponseType::ERROR, "BUSY");
+    }
+}
+
+void Controller::resetCommand() {
+    if (mGripper.reset()) {
+        mInterface.sendResponse(CmdType::RESET, ResponseType::OK);
+    } else {
+        mInterface.sendResponse(CmdType::RESET, ResponseType::ERROR, "BUSY");
     }
 }
 

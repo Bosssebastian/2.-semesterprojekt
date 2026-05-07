@@ -1,5 +1,6 @@
 #include "stepper/StepperAxis.h"
 #include "config/ParameterConfig.h"
+#include "interface/TestInterface.h"
 #include "stepper/TMC2209Driver.h"
 #include <cmath>
 #include "hardware/gpio.h"
@@ -70,28 +71,30 @@ void StepperAxis::update() {
         return;
     }
 
-    // Stop movement if stall is detected
-    if (mStopOnStall && checkStall()) {
+    const bool stalled = checkStall();
+
+    // Keep polling SG_RESULT during motion. Only stop when stall-stop is enabled.
+    if (mStopOnStall && stalled) {
         endMove(AxisMoveResult::Stalled);
         return;
     }
 
-    // The PWM counter can finish several cycles before update() runs again.
-    // Each finished cycle is counted by the IRQ and treated here as one step.
     const uint32_t wrapCount = mPWM.takeWrapCount();
-    for (uint32_t wrapIndex = 0; wrapIndex < wrapCount; ++wrapIndex) {
-        if (mRemainingSteps > 0) {
-            --mRemainingSteps;
-            ++mExecutedSteps;
-        }
-
-        if (mRemainingSteps <= 0) {
-            endMove(AxisMoveResult::Done);
-            return;
-        }
-
-        updateMotionSpeed();
+    if (wrapCount == 0) {
+        return;
     }
+
+    const uint32_t completedSteps =
+        (wrapCount < static_cast<uint32_t>(mRemainingSteps)) ? wrapCount : static_cast<uint32_t>(mRemainingSteps);
+    mRemainingSteps -= static_cast<int32_t>(completedSteps);
+    mExecutedSteps += completedSteps;
+
+    if (mRemainingSteps <= 0) {
+        endMove(AxisMoveResult::Done);
+        return;
+    }
+
+    updateMotionSpeed();
 }
 
 void StepperAxis::setEnabled(bool enabled) {
@@ -178,11 +181,14 @@ bool StepperAxis::checkStall() {
                 mFilteredStallGuardResult = sgResult;
                 mHasFilteredStallGuardResult = true;
             } else {
-                mFilteredStallGuardResult = static_cast<uint16_t>((3u * mFilteredStallGuardResult + sgResult + 2u) / 4u);
+                mFilteredStallGuardResult = static_cast<uint16_t>((mFilteredStallGuardResult + sgResult + 1u) / 2u);
             }
 
+            TestInterface::logf("%u\r\n", static_cast<unsigned>(mFilteredStallGuardResult));
+
             updateStallGuardPriming(mFilteredStallGuardResult, compareValue);
-            if (!isStallDetectionActive()) {
+            const bool detectionActive = isStallDetectionActive();
+            if (!detectionActive) {
                 mConsecutiveUartStallSamples = 0;
                 return false;
             }
@@ -292,7 +298,7 @@ bool StepperAxis::isStallDetectionActive() const {
         return false;
     }
 
-    return !isInBrakingZone();
+    return true;
 }
 
 void StepperAxis::updateMotionSpeed() {
@@ -306,20 +312,19 @@ void StepperAxis::updateMotionSpeed() {
         return;
     }
 
-    const float currentSpeedSquared = mCurrentStepFrequencyHz * mCurrentStepFrequencyHz;
     const float startSpeedSquared = startSpeedHz * startSpeedHz;
-    const float stepsToBrake = (currentSpeedSquared > startSpeedSquared) ? (currentSpeedSquared - startSpeedSquared) / (2.0f * accelerationSps2) : 0.0f;
-
-    if (static_cast<float>(mRemainingSteps) <= stepsToBrake) {
-        const float nextSpeedSquared = currentSpeedSquared - (2.0f * accelerationSps2);
-        mCurrentStepFrequencyHz = std::sqrt((nextSpeedSquared > startSpeedSquared) ? nextSpeedSquared : startSpeedSquared);
-    } else if (mCurrentStepFrequencyHz < targetSpeedHz) {
-        const float targetSpeedSquared = targetSpeedHz * targetSpeedHz;
-        const float nextSpeedSquared = currentSpeedSquared + (2.0f * accelerationSps2);
-        mCurrentStepFrequencyHz = std::sqrt((nextSpeedSquared < targetSpeedSquared) ? nextSpeedSquared : targetSpeedSquared);
-    } else {
-        mCurrentStepFrequencyHz = targetSpeedHz;
+    const float targetSpeedSquared = targetSpeedHz * targetSpeedHz;
+    const float accelerateSpeedSquared =
+        startSpeedSquared + (2.0f * accelerationSps2 * static_cast<float>(mExecutedSteps));
+    float speedSquared = accelerateSpeedSquared;
+    if (targetSpeedSquared < speedSquared) {
+        speedSquared = targetSpeedSquared;
     }
+    if (speedSquared < startSpeedSquared) {
+        speedSquared = startSpeedSquared;
+    }
+
+    mCurrentStepFrequencyHz = std::sqrt(speedSquared);
 
     mPWM.setFrequency(mCurrentStepFrequencyHz);
 }

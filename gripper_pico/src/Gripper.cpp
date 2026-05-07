@@ -17,6 +17,7 @@ void Gripper::setup() {
     mAxis.setup();
     mMoveStep = MoveStep::Idle;
     mActiveCommand = CmdType::NONE;
+    mSilentReset = false;
     mIsBusy = false;
     mLastResult = GripperMoveResult::None;
     mHasMoveEvent = false;
@@ -30,6 +31,7 @@ bool Gripper::open(bool stopOnStall) {
     }
 
     mLastResult = GripperMoveResult::None;
+    mSilentReset = false;
     mActiveCommand = CmdType::OPEN;
     mIsBusy = true;
     return startMoveStep(MoveStep::Open, -ParameterConfig::GRIPPER_OPEN_STEPS, stopOnStall);
@@ -41,13 +43,27 @@ bool Gripper::close(bool stopOnStall) {
     }
 
     mLastResult = GripperMoveResult::None;
+    mSilentReset = false;
     mActiveCommand = CmdType::CLOSE;
     mIsBusy = true;
     return startMoveStep(MoveStep::Close, ParameterConfig::GRIPPER_CLOSE_STEPS, stopOnStall);
 }
 
+bool Gripper::reset() {
+    if (mIsBusy) {
+        return false;
+    }
+
+    mLastResult = GripperMoveResult::None;
+    mSilentReset = false;
+    mActiveCommand = CmdType::RESET;
+    mIsBusy = true;
+    return startResetSequence(false);
+}
+
 void Gripper::stop() {
     if (!mIsBusy) {
+        mAxis.setEnabled(false);
         return;
     }
 
@@ -57,6 +73,17 @@ void Gripper::stop() {
 
 void Gripper::update() {
     mAxis.update();
+
+    if (mIsBusy && mMoveStep == MoveStep::OpenResetPause) {
+        if (absolute_time_diff_us(get_absolute_time(), mPauseUntil) > 0) {
+            return;
+        }
+
+        if (!startResetSequence(true)) {
+            endMove(GripperMoveResult::Error, false);
+        }
+        return;
+    }
 
     if (!mIsBusy || mAxis.isBusy()) {
         return;
@@ -79,7 +106,33 @@ void Gripper::update() {
             if (axisResult == AxisMoveResult::Stalled) {
                 endMove(GripperMoveResult::Stalled, false);
             } else if (axisResult == AxisMoveResult::Done) {
+                publishMoveEvent(CmdType::OPEN, GripperMoveResult::Done);
+                startOpenResetPause();
+            } else {
+                endMove(GripperMoveResult::Stopped, false);
+            }
+            return;
+
+        case MoveStep::OpenResetPause:
+            return;
+
+        case MoveStep::ResetOpen:
+            if (axisResult == AxisMoveResult::Stalled) {
+                if (!startMoveStep(MoveStep::ResetForward, ParameterConfig::GRIPPER_RESET_FORWARD_STEPS, false)) {
+                    endMove(GripperMoveResult::Error, false);
+                }
+            } else if (axisResult == AxisMoveResult::Done) {
+                endMove(GripperMoveResult::Error, false);
+            } else {
+                endMove(GripperMoveResult::Stopped, false);
+            }
+            return;
+
+        case MoveStep::ResetForward:
+            if (axisResult == AxisMoveResult::Done) {
                 endMove(GripperMoveResult::Done, false);
+            } else if (axisResult == AxisMoveResult::Stalled) {
+                endMove(GripperMoveResult::Stalled, false);
             } else {
                 endMove(GripperMoveResult::Stopped, false);
             }
@@ -135,6 +188,7 @@ bool Gripper::startMoveStep(MoveStep moveStep, int32_t steps, bool stopOnStall) 
     if (steps == 0) {
         mMoveStep = MoveStep::Idle;
         mActiveCommand = CmdType::NONE;
+        mSilentReset = false;
         mIsBusy = false;
         return false;
     }
@@ -142,6 +196,7 @@ bool Gripper::startMoveStep(MoveStep moveStep, int32_t steps, bool stopOnStall) 
     if (!mAxis.move(steps, stopOnStall)) {
         mMoveStep = MoveStep::Idle;
         mActiveCommand = CmdType::NONE;
+        mSilentReset = false;
         mIsBusy = false;
         return false;
     }
@@ -149,20 +204,39 @@ bool Gripper::startMoveStep(MoveStep moveStep, int32_t steps, bool stopOnStall) 
     return true;
 }
 
+void Gripper::startOpenResetPause() {
+    mAxis.setEnabled(false);
+    mMoveStep = MoveStep::OpenResetPause;
+    mPauseUntil = make_timeout_time_ms(2000);
+    mSilentReset = true;
+}
+
+bool Gripper::startResetSequence(bool silent) {
+    mSilentReset = silent;
+    return startMoveStep(MoveStep::ResetOpen, -ParameterConfig::GRIPPER_RESET_OPEN_STEPS, true);
+}
+
 void Gripper::endMove(GripperMoveResult result, bool keepMotorEnabled) {
     const CmdType completedCommand = mActiveCommand;
+    const bool completedSilentReset = mSilentReset;
 
     mMoveStep = MoveStep::Idle;
     mActiveCommand = CmdType::NONE;
+    mSilentReset = false;
     mIsBusy = false;
     mLastResult = result;
-    if (completedCommand == CmdType::OPEN || completedCommand == CmdType::CLOSE) {
-        mMoveEvent.cmd = completedCommand;
-        mMoveEvent.result = result;
-        mHasMoveEvent = true;
+    if ((completedCommand == CmdType::OPEN || completedCommand == CmdType::CLOSE || completedCommand == CmdType::RESET) &&
+        !(completedCommand == CmdType::OPEN && completedSilentReset)) {
+        publishMoveEvent(completedCommand, result);
     }
 
     if (!keepMotorEnabled) {
         mAxis.setEnabled(false);
     }
+}
+
+void Gripper::publishMoveEvent(CmdType cmd, GripperMoveResult result) {
+    mMoveEvent.cmd = cmd;
+    mMoveEvent.result = result;
+    mHasMoveEvent = true;
 }

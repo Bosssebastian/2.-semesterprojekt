@@ -1,7 +1,8 @@
 #pragma once
+#include "Interface.h"
+#include <atomic>
 #include <string>
-#include <vector>
-using namespace std;
+#include <thread>
 
 class IoRunner {
 public:
@@ -11,7 +12,14 @@ public:
     void start();
     void stop();
 
-private:
+    Interface& gripper();
+    Interface& storage();
 
+private:
     void run();
+
+    Interface mGripper{"", "GRIPPER"};
+    Interface mStorage{"", "STORAGE"};
+    std::thread mWorker;
+    std::atomic<bool> mRunning{false};
 };
