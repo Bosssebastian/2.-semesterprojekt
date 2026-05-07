@@ -42,7 +42,7 @@ add_executable(storage_pico
         src/encoder.cpp
         src/ldrSensors.cpp
         src/drejeBaenkDecoder.cpp
-
+        src/uartClass.cpp
         src/Interface.cpp
 )
 

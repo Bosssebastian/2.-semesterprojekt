@@ -1,17 +1,29 @@
-#include "../../../shared/Types.h"
+#pragma once
+#include <string>
+#include <vector>
+
+#include "uartClass.h"
+#include "../../shared/Types.h"
 
 class Interface
 {
 public:
+    Interface(UartClass& uart);
 
-bool hasCommand();
-CMDType getCMD();
-int getPosition();
+    bool hasCommand();
+    CmdType getCommand();
 
-void sendResponse(cmdType, ResponseType);
-void sendEvent(cmdTYpe, EventType, EventReason);
+    int getPosition() const;
+
+    void sendResponse(CmdType cmd, ResponseType response, const std::string& message);
+    void sendEvent(CmdType cmd, EventType event, EventReason reason);
+    void sendCurrentPosition(int position);
 
 private:
-int lastPosition;
+    UartClass& uart;
+    int lastPosition;
 
-}
+    std::vector<std::string> split(const std::string& line) const;
+    bool isNumber(const std::string& text) const;
+
+};

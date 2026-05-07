@@ -1,38 +1,47 @@
-#include <string>
-
 #include "Interface.h"
 
+#include <string>
+#include <vector>
+#include <cctype>
 
-bool Interface::hasCommand()
+Interface::Interface(UartClass& uart)
+    :uart(uart)
 {
-    return Uart.hasLine();
 
 }
 
-CMDType Interface::getCMD()
+bool Interface::hasCommand()
 {
-    const std::string line = Uart.getLine(); //getpackage
+    return uart.hasPackage();
+}
+
+CmdType Interface::getCommand()
+{
+    const std::string line = uart.readPackage(); //getpackage
     const std::vector<std::string> parts = split(line);
 
-    if (parts.size() < 2) || (part[0] != "CMD")
+    if (parts.size() < 2 || parts[0] != "CMD")
     {
-        return cmdType::NONE;
+        return CmdType::NONE;
     }
-    const CMDType cmd = toCMDType(parts[1])
+    const CmdType cmd = toCmdType(parts[1]);
 
     switch(cmd)
     {
         case CmdType::PING:
         case CmdType::STOP:
-        
-            return command;
+        case CmdType::STATUS:
+        case CmdType::RESET:
+            return cmd;
+
         case CmdType::GOTO:
-        if (isdigit(parts[2]))
-        {
-            lastPosition = parts[2];
-            return command;
-        }
-        return CmdType::NONE;
+            if (parts.size() >= 3 && isNumber(parts[2]))
+            {
+                lastPosition = std::stoi(parts[2]);
+                return cmd;
+            }
+            return CmdType::NONE;
+
         default:
             return CmdType::NONE;
     }
@@ -41,26 +50,32 @@ CMDType Interface::getCMD()
 
 }
 
-int getPosition()
+int Interface::getPosition() const
 {
     return lastPosition;
 }
 
-void Interface::sendResponse(cmdType cmd, ResponseType response)
+void Interface::sendResponse(CmdType cmd, ResponseType response, const std::string& message)
 {
-    std::string line = std::string(tostring(response) + " " + tostring(cmd));
+    std::string line = std::string(toString(response)) + " " + toString(cmd);
     line += "\n";
-    UART.writePackage(line);
+    uart.writePackage(line);
 }
 
-void Interface::sendEvent(cmdTYpe cmd, EventType event, EventReason reason)
+void Interface::sendEvent(CmdType cmd, EventType event, EventReason reason)
 {
-    std::string line = std::string("Event " + tostring(event) + " " + tostring(cmd) + " " + tostring(reason) + "\n" );
-    UART.writePackage(line);
+    std::string line = std::string("Event ") + toString(event) + " " + toString(cmd) + " " + toString(reason) + "\n";
+    uart.writePackage(line);
+}
+
+void Interface::sendCurrentPosition(int position)
+{
+    std::string line = std::string("EVENT ") + toString(EventType::CURRENT_POSITION) + " " + std::to_string(position) + "\n";
+    uart.writePackage(line);
 }
 
 
-std::vector<std::string> split(const std::string& line) const {
+std::vector<std::string> Interface::split(const std::string& line) const {
     std::vector<std::string> parts;
     std::string current;
 
@@ -80,4 +95,21 @@ std::vector<std::string> split(const std::string& line) const {
     }
 
     return parts;
+}
+
+bool Interface::isNumber(const std::string& text) const
+{
+    if (text.empty())
+    {
+        return false;
+    }
+
+    for (char c : text)
+    {
+        if (!std::isdigit(static_cast<unsigned char>(c)))
+        {
+            return false;
+        }
+    }
+    return true;
 }

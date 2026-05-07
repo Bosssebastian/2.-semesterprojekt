@@ -14,6 +14,8 @@
 
 #include "drejeBaenkDecoder.h"
 
+#include "uartClass.h"
+#include "Interface.h"
 
 int main() {
     srand(time(0)); //for the random target generator to stress test
@@ -27,6 +29,10 @@ int main() {
 
     int target = 1; //making it global to use it more than just in one function
 
+    UartClass uartConnection(1, 8, 9, 115200);
+    uartConnection.setup();
+
+    Interface mInterface(uartConnection);
 
     DcMotor motor(2, 3, 11);
     pathFinder shortcut(0, 3, 8); //in shortcut first number is target position, second number is current position and last number is max number og positions
@@ -51,10 +57,10 @@ int main() {
     target = (rand() % 8) +1; // for the random target generator, 8 different targets
     
     int position;
-    
+    /*
     if (mInterface.hasCommand()) 
     {
-        CmdType cmd = mInterface.getCMD()
+        CmdType cmd = mInterface.getCommand()
         switch (cmd) 
         {
             case CMDType::PING:
@@ -69,7 +75,7 @@ int main() {
             ////
             
     }   
-
+    */
     shortcut.setTarget(target); //setting target via setter in pathFinder for random target generator
     printf("SUCESS!!: New target: %d\n", target);
 

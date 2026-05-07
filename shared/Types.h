@@ -5,8 +5,8 @@
 
 enum class CmdType {NONE, PING, OPEN, CLOSE, STOP, STATUS, STATISTICS, GOTO, RESET};
 enum class ResponseType {OK, ERROR};
-enum class EventType {ERROR, MOVE_DONE};
-enum class EventReason {NONE, STEPS_FINISHED, STALL, STOPPED, MOVE_ERROR};
+enum class EventType {ERROR, MOVE_DONE, CURRENT_POSITION};
+enum class EventReason {NONE, STEPS_FINISHED, STALL, STOPPED, MOVE_ERROR, REACHED_POSITION};
 
 inline const char* toString(CmdType type) {
     switch (type) {
@@ -50,6 +50,8 @@ inline const char* toString(EventType type) {
             return "ERROR";
         case EventType::MOVE_DONE:
             return "MOVE_DONE";
+        case EventType::CURRENT_POSITION:
+            return "CURRENT_POSITION";
     }
 
     return "UNKNOWN";
@@ -67,6 +69,8 @@ inline const char* toString(EventReason reason) {
             return "STOPPED";
         case EventReason::MOVE_ERROR:
             return "MOVE_ERROR";
+        case EventReason::REACHED_POSITION:
+            return "REACHED_POSITION";
     }
 
     return "UNKNOWN";
@@ -122,6 +126,9 @@ inline EventType toEventType(const std::string& value) {
     if (value == "MOVE_DONE") {
         return EventType::MOVE_DONE;
     }
+    if (value == "CURRENT_POSITION") {
+        return EventType::CURRENT_POSITION;
+    }
 
     return EventType::ERROR;
 }
@@ -142,6 +149,7 @@ inline EventReason toEventReason(const std::string& value) {
     if (value == "MOVE_ERROR") {
         return EventReason::MOVE_ERROR;
     }
+    if (value == "REACHED_POSITION") return EventReason::REACHED_POSITION;
 
     return EventReason::NONE;
 }
