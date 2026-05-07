@@ -28,7 +28,7 @@ int main() {
     int target = 1; //making it global to use it more than just in one function
 
 
-    DcMotor motor(4, 5, 6);
+    DcMotor motor(2, 3, 11);
     pathFinder shortcut(0, 3, 8); //in shortcut first number is target position, second number is current position and last number is max number og positions
 
     ADS7830 ads1(i2c0, 0, 1, 100000, 0x48, 10);
@@ -72,6 +72,7 @@ int main() {
 
     shortcut.setTarget(target); //setting target via setter in pathFinder for random target generator
     printf("SUCESS!!: New target: %d\n", target);
+
 
     while (true) {
 
@@ -141,32 +142,43 @@ int main() {
 
         
 
-        
-        int raw1 = ldr1.readAverage();
-        int raw2 = ldr2.readAverage();
-        int raw3 = ldr3.readAverage();
-        int raw4 = ldr4.readAverage();
+/*
+        int raw1 = ldr1.readRaw();
+        int raw2 = ldr2.readRaw();
+        int raw3 = ldr3.readRaw();
+        int raw4 = ldr4.readRaw();
 
         int bit1 = ldr1.interpretValue();
         int bit2 = ldr2.interpretValue();
         int bit3 = ldr3.interpretValue();
         int bit4 = ldr4.interpretValue();
 
-        
-
+        uint8_t channel1 = ads1.readChannel(0);
+        uint8_t channel2 = ads1.readChannel(1);
+        uint8_t channel3 = ads1.readChannel(2);
+        uint8_t channel4 = ads1.readChannel(3);
+        uint8_t channel5 = ads1.readChannel(4);
+        uint8_t channel6 = ads1.readChannel(5);
+        uint8_t channel7 = ads1.readChannel(6);
+        uint8_t channel8 = ads1.readChannel(7);
+*/
         int decoded = decoder.decipher();
-
-     /*   printf(
+/*
+       printf(
             "RAW: %3d %3d %3d %3d | BITS: %d %d %d %d | DEC: %d\n",
             raw1, raw2, raw3, raw4,
             bit1, bit2, bit3, bit4,
             decoded
-        );*/
-        //std::cout << "target is: " << target << std::endl;
+        );
+*/
+        std::cout << "target is: " << target << std::endl;
         if(currentPos != -1) {
             std::cout << "current position is: " << currentPos << std::endl;
 
         }
+
+//        printf("Channels: %d %d %d %d %d %d %d %d\n", channel1, channel2, channel3, channel4, channel5, channel6, channel7, channel8);
+
         sleep_ms(100);
         tight_loop_contents();
     }   
