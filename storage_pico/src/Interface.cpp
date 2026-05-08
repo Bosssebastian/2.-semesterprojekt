@@ -17,7 +17,7 @@ bool Interface::hasCommand()
 
 CmdType Interface::getCommand()
 {
-    const std::string line = uart.readPackage(); //getpackage
+    const std::string line = uart.readPackage(); 
     const std::vector<std::string> parts = split(line);
 
     if (parts.size() < 2 || parts[0] != "CMD")

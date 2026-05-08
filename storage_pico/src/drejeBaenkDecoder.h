@@ -2,6 +2,7 @@
 
 //DrejeBaenkDecoder.h
 #include "ldrSensors.h"
+#include "DcMotor.h"
 #include <array>
 
 
@@ -29,6 +30,10 @@ class drejeBaenkDecoder
         }};
 
         int interpretValue();
+
+        void saveAllValues();
+
+        void timeBasedCalibration(DcMotor& motor, uint32_t calibrationTimeMS);
 
     private:
         ldrSensors& _ldr1;

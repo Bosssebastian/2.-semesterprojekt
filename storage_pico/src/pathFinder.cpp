@@ -59,7 +59,7 @@ float pathFinder::getClosestPosition() const {
 	}
 	else
 	{
-		delta = getCircularPosition(target) - getCircularPosition(currentPosition);
+		delta = maxPosition / 2;
 		//Distances are equal, both directions give same distance
 	}
 

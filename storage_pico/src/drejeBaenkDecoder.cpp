@@ -37,3 +37,36 @@ std::array<int, 4> drejeBaenkDecoder::readBits()
     };
 }
 
+void drejeBaenkDecoder::saveAllValues()
+{
+    _ldr1.saveValue();
+    _ldr2.saveValue();
+    _ldr3.saveValue();
+    _ldr1.saveValue();
+}
+
+//funktionskald decoder.timeBasedCalibration(motor, 2000);
+void drejeBaenkDecoder::timeBasedCalibration(DcMotor& motor, uint32_t calibrationTimeMs)
+{
+
+    //Clear values, but we only do one calibration at the beginning
+
+
+    uint32_t startTime = to_ms_since_boot(get_absolute_time());
+
+    motor.forwards();
+
+    while (to_ms_since_boot(get_absolute_time()) < calibrationTimeMs)
+    {
+        saveAllValues();
+        sleep_ms(2);
+    }
+
+    motor.stop();
+
+    _ldr1.totalCalibration();
+    _ldr2.totalCalibration();
+    _ldr3.totalCalibration();
+    _ldr4.totalCalibration();
+
+}
