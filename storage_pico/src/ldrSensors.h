@@ -44,15 +44,15 @@ class ldrSensors
 
         void totalCalibration();
 
-        float vectorAverage(const std::vector<float> inputVector);
+        float vectorAverage(const std::vector<float>& inputVector);
 
     private:
         ADS7830& _ads1;
         uint8_t _channel;
         int _samples;
 
-        uint8_t _calibratedValueLow = 0;
-        uint8_t _calibratedValueHigh = 0;
+        float _calibratedValueLow = 0;
+        float _calibratedValueHigh = 0;
         float _threshold = 0;
 
         std::vector<float> _savedValues;

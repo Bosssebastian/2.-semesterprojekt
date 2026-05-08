@@ -50,11 +50,11 @@ int ldrSensors::interpretValue()
 
     if (currentValue > _threshold)
     {
-        return 1;
+        return 0;
     }
     else
     {
-        return 0;
+        return 1;
     }
     /*
     float currentValue = readAverage();
@@ -85,7 +85,7 @@ void ldrSensors::saveValue()
 
 }
 
-float ldrSensors::vectorAverage(const std::vector<float> inputVector)
+float ldrSensors::vectorAverage(const std::vector<float>& inputVector)
 {
 
     if (inputVector.empty())
@@ -114,10 +114,10 @@ void ldrSensors::totalCalibration()
         return;
     }
 
-    float maxValue = 0;
-    float minValue = 0;
+    float maxValue = _savedValues[0];
+    float minValue = _savedValues[0];
 
-    for (int i = 0; i < _savedValues.size(); i++)
+    for (int i = 1; i < _savedValues.size(); i++)
     {
         if (_savedValues[i] > maxValue)
         {
@@ -151,6 +151,8 @@ void ldrSensors::totalCalibration()
 
     _calibratedValueHigh = vectorAverage(highValues);
     _calibratedValueLow = vectorAverage(lowValues);
+
+    _threshold = ( _calibratedValueHigh + _calibratedValueLow ) / 2;
 
     /* OLD CODE
     int currentValue = readAverage(); //readAverage is just measuring 10 ssamples and taking the average, this is perceved as 1 reading

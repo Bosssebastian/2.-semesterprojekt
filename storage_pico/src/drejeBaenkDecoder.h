@@ -1,8 +1,9 @@
 #ifndef DREJEBAENKDECODER_h
+#define DREJEBAENKDECODER_h
 
 //DrejeBaenkDecoder.h
 #include "ldrSensors.h"
-#include "DcMotor.h"
+#include "dcMotor.h"
 #include <array>
 
 

@@ -42,10 +42,10 @@ void drejeBaenkDecoder::saveAllValues()
     _ldr1.saveValue();
     _ldr2.saveValue();
     _ldr3.saveValue();
-    _ldr1.saveValue();
+    _ldr4.saveValue();
 }
 
-//funktionskald decoder.timeBasedCalibration(motor, 2000);
+
 void drejeBaenkDecoder::timeBasedCalibration(DcMotor& motor, uint32_t calibrationTimeMs)
 {
 
@@ -56,12 +56,20 @@ void drejeBaenkDecoder::timeBasedCalibration(DcMotor& motor, uint32_t calibratio
 
     motor.forwards();
 
-    while (to_ms_since_boot(get_absolute_time()) < calibrationTimeMs)
+    while ((to_ms_since_boot(get_absolute_time()) - startTime) < calibrationTimeMs)
     {
         saveAllValues();
         sleep_ms(2);
     }
+    motor.stop();
 
+    motor.backwards();
+
+    while ((to_ms_since_boot(get_absolute_time()) - startTime) < calibrationTimeMs * 2)
+    {
+        saveAllValues();
+        sleep_ms(2);
+    }
     motor.stop();
 
     _ldr1.totalCalibration();

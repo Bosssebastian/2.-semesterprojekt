@@ -49,10 +49,14 @@ int main() {
 
     drejeBaenkDecoder decoder(ldr1, ldr2, ldr3, ldr4);
 
+    decoder.timeBasedCalibration(motor, 2000);
+
+    /*
     ldr1.calibrateValue();
     ldr2.calibrateValue();
     ldr3.calibrateValue();
     ldr4.calibrateValue();
+    */
 
     target = (rand() % 8) +1; // for the random target generator, 8 different targets
     
@@ -79,11 +83,17 @@ int main() {
     shortcut.setTarget(target); //setting target via setter in pathFinder for random target generator
     printf("SUCESS!!: New target: %d\n", target);
 
+    int oldPosition = 0;
 
     while (true) {
 
         int currentPos = decoder.decipher();
 
+        std::array<int, 4> bits = decoder.readBits();
+        /*
+        printf("BITS: %d %d %d %d | POS: %d\n",
+            bits[0], bits[1], bits[2], bits[3], currentPos);
+        */
         if(currentPos != -1) {
             shortcut.setCurrentPosition(currentPos);
 
@@ -100,6 +110,10 @@ int main() {
             target = (rand() % 8) +1; // for the random target generator, 8 different targets
             shortcut.setTarget(target); //setting target via setter in pathFinder for random target generator
             printf("New target: %d\n", target);
+            
+            //std::cout << "target is: " << target << std::endl;
+
+            
         }
         else if(move > 0) {
             motor.forwards();
@@ -168,7 +182,7 @@ int main() {
         uint8_t channel7 = ads1.readChannel(6);
         uint8_t channel8 = ads1.readChannel(7);
 */
-        int decoded = decoder.decipher();
+        //int decoded = decoder.decipher();
 /*
        printf(
             "RAW: %3d %3d %3d %3d | BITS: %d %d %d %d | DEC: %d\n",
@@ -177,10 +191,11 @@ int main() {
             decoded
         );
 */
-        std::cout << "target is: " << target << std::endl;
-        if(currentPos != -1) {
+        //std::cout << "target is: " << target << std::endl;
+        if (currentPos != -1 && currentPos != oldPosition)
+        {
             std::cout << "current position is: " << currentPos << std::endl;
-
+            oldPosition = currentPos;
         }
 
 //        printf("Channels: %d %d %d %d %d %d %d %d\n", channel1, channel2, channel3, channel4, channel5, channel6, channel7, channel8);
