@@ -90,10 +90,10 @@ int main() {
         int currentPos = decoder.decipher();
 
         std::array<int, 4> bits = decoder.readBits();
-        /*
+        
         printf("BITS: %d %d %d %d | POS: %d\n",
             bits[0], bits[1], bits[2], bits[3], currentPos);
-        */
+        
         if(currentPos != -1) {
             shortcut.setCurrentPosition(currentPos);
 
