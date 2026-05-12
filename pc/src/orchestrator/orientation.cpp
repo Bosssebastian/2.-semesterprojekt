@@ -2,7 +2,7 @@
 
 double Orientation::norm(std::vector<double> v) {
     double sum = 0;
-    for (int i = 0; i < v.size(); i++) {
+    for (unsigned int i = 0; i < v.size(); i++) {
         sum += v[i] * v[i];
     }
     return sqrt(sum);
@@ -11,7 +11,7 @@ double Orientation::norm(std::vector<double> v) {
 std::vector<std::vector<double>> Orientation::getRotMat(std::vector<double> axis, double angle) {
     std::vector<double> unitK;
     double normAxis = norm(axis);
-    for (int i = 0; i < axis.size(); i++) {
+    for (unsigned int i = 0; i < axis.size(); i++) {
         unitK.push_back(axis[i] / normAxis);
     } // ensure unit vector
     std::vector<std::vector<double>> skewK = { {0,-unitK[2],unitK[1]}, {unitK[2],0,-unitK[0]}, {-unitK[1],unitK[0],0} }; // skew symmetric matrix, K
@@ -50,7 +50,7 @@ std::vector<double> Orientation::rotMat2rv(std::vector<std::vector<double>> rotm
     double n = sqrt(pow(axis[0][0], 2) + pow(axis[1][0], 2) + pow(axis[2][0], 2));
 
     std::vector<double> rv = { (axis[0][0] / n * angle), (axis[1][0] / n * angle), (axis[2][0] / n * angle) };
-    for (int i = 0; i < rv.size(); i++) {
+    for (unsigned int i = 0; i < rv.size(); i++) {
         rv[i] = abs(rv[i]);
     }
     // sign(rv[0]) == sign(rv[0]) => rotate clockwise

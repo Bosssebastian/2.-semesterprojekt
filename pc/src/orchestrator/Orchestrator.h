@@ -60,6 +60,7 @@ private:
     WebServerRunner& mWeb;
     Interface& mGripper;
     Interface& mStorage;
+    Movement mMove;
 
     OrchestratorState mState{OrchestratorState::Stopped};
     std::string mFaultReason;
@@ -67,5 +68,4 @@ private:
     bool mPendingSkipRequest{false};
     bool mStateJustEntered{true};
     
-    Movement move("192.168.1.11", 29998);
 };

@@ -2,22 +2,25 @@
 
 void Movement::move(std::vector<std::vector<double>> inputCoord, double rotZ, double speed, double acc, double customZ, bool isWorldFrame){
     std::vector<double> goal = transform.getMovementVec(inputCoord, rotZ, isWorldFrame);
-    if (customZ != 0.0){
-        goal[2] = customZ;
+    //if (customZ != 0.0){
+    //    goal[2] = customZ;
+    //}
+    for (unsigned int i = 0; i < goal.size(); i++){
+        std::cout << goal[i] << "\n";
     }
     rtde_control.moveL(goal,speed,acc,asyncOn);
 }
 
 void Movement::moveJStock(std::string stock, double speed, double acc){
     int idx = 0; // Default to home position
-    for (int i = 0; i < stockName.size(); i++){ // Determine stock position idx
+    for (unsigned int i = 0; i < stockName.size(); i++){ // Determine stock position idx
         if (stock == stockName[i]){
             idx = i;
         }
     }
     std::vector<double> stockVec = stockCollection[idx];
-    for (int i = 0; i < stockVec.size(); i++){ // Convert to radians
-        stockVec[i] = matop.degToRad(stockVec[i])
+    for (unsigned int i = 0; i < stockVec.size(); i++){ // Convert to radians
+        stockVec[i] = matop.degToRad(stockVec[i]);
     }
     rtde_control.moveJ(stockVec,speed,acc,asyncOn); // Move to pose
 }
@@ -82,7 +85,7 @@ void Movement::moveDown(std::string start, double speed, double acc){
     if (start == "storage"){
         distanceToCube = 0.173; // Measuring, Confirmed (14.5cm clearance), Needs test with mounted gripper
     }
-    else if (start == "home") {
+    else if (start == "base") {
         distanceToCube = 0.19; // Measured, Confirmed (14.5cm clearance), Needs test with mounted gripper
     }
     else {

@@ -7,6 +7,7 @@
 #include <chrono>
 #include <cstdio>
 #include <thread>
+#include "movement.h"
 
 #ifdef _WIN32
 #include <conio.h>
@@ -67,7 +68,7 @@ bool pollTerminalEnter() {
 }
 
 Orchestrator::Orchestrator(IoRunner& io, VisionRunner& vision, WebServerRunner& web)
-    : mIo(io), mVision(vision), mWeb(web), mGripper(io.gripper()), mStorage(io.storage()) {
+    : mIo(io), mVision(vision), mWeb(web), mGripper(io.gripper()), mStorage(io.storage()), mMove() {
     mWeb.setState(mState);
 }
 
@@ -174,10 +175,10 @@ bool Orchestrator::skipRequested() {
 }
 
 void Orchestrator::handleStarting() {
-    onEnter([] {
+    onEnter([this] {
         LOG_INFO("Orchestrator: Starting up...");
-        move.home(); // Move to home pose
-        move.setTransform(); // Set up transformation matrices
+        mMove.home(); // Move to home pose
+        mMove.setTransform(); // Set up transformation matrices
     });
     transitionTo(OrchestratorState::Idle);
 }
@@ -205,12 +206,12 @@ void Orchestrator::handleInStorStorageMoveToSlot() {
 }
 
 void Orchestrator::handleInStorRobotOverInput() {
-    onEnter([] {
+    onEnter([this] {
         LOG_INFO("Orchestrator: Commanding move over input...");
         double speed = 0.5;
         double acc = 0.2;
         double customZ = 0.07;
-        move.move(inputFromVision,speed,acc,customZ); // Move to coordinates provided by vision
+        mMove.move({{0.24},{0.34},{0.24}}); // Move to coordinates provided by vision
     });
 
     if (skipRequested()) {
@@ -218,15 +219,15 @@ void Orchestrator::handleInStorRobotOverInput() {
         return;
     }
 
-    If (move.isDone()){ // Check if async movement is done
+    if (mMove.isDone()){ // Check if async movement is done
         transitionTo(OrchestratorState::InStor_RobotToCube);
     }
 }
 
 void Orchestrator::handleInStorRobotToCube() {
-    onEnter([] {
+    onEnter([this] {
         LOG_INFO("Orchestrator: Commanding move to cube...");
-        move.moveDown("base"); // Moves down
+        mMove.moveDown("base"); // Moves down
     });
 
 
@@ -235,7 +236,7 @@ void Orchestrator::handleInStorRobotToCube() {
         return;
     }
 
-    If (move.isDone()){ // Check if async movement is done
+    if (mMove.isDone()){ // Check if async movement is done
         transitionTo(OrchestratorState::InStor_RobotToCube);
     }
 }
@@ -268,9 +269,9 @@ void Orchestrator::handleInStorGripperClose() {
 }
 
 void Orchestrator::handleInStorRobotOverStorage() {
-    onEnter([] {
+    onEnter([this] {
         LOG_INFO("Orchestrator: Robot over storage placeholder state.");
-        move.moveJStock("storage");
+        mMove.moveJStock("storage");
     });
 
     if (skipRequested()) {
@@ -278,7 +279,7 @@ void Orchestrator::handleInStorRobotOverStorage() {
         return;
     }
 
-    If (move.isDone()){ // Check if async movement is done
+    if (mMove.isDone()){ // Check if async movement is done
         transitionTo(OrchestratorState::InStor_RobotToCube);
     }
 }
@@ -295,9 +296,9 @@ void Orchestrator::handleInStorStorageMoveToPos() {
 }
 
 void Orchestrator::handleInStorRobotDownToSlot() {
-    onEnter([] {
+    onEnter([this] {
         LOG_INFO("Orchestrator: Robot down to slot placeholder state.");
-        move.moveDown("storage"); // Move to put object down in storage
+        mMove.moveDown("storage"); // Move to put object down in storage
     });
 
     if (skipRequested()) {   
@@ -305,7 +306,7 @@ void Orchestrator::handleInStorRobotDownToSlot() {
         return;
     }
 
-    If (move.isDone()){ // Check if async movement is done
+    if (mMove.isDone()){ // Check if async movement is done
         transitionTo(OrchestratorState::InStor_RobotToCube);
     }
 }
@@ -338,9 +339,9 @@ void Orchestrator::handleInStorGripperOpen() {
 }
 
 void Orchestrator::handleInStorRobotUpFromSlot() {
-    onEnter([] {
+    onEnter([this] {
         LOG_INFO("Orchestrator: Robot up from slot placeholder state.");
-        move.moveUp("storage")
+        //mMove.moveUp("storage")
     });
 
     if (skipRequested()) {
@@ -348,7 +349,7 @@ void Orchestrator::handleInStorRobotUpFromSlot() {
         return;
     }
 
-    If (move.isDone()){ // Check if async movement is done
+    if (mMove.isDone()){ // Check if async movement is done
         transitionTo(OrchestratorState::InStor_RobotToCube);
     }
 }
@@ -364,7 +365,7 @@ void Orchestrator::handleResetting() {
     onEnter([] {
         LOG_INFO("Orchestrator: Resetting system...");
     });
-    move.home()
+    mMove.home();
     stopMotion();
     mFaultReason.clear();
     mPendingSkipRequest = false;

@@ -1,6 +1,8 @@
 #include "VisionController.h"
 #include <iostream>
 
+#ifdef PC_ENABLE_OPENCV
+
 /* just in case
 std::string getJsonValue(const std::string& json, const std::string& key) {
     std::string searchKey = "\"" + key + "\":";
@@ -159,8 +161,46 @@ void VisionController::getObjectPosition(std::vector<std::vector<double>> output
 void VisionController::getObjectInfo(std::string& object, std::string& size, std::string& color)
 {
     object = mObject;
-    size = mSize;
+    size = std::to_string(mSize);
     color = mColor;
     return;
 }
 
+#else
+
+VisionController::VisionController()
+    : mX(0)
+    , mY(0)
+{
+}
+
+VisionController::~VisionController() = default;
+
+void VisionController::scanForObject()
+{
+    // Temporary stub: OpenCV is not installed, so camera/QR scanning is disabled.
+}
+
+bool VisionController::objectReady()
+{
+    return false;
+}
+
+void VisionController::getObjectPosition(std::vector<std::vector<double>> outputPos)
+{
+    if (outputPos.size() >= 3 && !outputPos[0].empty() && !outputPos[1].empty() && !outputPos[2].empty()) {
+        outputPos[0][0] = mX;
+        outputPos[1][0] = mY;
+        outputPos[2][0] = 2.5;
+    }
+    mStatus = false;
+}
+
+void VisionController::getObjectInfo(std::string& object, std::string& size, std::string& color)
+{
+    object.clear();
+    size.clear();
+    color.clear();
+}
+
+#endif
