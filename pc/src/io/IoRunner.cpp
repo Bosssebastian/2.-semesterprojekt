@@ -101,7 +101,7 @@ void IoRunner::start() {
     } else {
         LOG_INFO(("Found " + std::to_string(ports.size()) + " serial port(s)").c_str());
     }
-
+    /*
     for (const std::string& portPath : ports) {
         if (!isRaspberryPiPicoPort(portPath)) {
             LOG_WARN(("Ignoring " + portPath + " because it is not a Raspberry Pi Pico serial device").c_str());
@@ -125,7 +125,7 @@ void IoRunner::start() {
 
     mGripper.setup();
     mStorage.setup();
-    mWorker = std::thread(&IoRunner::run, this);
+    mWorker = std::thread(&IoRunner::run, this);*/
 }
 
 void IoRunner::stop() {

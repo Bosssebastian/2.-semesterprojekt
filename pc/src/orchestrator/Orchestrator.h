@@ -2,6 +2,7 @@
 #include "OrchestratorState.h"
 #include "io/Interface.h"
 #include <string>
+#include "movement.h"
 
 class IoRunner;
 class VisionRunner;
@@ -65,4 +66,6 @@ private:
     bool mStopRequested{false};
     bool mPendingSkipRequest{false};
     bool mStateJustEntered{true};
+    
+    Movement move("192.168.1.11", 29998);
 };
