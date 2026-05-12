@@ -3,6 +3,9 @@
 #include <iostream>
 
 DataBase::DataBase(const std::string& file) {
-    sqlite3_open("database.db", &db);    
+    int return_value = sqlite3_open(file.c_str(), &db); 
+    if(return_value) {
+        std::cerr << "Error, could not open database. " << sqlite3_errmsg(db) << std::endl;
+    }   
 }
 
