@@ -1,7 +1,9 @@
 #include "uartClass.h"
 #include <iostream> 
+#include <cstdio>
 
-static uart_inst_t* getUartFromId(int uart_id) {
+static uart_inst_t* getUartFromId(int uart_id)
+{
     if (uart_id == 0) {
         return uart0;
     }
@@ -11,14 +13,16 @@ static uart_inst_t* getUartFromId(int uart_id) {
     return nullptr;
 }
 
-UartClass::UartClass(int uart_id, int pin_tx, int pin_rx, int baud){
+UartClass::UartClass(int uart_id, int pin_tx, int pin_rx, int baud)
+{
     this->uart_id = uart_id;
     this->pin_tx = pin_tx;
     this->pin_rx = pin_rx;
     this->baud = baud;
 }
 
-void UartClass::setup() {
+void UartClass::setup()
+{
     uart = getUartFromId(uart_id);
 
     if (uart == nullptr) {
@@ -35,24 +39,37 @@ void UartClass::setup() {
 }
 
 
-void UartClass::writePackage(std::string line) {
+void UartClass::sendLine(std::string line)
+{
+    if (uart == nullptr) 
+    {
+        return;
+    }
     uart_write_blocking(uart, reinterpret_cast<const uint8_t*>(line.c_str()), line.length()); //Do not know why reinterpret is neccesary
+    uart_putc_raw(uart, '\n');
 }
 
-std::string UartClass::readPackage() {
-    while (!hasPackage()) {
+std::string UartClass::getLine()
+{
+    while (!hasLine()) {
         sleep_ms(1);
     }
 
     std::string line = rxBuffer;
     rxBuffer.clear();
-    packageReady = false;
+    mLineReady = false;
     return line;
 }
 
-bool UartClass::hasPackage() {
-    if (packageReady) {
+bool UartClass::hasLine()
+{
+    if (mLineReady) {
         return true;
+    }
+
+    if (uart == nullptr)
+    {
+        return false;
     }
 
     while (uart_is_readable(uart)) {
@@ -63,7 +80,7 @@ bool UartClass::hasPackage() {
         }
 
         if (c == '\n') {
-            packageReady = true;
+            mLineReady = true;
             return true;
         }
 
@@ -71,6 +88,17 @@ bool UartClass::hasPackage() {
     }
 
     return false;
+}
+
+std::vector<std::string> UartClass::split(const std::string& line) const
+{
+    std::vector<std::string> parts;
+    std::string current;
+
+    for (char c : line)
+    {
+        if (c
+    }
 }
 
 
@@ -81,7 +109,7 @@ void UartClass::clearRXQue() {
     }
 
 }
-
+/*
 bool UartClass::tryReadPackage(uint8_t &flag, uint8_t &msgType, uint8_t &data) {
     static bool synced = false;
     static uint8_t buffer[3];
@@ -122,7 +150,7 @@ bool UartClass::requestPackage(uint8_t msgType, uint8_t &result, uint32_t ackTim
     std::string line;
     line.push_back(static_cast<char>(START));
     line.push_back(static_cast<char>(msgType));
-    writePackage(line);
+    sendLine(line);
 
     bool gotAck = false;
     uint8_t flag = 0;
@@ -166,4 +194,4 @@ bool UartClass::requestPackage(uint8_t msgType, uint8_t &result, uint32_t ackTim
     return false;
     
 }
-
+*/
