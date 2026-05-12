@@ -58,5 +58,8 @@ std::vector<std::string> SerialPort::split(const std::string& line) const {
 }
 
 void SerialPort::sendLine(const std::string& line) {
-    std::printf("%s", line.c_str());
+    std::printf("%s", line.c_str()); 
+    //Should it not have \n here instead of every time you call it? 
+    //That is the structure that i have in Interface, cannot see if
+    //it is then also neccesary here...
 }

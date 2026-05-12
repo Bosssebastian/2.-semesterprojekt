@@ -97,8 +97,25 @@ std::vector<std::string> UartClass::split(const std::string& line) const
 
     for (char c : line)
     {
-        if (c
+        if (c == ' ')
+        {
+            if (!current.empty())
+            {
+                parts.push_back(current);
+                current.clear();
+            }
+        }
+        else 
+        {
+            current += c;
+        }
     }
+    if (!current.empty())
+    {
+        parts.push_back(current);
+    }
+
+    return parts;
 }
 
 

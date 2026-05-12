@@ -5,19 +5,19 @@
 #include <cctype>
 
 Interface::Interface(UartClass& uart)
-    :uart(uart)
+    :uart(uart), lastPosition(-1)
 {
 
 }
 
 bool Interface::hasCommand()
 {
-    return uart.hasPackage();
+    return uart.hasLine();
 }
 
 CmdType Interface::getCommand()
 {
-    const std::string line = uart.readPackage(); 
+    const std::string line = uart.getLine(); 
     const std::vector<std::string> parts = split(line);
 
     if (parts.size() < 2 || parts[0] != "CMD")
@@ -58,20 +58,35 @@ int Interface::getPosition() const
 void Interface::sendResponse(CmdType cmd, ResponseType response, const std::string& message)
 {
     std::string line = std::string(toString(response)) + " " + toString(cmd);
-    line += "\n";
-    uart.writePackage(line);
+    //line += "\n"; already present in uartClass sendLine
+    if (!message.empty())
+    {
+        line += " ";
+        line += message;
+    }
+    uart.sendLine(line);
 }
 
 void Interface::sendEvent(CmdType cmd, EventType event, EventReason reason)
 {
-    std::string line = std::string("Event ") + toString(event) + " " + toString(cmd) + " " + toString(reason) + "\n";
-    uart.writePackage(line);
+    std::string line = std::string("EVENT ") 
+        + toString(event) 
+        + " " 
+        + toString(cmd) 
+        + " " 
+        + toString(reason);
+        //+ "\n";
+    uart.sendLine(line);
 }
 
 void Interface::sendCurrentPosition(int position)
 {
-    std::string line = std::string("EVENT ") + toString(EventType::CURRENT_POSITION) + " " + std::to_string(position) + "\n";
-    uart.writePackage(line);
+    std::string line = std::string("EVENT ") 
+        + toString(EventType::CURRENT_POSITION) 
+        + " " 
+        + std::to_string(position); 
+        //+ "\n";
+    uart.sendLine(line);
 }
 
 
