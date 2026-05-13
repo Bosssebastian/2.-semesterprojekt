@@ -114,10 +114,6 @@ void IoRunner::start() {
         if (port.identifiedDevice() == "GRIPPER") {
             mGripper.setDevicePath(port.devicePath());
             LOG_INFO(("Assigned " + portPath + " as GRIPPER").c_str());
-        } else if (port.identifiedDevice() == "STORAGE") {
-            mStorage.setDevicePath(port.devicePath());
-            LOG_INFO(("Assigned " + portPath + " as STORAGE").c_str());
-
         } else {
             LOG_WARN(("Ignoring " + portPath + " because it did not identify as GRIPPER or STORAGE").c_str());
         }

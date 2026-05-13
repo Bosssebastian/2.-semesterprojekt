@@ -14,24 +14,48 @@ bool commandWaitsForEvent(CmdType command) {
 }
 }
 
-Interface::Interface(std::string devicePath, std::string portLabel, int baud)
-    : mSerialPort(std::move(devicePath), baud, std::move(portLabel)) {
+Interface::Interface(std::string devicePath, configType mConfiguration, std::string portLabel, int baud) {
+    
+    if (mConfiguration == configType::SERIALPORT) {
+        mSerialPort(std::move(devicePath), baud, std::move(portLabel))
+    } else {
+        mUart() //Remember to input parameters
+    }
+
     mCurrentSamples.resize(CurrentSampleCapacity);
 }
 
 void Interface::setDevicePath(std::string devicePath) {
-    mSerialPort.setDevicePath(std::move(devicePath));
+    if (mConfiguration == configType::SERIALPORT)
+    {
+        mSerialPort.setDevicePath(std::move(devicePath));
+    }
+    
 }
 
 void Interface::setup() {
-    mSerialPort.setup();
+    if (mConfiguration == configType::SERIALPORT) {
+        mSerialPort.setup();
+    } else {
+        mUart.setup();
+    }
 }
 
 void Interface::update() {
-    while (mSerialPort.hasPackage()) {
-        std::string message = mSerialPort.readPackage();
-        handlePackage(split(message));
+
+    if (mConfiguration == configType::SERIALPORT) {
+        while (mSerialPort.hasPackage()) {
+            std::string message = mSerialPort.readPackage();
+            handlePackage(split(message));
+        }
+    } else {
+        while (mUart.hasLine()) {
+            std::string message = mUart.getLine();
+            handlePackage(split(message));
+        }
     }
+
+    
 
     handleTimeouts();
 }
@@ -53,8 +77,12 @@ bool Interface::sendCommand(CmdType command, const std::string& argument) {
         package += " " + argument;
     }
     package += "\n";
-
-    mSerialPort.writePackage(package);
+    if (mConfiguration == configType::SERIALPORT) {
+        mSerialPort.writePackage(package);
+    } else {
+       mUart.sendLine(package); 
+    }
+   
     return true;
 }
 

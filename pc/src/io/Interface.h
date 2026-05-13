@@ -16,6 +16,11 @@ enum class CmdStatus {
     TIMED_OUT
 };
 
+enum class configType {
+    SERIALPORT,
+    UART
+}
+
 struct CmdState {
     CmdStatus status = CmdStatus::IDLE;
     int retryCount = 0;
@@ -30,7 +35,7 @@ struct CurrentSample {
 
 class Interface {
 public:
-    Interface(std::string devicePath, std::string portLabel = "", int baud = 115200);
+    Interface(std::string devicePath, configType mConfiguration, std::string portLabel = "", int baud = 115200);
 
     void setDevicePath(std::string devicePath);
     void setup();
@@ -43,7 +48,9 @@ public:
 private:
     static constexpr std::size_t CurrentSampleCapacity = 30000;
 
+    configType mConfiguration = configType::SERIALPORT;
     SerialPort mSerialPort;
+    Uart mUart;
     std::map<CmdType, CmdState> mCmdStates;
     std::vector<CurrentSample> mCurrentSamples;
     std::size_t mCurrentWriteIndex = 0;

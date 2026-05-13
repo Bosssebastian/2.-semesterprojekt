@@ -18,8 +18,8 @@ public:
 private:
     void run();
 
-    Interface mGripper{"", "GRIPPER"};
-    Interface mStorage{"", "STORAGE"};
+    Interface mGripper{"", configType::SERIALPORT, "GRIPPER"};
+    Interface mStorage{"", configType::UART, "STORAGE"};
     std::thread mWorker;
     std::atomic<bool> mRunning{false};
 };
