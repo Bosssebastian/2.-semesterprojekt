@@ -7,5 +7,11 @@ DataBase::DataBase(const std::string& file) {
     if(return_value) {
         std::cerr << "Error, could not open database. " << sqlite3_errmsg(db) << std::endl;
     }   
+    else {
+        std::cout << "Opened database succesfully! " << std::endl;
+    }
 }
 
+DataBase::~DataBase() {
+    sqlite3_close(db);
+}

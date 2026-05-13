@@ -5,14 +5,13 @@
 class DataBase {
 private:
     sqlite3* db;
-    std::string filename;
+    std::string filename; //the file which is created when database is opened
 
 public:
-    DataBase(const std::string& file);
-    ~DataBase();
+    DataBase(const std::string& file); //opens database
+    ~DataBase(); // closes database
 
-    void openDataBase();
-    void closeDatabase();
+
 };
 
 #endif
