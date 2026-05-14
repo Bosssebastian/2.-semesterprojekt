@@ -1,18 +1,22 @@
 #include "Interface.h"
+#include <algorithm>
 #include <ctime>
+#include <cstdlib>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
 namespace {
-constexpr double kCommandTimeoutSeconds = 5.0;
+constexpr double kCommandTimeoutSeconds = 20.0;
 
 bool commandWaitsForEvent(CmdType command) {
-    return command == CmdType::OPEN || command == CmdType::CLOSE || command == CmdType::GOTO;
+    return command == CmdType::OPEN || command == CmdType::CLOSE || command == CmdType::GOTO || command == CmdType::RESET;
 }
 }
 
-Interface::Interface(std::string devicePath, int baud)
-    : mSerialPort(std::move(devicePath), baud) {
+Interface::Interface(std::string devicePath, std::string portLabel, int baud)
+    : mSerialPort(std::move(devicePath), baud, std::move(portLabel)) {
+    mCurrentSamples.resize(CurrentSampleCapacity);
 }
 
 void Interface::setDevicePath(std::string devicePath) {
@@ -63,6 +67,41 @@ CmdStatus Interface::getStatus(CmdType cmd) const {
     return it->second.status;
 }
 
+std::vector<CurrentSample> Interface::getRecentCurrentSamples(uint32_t windowMs) const {
+    std::lock_guard<std::mutex> lock(mCurrentMutex);
+
+    const std::size_t sampleCount = mCurrentBufferWrapped ? mCurrentSamples.size() : mCurrentWriteIndex;
+    if (sampleCount == 0) {
+        return {};
+    }
+
+    std::vector<CurrentSample> ordered;
+    ordered.reserve(sampleCount);
+
+    if (mCurrentBufferWrapped) {
+        ordered.insert(ordered.end(), mCurrentSamples.begin() + static_cast<std::ptrdiff_t>(mCurrentWriteIndex), mCurrentSamples.end());
+        ordered.insert(ordered.end(), mCurrentSamples.begin(), mCurrentSamples.begin() + static_cast<std::ptrdiff_t>(mCurrentWriteIndex));
+    } else {
+        ordered.insert(ordered.end(), mCurrentSamples.begin(), mCurrentSamples.begin() + static_cast<std::ptrdiff_t>(mCurrentWriteIndex));
+    }
+
+    if (windowMs == 0 || ordered.empty()) {
+        return ordered;
+    }
+
+    const uint32_t newestTimestamp = ordered.back().timestampMs;
+    const uint32_t oldestTimestamp = (newestTimestamp > windowMs) ? newestTimestamp - windowMs : 0;
+    const auto firstRecent = std::lower_bound(
+        ordered.begin(),
+        ordered.end(),
+        oldestTimestamp,
+        [](const CurrentSample& sample, uint32_t timestamp) {
+            return sample.timestampMs < timestamp;
+        });
+
+    return std::vector<CurrentSample>(firstRecent, ordered.end());
+}
+
 std::vector<std::string> Interface::split(const std::string& str) {
     std::vector<std::string> parts;
     std::string current;
@@ -96,6 +135,11 @@ void Interface::handlePackage(const std::vector<std::string>& parts) {
 
     if (parts[0] == "OK" || parts[0] == "ERROR") {
         handleAcknowledgment(parts);
+        return;
+    }
+
+    if (parts[0] == "EVENT" && parts.size() >= 5 && parts[1] == "CURRENT") {
+        handleCurrentEvent(parts);
         return;
     }
 
@@ -142,6 +186,31 @@ void Interface::handleEvent(const std::vector<std::string>& parts) {
     }
 
     state.active = false;
+}
+
+void Interface::handleCurrentEvent(const std::vector<std::string>& parts) {
+    try {
+        const uint32_t startMs = static_cast<uint32_t>(std::stoul(parts[2]));
+        const uint32_t periodMs = static_cast<uint32_t>(std::stoul(parts[3]));
+
+        for (std::size_t sampleIndex = 4; sampleIndex < parts.size(); ++sampleIndex) {
+            const float amps = std::stof(parts[sampleIndex]);
+            const uint32_t timestampMs = startMs + static_cast<uint32_t>(sampleIndex - 4) * periodMs;
+            storeCurrentSample(timestampMs, amps);
+        }
+    } catch (const std::exception&) {
+        return;
+    }
+}
+
+void Interface::storeCurrentSample(uint32_t timestampMs, float amps) {
+    std::lock_guard<std::mutex> lock(mCurrentMutex);
+
+    mCurrentSamples[mCurrentWriteIndex] = CurrentSample{timestampMs, amps};
+    mCurrentWriteIndex = (mCurrentWriteIndex + 1) % mCurrentSamples.size();
+    if (mCurrentWriteIndex == 0) {
+        mCurrentBufferWrapped = true;
+    }
 }
 
 void Interface::handleTimeouts() {

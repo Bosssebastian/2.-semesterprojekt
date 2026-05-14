@@ -1,10 +1,11 @@
 #pragma once
 
+#include <deque>
 #include <string>
 
 class SerialPort {
 public:
-    SerialPort(std::string devicePath, int baud);
+    SerialPort(std::string devicePath, int baud, std::string portLabel = "");
     ~SerialPort();
 
     void setDevicePath(std::string devicePath);
@@ -14,6 +15,7 @@ public:
     bool hasPackage();
     bool tryReadPackage(std::string& line, int timeoutMs);
     const std::string& identifiedDevice() const;
+    const std::string& lastProbeResponse() const;
     const std::string& devicePath() const;
     const std::string& lastProbeResponse() const;
 
@@ -23,8 +25,10 @@ private:
     std::string mDevicePath;
     std::string mIdentifiedDevice;
     std::string mLastProbeResponse;
+    std::string mPortLabel;
     int mBaud;
     std::string mRxBuffer;
+    std::deque<std::string> mPackages;
     bool mPackageReady{false};
 #ifdef _WIN32
     void* mHandle{nullptr};

@@ -1,14 +1,28 @@
 #include "SerialPort.h"
-
+#include "logging/Logger.h"
 #include <chrono>
 #include <cstdio>
 #include <thread>
 #include <utility>
 
+namespace {
+std::string prefixLogMessage(const std::string& portLabel, std::string message) {
+    if (portLabel.empty()) {
+        return message;
+    }
+
+    return "[" + portLabel + "] " + message;
+}
+}
+
 #ifdef _WIN32
 
-SerialPort::SerialPort(std::string devicePath, int baud)
-    : mDevicePath(std::move(devicePath)), mBaud(baud) {
+SerialPort::SerialPort(std::string devicePath, int baud, std::string portLabel)
+    : mDevicePath(std::move(devicePath)), mPortLabel(std::move(portLabel)), mBaud(baud) {
+}
+
+SerialPort::~SerialPort() {
+    closePort();
 }
 
 void SerialPort::setDevicePath(std::string devicePath) {
@@ -16,7 +30,10 @@ void SerialPort::setDevicePath(std::string devicePath) {
 }
 
 void SerialPort::setup() {
-    std::printf("PC serial transport is not implemented for Windows\n");
+    mRxBuffer.clear();
+    mPackages.clear();
+    mPackageReady = false;
+    LOG_WARN(prefixLogMessage(mPortLabel, "PC serial transport is not implemented for Windows").c_str());
 }
 
 void SerialPort::writePackage(std::string line) {
@@ -24,8 +41,15 @@ void SerialPort::writePackage(std::string line) {
 }
 
 std::string SerialPort::readPackage() {
-    mPackageReady = false;
-    return "";
+    if (mPackages.empty()) {
+        mPackageReady = false;
+        return "";
+    }
+
+    std::string line = std::move(mPackages.front());
+    mPackages.pop_front();
+    mPackageReady = !mPackages.empty();
+    return line;
 }
 
 bool SerialPort::hasPackage() {
@@ -40,6 +64,10 @@ bool SerialPort::tryReadPackage(std::string& line, int timeoutMs) {
 
 const std::string& SerialPort::identifiedDevice() const {
     return mIdentifiedDevice;
+}
+
+const std::string& SerialPort::lastProbeResponse() const {
+    return mLastProbeResponse;
 }
 
 const std::string& SerialPort::devicePath() const {
@@ -86,8 +114,8 @@ bool startsWith(const std::string& value, const std::string& prefix) {
 }
 }
 
-SerialPort::SerialPort(std::string devicePath, int baud)
-    : mDevicePath(std::move(devicePath)), mBaud(baud) {
+SerialPort::SerialPort(std::string devicePath, int baud, std::string portLabel)
+    : mDevicePath(std::move(devicePath)), mPortLabel(std::move(portLabel)), mBaud(baud) {
 }
 
 SerialPort::~SerialPort() {
@@ -102,21 +130,30 @@ void SerialPort::setup() {
     closePort();
     mIdentifiedDevice.clear();
     mLastProbeResponse.clear();
+    mRxBuffer.clear();
+    mPackages.clear();
+    mPackageReady = false;
 
     if (mDevicePath.empty()) {
-        std::printf("No serial device path configured\n");
+        LOG_WARN(prefixLogMessage(mPortLabel, "No serial device path configured").c_str());
         return;
     }
 
     mFd = open(mDevicePath.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
     if (mFd < 0) {
-        std::printf("Failed to open serial device %s: %s\n", mDevicePath.c_str(), std::strerror(errno));
+        LOG_ERROR(prefixLogMessage(
+                      mPortLabel,
+                      std::string("Failed to open serial device ") + mDevicePath + ": " + std::strerror(errno))
+                      .c_str());
         return;
     }
 
     termios tty{};
     if (tcgetattr(mFd, &tty) != 0) {
-        std::printf("Failed to read serial attributes for %s: %s\n", mDevicePath.c_str(), std::strerror(errno));
+        LOG_ERROR(prefixLogMessage(
+                      mPortLabel,
+                      std::string("Failed to read serial attributes for ") + mDevicePath + ": " + std::strerror(errno))
+                      .c_str());
         close(mFd);
         mFd = -1;
         return;
@@ -141,7 +178,10 @@ void SerialPort::setup() {
     tty.c_cc[VTIME] = 0;
 
     if (tcsetattr(mFd, TCSANOW, &tty) != 0) {
-        std::printf("Failed to configure serial device %s: %s\n", mDevicePath.c_str(), std::strerror(errno));
+        LOG_ERROR(prefixLogMessage(
+                      mPortLabel,
+                      std::string("Failed to configure serial device ") + mDevicePath + ": " + std::strerror(errno))
+                      .c_str());
         close(mFd);
         mFd = -1;
         return;
@@ -155,6 +195,7 @@ void SerialPort::setup() {
             continue;
         }
 
+        mLastProbeResponse = line;
         if (startsWith(line, "OK PING ")) {
             mLastProbeResponse = line;
             mIdentifiedDevice = line.substr(std::strlen("OK PING "));
@@ -171,7 +212,10 @@ void SerialPort::writePackage(std::string line) {
 
     const ssize_t bytesWritten = write(mFd, line.c_str(), line.size());
     if (bytesWritten < 0) {
-        std::printf("Failed to write serial package to %s: %s\n", mDevicePath.c_str(), std::strerror(errno));
+        LOG_ERROR(prefixLogMessage(
+                      mPortLabel,
+                      std::string("Failed to write serial package to ") + mDevicePath + ": " + std::strerror(errno))
+                      .c_str());
     }
 }
 
@@ -179,9 +223,9 @@ std::string SerialPort::readPackage() {
     while (!hasPackage()) {
     }
 
-    std::string line = mRxBuffer;
-    mRxBuffer.clear();
-    mPackageReady = false;
+    std::string line = std::move(mPackages.front());
+    mPackages.pop_front();
+    mPackageReady = !mPackages.empty();
     return line;
 }
 
@@ -209,14 +253,16 @@ bool SerialPort::hasPackage() {
         }
 
         if (c == '\n') {
-            mPackageReady = true;
-            return true;
+            mPackages.push_back(std::move(mRxBuffer));
+            mRxBuffer.clear();
+            continue;
         }
 
         mRxBuffer += c;
     }
 
-    return false;
+    mPackageReady = !mPackages.empty();
+    return mPackageReady;
 }
 
 bool SerialPort::tryReadPackage(std::string& line, int timeoutMs) {
@@ -235,6 +281,10 @@ bool SerialPort::tryReadPackage(std::string& line, int timeoutMs) {
 
 const std::string& SerialPort::identifiedDevice() const {
     return mIdentifiedDevice;
+}
+
+const std::string& SerialPort::lastProbeResponse() const {
+    return mLastProbeResponse;
 }
 
 const std::string& SerialPort::devicePath() const {

@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <string>
 
-enum class CmdType {NONE, PING, OPEN, CLOSE, STOP, STATUS, STATISTICS, GOTO};
+enum class CmdType {NONE, PING, OPEN, CLOSE, STOP, STATUS, STATISTICS, GOTO, RESET};
 enum class ResponseType {OK, ERROR};
 enum class EventType {ERROR, MOVE_DONE};
 enum class EventReason {NONE, STEPS_FINISHED, STALL, STOPPED, MOVE_ERROR};
@@ -26,6 +26,8 @@ inline const char* toString(CmdType type) {
             return "STATISTICS";
         case CmdType::GOTO:
             return "GOTO";
+        case CmdType::RESET:
+            return "RESET";
     }
 
     return "UNKNOWN";
@@ -94,6 +96,9 @@ inline CmdType toCmdType(const std::string& value) {
     }
     if (value == "GOTO") {
         return CmdType::GOTO;
+    }
+    if (value == "RESET") {
+        return CmdType::RESET;
     }
 
     return CmdType::NONE;

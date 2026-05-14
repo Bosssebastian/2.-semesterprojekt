@@ -10,11 +10,12 @@ public:
 	void update();
 
 private:
-    Gripper& mGripper;
     Interface& mInterface;
+    Gripper& mGripper;
 
     void openCommand();
     void closeCommand();
+    void resetCommand();
     void sendMoveCompletionEvent(const GripperMoveEvent& moveEvent);
 
 };
