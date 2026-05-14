@@ -11,6 +11,10 @@ public:
     DataBase(const std::string& file); //opens database
     ~DataBase(); // closes database
 
+    DataBase(const DataBase&) = delete;
+    DataBase& operator=(const DataBase&) = delete;
+
+    bool execute(const std::string& sql);
 
 };
 
