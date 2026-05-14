@@ -12,6 +12,7 @@ class dataLogger
     public:
         dataLogger(); //member variable of successfulReadings(vector) irregularities(integer), targets(vector), success(integer) deltaTime(float)
 
+        void reset();
 
         void appendReading(int reading); //Appends 1,2,3,4,5,6,7,8 if reading is different from before and not -1 (code already exists) (append to vector)
         void checkIrregularities(); //For each appendReading, we check if there is an irregularity (check last element of vector m)

@@ -8,8 +8,26 @@
 #include "pathfinder.h"
 
 dataLogger::dataLogger()
+    : mSuccess(0),
+      mIrregularities(0),
+      mStart(0)
 {
+    mStoredPositions.clear();
+    mStoredTargets.clear();
+    mDeltaTime.clear();
+    mDeltaMove.clear();
+}
 
+void dataLogger::reset()
+{
+    mStoredPositions.clear();
+    mStoredTargets.clear();
+    mDeltaTime.clear();
+    mDeltaMove.clear();
+
+    mSuccess = 0;
+    mIrregularities = 0;
+    mStart = 0;
 }
 
 void dataLogger::appendReading(int reading)
@@ -34,7 +52,7 @@ void dataLogger::checkIrregularities()
 
         int directDistance = abs(before - now);
         //Using pathfinder to get circularDistance so 8-1 = 1
-        int directCircularDistance = finder.getCircularPosition(directDistance); 
+        int directCircularDistance = std::min(directDistance, 8 - finder.getCircularPosition(directDistance)); 
         
 
         if (directCircularDistance > 1)
@@ -61,17 +79,9 @@ void dataLogger::timeTaskEnd()
 
 
     float slut = clock();
-
-    float time = (slut - mStart) / CLOCKS_PER_SEC;
-    if (mDeltaTime.size() > 1)
-    {
-        mDeltaTime.push_back(time - mDeltaTime[mDeltaTime.size() - 1]);
-    } 
-    else 
-    {
-        mDeltaTime.push_back(time);
-    }
     
+    float time = (slut - mStart) / CLOCKS_PER_SEC;
+    mDeltaTime.push_back(time);
 }
 
 void dataLogger::calculateMovingDistance()

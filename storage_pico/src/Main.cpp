@@ -22,7 +22,7 @@ int main() {
 
     clock_t ProgramStart = clock();
 
-    int dataloggingSpan = 60;
+    int dataloggingSpan = 1200;
 
     srand(time(0)); //for the random target generator to stress test
     
@@ -58,6 +58,8 @@ int main() {
     drejeBaenkDecoder decoder(ldr1, ldr2, ldr3, ldr4);
 
     decoder.timeBasedCalibration(motor, 2000);
+
+    log1.reset();
 
     /*
     ldr1.calibrateValue();
@@ -95,6 +97,8 @@ int main() {
     log1.timeTaskStart();
 
     int oldPosition = target; //Should probably be set to the actual old target
+
+    log1.timeTaskStart();
 
     while (true) {
 
