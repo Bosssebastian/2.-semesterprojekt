@@ -174,7 +174,7 @@ bool Orchestrator::skipRequested() {
 }
 
 void Orchestrator::handleStarting() {
-    onEnter([] {
+    onEnter([this] {
         LOG_INFO("Orchestrator: Starting up...");
         move.home(); // Move to home pose
         move.setTransform(); // Set up transformation matrices
@@ -183,7 +183,7 @@ void Orchestrator::handleStarting() {
 }
 
 void Orchestrator::handleIdle() {
-    onEnter([] {
+    onEnter([this] {
         LOG_INFO("Orchestrator: Idle. Waiting for input...");
     });
 
@@ -194,7 +194,7 @@ void Orchestrator::handleIdle() {
 }
 
 void Orchestrator::handleInStorStorageMoveToSlot() {
-    onEnter([] {
+    onEnter([this] {
         LOG_INFO("Orchestrator: Storage move to slot placeholder state.");
     });
 
@@ -205,7 +205,7 @@ void Orchestrator::handleInStorStorageMoveToSlot() {
 }
 
 void Orchestrator::handleInStorRobotOverInput() {
-    onEnter([] {
+    onEnter([this] {
         LOG_INFO("Orchestrator: Commanding move over input...");
         double speed = 0.5;
         double acc = 0.2;
@@ -224,7 +224,7 @@ void Orchestrator::handleInStorRobotOverInput() {
 }
 
 void Orchestrator::handleInStorRobotToCube() {
-    onEnter([] {
+    onEnter([this] {
         LOG_INFO("Orchestrator: Commanding move to cube...");
         move.moveDown("base"); // Moves down
     });
@@ -268,7 +268,7 @@ void Orchestrator::handleInStorGripperClose() {
 }
 
 void Orchestrator::handleInStorRobotOverStorage() {
-    onEnter([] {
+    onEnter([this] {
         LOG_INFO("Orchestrator: Robot over storage placeholder state.");
         move.moveJStock("storage");
     });
@@ -284,7 +284,7 @@ void Orchestrator::handleInStorRobotOverStorage() {
 }
 
 void Orchestrator::handleInStorStorageMoveToPos() {
-    onEnter([] {
+    onEnter([this] {
         LOG_INFO("Orchestrator: Storage move to position placeholder state.");
     });
 
@@ -295,7 +295,7 @@ void Orchestrator::handleInStorStorageMoveToPos() {
 }
 
 void Orchestrator::handleInStorRobotDownToSlot() {
-    onEnter([] {
+    onEnter([this] {
         LOG_INFO("Orchestrator: Robot down to slot placeholder state.");
         move.moveDown("storage"); // Move to put object down in storage
     });
@@ -338,7 +338,7 @@ void Orchestrator::handleInStorGripperOpen() {
 }
 
 void Orchestrator::handleInStorRobotUpFromSlot() {
-    onEnter([] {
+    onEnter([this] {
         LOG_INFO("Orchestrator: Robot up from slot placeholder state.");
         move.moveUp("storage")
     });
@@ -354,14 +354,14 @@ void Orchestrator::handleInStorRobotUpFromSlot() {
 }
 
 void Orchestrator::handleInStorComplete() {
-    onEnter([] {
+    onEnter([this] {
         LOG_INFO("Orchestrator: Input-to-storage cycle complete.");
     });
     transitionTo(OrchestratorState::Idle);
 }
 
 void Orchestrator::handleResetting() {
-    onEnter([] {
+    onEnter([this] {
         LOG_INFO("Orchestrator: Resetting system...");
     });
     move.home()
@@ -372,7 +372,7 @@ void Orchestrator::handleResetting() {
 }
 
 void Orchestrator::handleStopping() {
-    onEnter([] {
+    onEnter([this] {
         LOG_INFO("Orchestrator: Stopping system...");
     });
     stopMotion();
