@@ -208,10 +208,12 @@ void Orchestrator::handleInStorStorageMoveToSlot() {
 void Orchestrator::handleInStorRobotOverInput() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Commanding move over input...");
-        double speed = 0.5;
+        MatrixOperations matop;
+        double speed = 0.3;
         double acc = 0.2;
-        double customZ = 0.07;
-        mMove.move({{0.24},{0.34},{0.24}}); // Move to coordinates provided by vision
+        double customZ = 0.18;
+        double rotZ = matop.degToRad(22.5);
+        mMove.move({{0.0},{-0.08},{0.24}},speed,acc,customZ,rotZ); // Move to coordinates provided by vision
     });
 
     if (skipRequested()) {
@@ -237,7 +239,7 @@ void Orchestrator::handleInStorRobotToCube() {
     }
 
     if (mMove.isDone()){ // Check if async movement is done
-        transitionTo(OrchestratorState::InStor_RobotToCube);
+        transitionTo(OrchestratorState::InStor_GripperClose);
     }
 }
 
@@ -280,7 +282,7 @@ void Orchestrator::handleInStorRobotOverStorage() {
     }
 
     if (mMove.isDone()){ // Check if async movement is done
-        transitionTo(OrchestratorState::InStor_RobotToCube);
+        transitionTo(OrchestratorState::InStor_StorageMoveToPos);
     }
 }
 
@@ -307,7 +309,7 @@ void Orchestrator::handleInStorRobotDownToSlot() {
     }
 
     if (mMove.isDone()){ // Check if async movement is done
-        transitionTo(OrchestratorState::InStor_RobotToCube);
+        transitionTo(OrchestratorState::InStor_GripperOpen);
     }
 }
 
@@ -341,7 +343,8 @@ void Orchestrator::handleInStorGripperOpen() {
 void Orchestrator::handleInStorRobotUpFromSlot() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Robot up from slot placeholder state.");
-        //mMove.moveUp("storage")
+        //mMove.moveUp("storage");
+        mMove.moveJStock("storage");
     });
 
     if (skipRequested()) {
@@ -350,7 +353,7 @@ void Orchestrator::handleInStorRobotUpFromSlot() {
     }
 
     if (mMove.isDone()){ // Check if async movement is done
-        transitionTo(OrchestratorState::InStor_RobotToCube);
+        transitionTo(OrchestratorState::InStor_Complete);
     }
 }
 
@@ -377,6 +380,7 @@ void Orchestrator::handleStopping() {
         LOG_INFO("Orchestrator: Stopping system...");
     });
     stopMotion();
+    mMove.stop(); // stops script on robot
     transitionTo(OrchestratorState::Stopped);
 }
 

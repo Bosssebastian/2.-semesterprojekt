@@ -231,13 +231,13 @@ std::vector<std::vector<double>> MatrixOperations::findBaseToCamTrans(double upZ
 	std::cout << "\n";
 	if (inwardsY) { // add/subtract cameraOffset if camera is mounted inwards/outwards, and rotate to match orientation (using euler angles)
 		totalY += cameraOffset;
-		//rot = multMat(rotz(degToRad(rotationZ)),roty(PI_2));
-		rot = roty(PI_2);
+		//rot = multMat(rotz(degToRad(rotationZ)),roty(PI));
+		rot = roty(PI);
 	}
 	else {
 		totalY -= cameraOffset;
-		//rot = multMat(rotz(degToRad(rotationZ)),rotx(PI_2));
-		rot = rotx(PI_2);
+		//rot = multMat(rotz(degToRad(rotationZ)),rotx(PI));
+		rot = rotx(PI);
 	}
 	totalY /= 1000.; // convert to m
 	double totalX = -(425. - 158. - 92.) / 1000.; // distance from base center to table side, minus mounting arm link to camera center, minus distance from sidebar to mounting arm link
@@ -248,7 +248,7 @@ std::vector<std::vector<double>> MatrixOperations::findBaseToCamTrans(double upZ
 	//printMat(wToCTrans);
 	std::vector<std::vector<double>> bToCTrans = multMat(bToWTrans, wToCTrans); // transformation matrix from base frame to camera frame
 	//printMat(bToCTrans);
-	return {{0.9239, 0.0, -0.3827, 0.0974},{0.3827, 0.0, 0.9239, -0.6924},{0.0, -1.0000, 0.0, 0.6680},{0.0, 0.0, 0.0, 1.0000}}; //bToCTrans;
+	return {{-0.9239, -0.3827, 0.0, 0.0974},{-0.3827, 0.9239, 0.0, -0.6924},{0.0, 0.0, -1.0000, 0.6680},{0.0, 0.0, 0.0, 1.0000}}; //bToCTrans;
 }
 
 std::vector<std::vector<double>> MatrixOperations::getBaseToWorldTrans() {
