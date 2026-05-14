@@ -380,12 +380,11 @@ void Orchestrator::handleStopping() {
         LOG_INFO("Orchestrator: Stopping system...");
     });
     stopMotion();
-    mMove.stop(); // stops script on robot
     transitionTo(OrchestratorState::Stopped);
 }
 
 void Orchestrator::stopMotion() {
     mGripper.sendCommand(CmdType::STOP);
     mStorage.sendCommand(CmdType::STOP);
-    //Robot stop
-}
+    mMove.stop(); // Stops script on robot
+    }

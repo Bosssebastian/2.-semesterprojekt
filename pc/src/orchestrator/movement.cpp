@@ -106,5 +106,7 @@ void Movement::moveDown(std::string start, double speed, double acc){
 }
 
 void Movement::stop(){
+    rtde_control.stopJ(1.0);
+    rtde_control.stopL(1.0);
     rtde_control.stopScript(); // stops script on robot
 }
