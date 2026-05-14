@@ -1,13 +1,16 @@
 #include "movement.h"
 
-void Movement::move(std::vector<std::vector<double>> inputCoord, double rotZ, double speed, double acc, double customZ, bool isWorldFrame){
+void Movement::move(std::vector<std::vector<double>> inputCoord, double speed, double acc, double customZ, double rotZ, bool isWorldFrame){
     std::vector<double> goal = transform.getMovementVec(inputCoord, rotZ, isWorldFrame);
-    //if (customZ != 0.0){
-    //    goal[2] = customZ;
-    //}
-    for (unsigned int i = 0; i < goal.size(); i++){
-        std::cout << goal[i] << "\n";
+    if (customZ != 0.0){
+        goal[2] = customZ+0.12; // gripper = 12cm
+        //goal[2] = 0.085; // stopper ved 0.5cm fra gripper til bord
+        // 4 cm fra gripper til bord ved z=0
     }
+    for (unsigned int i = 0; i < goal.size(); i++){
+        //std::cout << goal[i] << "\n";
+    }
+    lastForwardPosition = goal; // save last linear position
     rtde_control.moveL(goal,speed,acc,asyncOn);
 }
 
@@ -35,8 +38,16 @@ void Movement::home() {
     rtde_control.moveJ({base,shoulder,elbow,wrist1,wrist2,wrist3},0.5,0.2,asyncOn);
 }
 
-void Movement::moveZ(double diffZ, double speed, double acc){
-    std::vector<double> curPos = rtde_control.getForwardKinematics();
+void Movement::moveZ(double diffZ, std::string state, double speed, double acc){
+    //std::vector<double> curPos = rtde_control.getForwardKinematics(); // Does not work on RP (for some reason)
+    //std::cout << "forward kinematics retrieved\n";
+    std::vector<double> curPos;
+    if (state == "base"){
+        curPos = lastForwardPosition;
+    }
+    else if (state == "storage"){
+        curPos = {-0.0842395, -0.340469, 0.337993, -1.93723, -2.473, 0.0};
+    }
     curPos[2] += diffZ;
     rtde_control.moveL(curPos,speed,acc,asyncOn);
 }
@@ -83,13 +94,17 @@ void Movement::moveUp(std::string start, double speed, double acc){ // Needs tes
 void Movement::moveDown(std::string start, double speed, double acc){
     double distanceToCube;
     if (start == "storage"){
-        distanceToCube = 0.173; // Measuring, Confirmed (14.5cm clearance), Needs test with mounted gripper
+        distanceToCube = 0.196; // Measuring, Confirmed (14.5cm clearance), Needs test with mounted gripper
     }
     else if (start == "base") {
-        distanceToCube = 0.19; // Measured, Confirmed (14.5cm clearance), Needs test with mounted gripper
+        distanceToCube = 0.215; // Measured, Confirmed (0.5cm clearance), Tested with mounted gripper
     }
     else {
         distanceToCube = 0; // Does not move on invallid starting position
     }
-    moveZ(-distanceToCube,speed,acc);
+    moveZ(-distanceToCube, start, speed,acc);
+}
+
+void Movement::stop(){
+    rtde_control.stopScript(); // stops script on robot
 }
