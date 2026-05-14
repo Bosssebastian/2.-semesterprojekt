@@ -181,6 +181,14 @@ void VisionController::getObjectPosition(std::vector<std::vector<double>>& outpu
         outputPos[1].resize(1);
     }
 
+    if (mTransVec.empty() || mTransVec.rows < 1 || mTransVec.cols < 1) {
+        std::cerr << "VisionController: mTransVec is empty or invalid\n";
+        outputPos[0][0] = 0.0;
+        outputPos[1][0] = 0.0;
+        mStatus = false;
+        return;
+    }
+
     outputPos[0][0] = mTransVec.at<double>(0,0);
     outputPos[1][0] = mTransVec.at<double>(1,0);
     mStatus = false;
@@ -200,6 +208,12 @@ void VisionController::setSameSpot(int i){
 }
 
 void VisionController::getObjectRot(double& output){
+    if (mRotVec.empty() || mRotVec.rows < 1 || mRotVec.cols < 1) {
+        std::cerr << "VisionController: mRotVec is empty or invalid\n";
+        output = 0.0;
+        mStatus = false;
+        return;
+    }
     output = fmod(mRotVec.at<double>(3,0), (M_PI/2));
     std::cout << output << "\n";
 }
