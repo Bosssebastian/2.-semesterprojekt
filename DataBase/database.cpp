@@ -64,13 +64,27 @@ void DataBase::createTables() {
 }
 
 void DataBase::insertVisionObject(const std::string& object, int size, const std::string& color) {
-    "SELECT from ? INSERT INTO current_state_vision";
+    std::string sql = 
+    "INSERT INTO current_state_vision (object, size, color) VALUES ('"+ object +"' , " + std::to_string(size) + ", '" + color + "');";
+    execute(sql);
 }
 
 void DataBase::updateStorageSlot(int storageId, int objectId, int occupied) {
-    "UPDATE";
+    std::string sql =
+        "UPDATE current_state_storage SET "
+        "object_id = " + std::to_string(objectId) + ", "
+        "occupied = " + std::to_string(occupied) +
+        " WHERE storage_id = " + std::to_string(storageId) + ";";
+
+    execute(sql);
 }
 
 void DataBase::insertHistory(int objectId, int slot, double timestamp) {
-    "SELECT from ? INSERT INTO history";
+    std::string sql =
+        "INSERT INTO history (object_id, slot, time_stamp) VALUES ("
+        + std::to_string(objectId) + ", "
+        + std::to_string(slot) + ", "
+        + std::to_string(timestamp) + ");";
+
+    execute(sql);
 }
