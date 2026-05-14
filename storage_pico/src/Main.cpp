@@ -16,8 +16,14 @@
 
 #include "uartClass.h"
 #include "Interface.h"
+#include "datalogger.h"
 
 int main() {
+
+    clock_t ProgramStart = clock();
+
+    int dataloggingSpan = 60;
+
     srand(time(0)); //for the random target generator to stress test
     
     stdio_init_all();
@@ -33,6 +39,8 @@ int main() {
     uartConnection.setup();
 
     Interface mInterface(uartConnection);
+
+    dataLogger log1;
 
     DcMotor motor(2, 3, 11);
     pathFinder shortcut(0, 3, 8); //in shortcut first number is target position, second number is current position and last number is max number og positions
@@ -83,27 +91,61 @@ int main() {
     shortcut.setTarget(target); //setting target via setter in pathFinder for random target generator
     printf("SUCESS!!: New target: %d\n", target);
 
-    int oldPosition = 0;
+    log1.appendTarget(target);
+    log1.timeTaskStart();
+
+    int oldPosition = target; //Should probably be set to the actual old target
 
     while (true) {
+
+        
 
         int currentPos = decoder.decipher();
 
         std::array<int, 4> bits = decoder.readBits();
         
+        /*
         printf("BITS: %d %d %d %d | POS: %d\n",
             bits[0], bits[1], bits[2], bits[3], currentPos);
-        
+        */
+
+        if (currentPos != -1 && currentPos != oldPosition)
+        {
+            std::cout << "current position is: " << currentPos << std::endl;
+
+            log1.appendReading(currentPos);
+
+            oldPosition = currentPos;
+        }
+
         if(currentPos != -1) {
             shortcut.setCurrentPosition(currentPos);
 
         }
 
+        
+
         float move = shortcut.getClosestPosition(); //finding closest path to target
 
-        if(move == 0){
+        if(move == 0) {
             motor.stop();
+
+            log1.timeTaskEnd();
+
+            log1.storeSuccess();
+
             printf("SUCCES!!: already at target\n");
+
+            std::cout << "timePassed: " <<((clock() - ProgramStart) / CLOCKS_PER_SEC) << std::endl;
+            if (((clock() - ProgramStart) / CLOCKS_PER_SEC) > dataloggingSpan)
+            {
+                log1.printData();
+                sleep_ms(1000);
+
+                //Could be nice if it moved to 4...
+
+                break;
+            }
 
             sleep_ms(500);
 
@@ -112,7 +154,8 @@ int main() {
             printf("New target: %d\n", target);
             
             //std::cout << "target is: " << target << std::endl;
-
+            log1.appendTarget(target);
+            log1.timeTaskStart();
             
         }
         else if(move > 0) {
@@ -192,11 +235,7 @@ int main() {
         );
 */
         //std::cout << "target is: " << target << std::endl;
-        if (currentPos != -1 && currentPos != oldPosition)
-        {
-            std::cout << "current position is: " << currentPos << std::endl;
-            oldPosition = currentPos;
-        }
+        
 
 //        printf("Channels: %d %d %d %d %d %d %d %d\n", channel1, channel2, channel3, channel4, channel5, channel6, channel7, channel8);
 

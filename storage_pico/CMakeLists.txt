@@ -44,6 +44,7 @@ add_executable(storage_pico
         src/drejeBaenkDecoder.cpp
         src/uartClass.cpp
         src/Interface.cpp
+        src/datalogger.cpp
 )
 
 pico_set_program_name(storage_pico "storage_pico")
