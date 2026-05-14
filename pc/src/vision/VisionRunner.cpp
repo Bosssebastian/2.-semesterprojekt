@@ -27,3 +27,11 @@ void VisionRunner::stop() {
 void VisionRunner::run() {
     mVision.scanForObject();
 }
+
+void VisionRunner::getPos(std::vector<std::vector<double>> outputPos){
+    mVision.getObjectPosition(outputPos);
+}
+
+bool VisionRunner::objectReady(){
+    return mVision.objectReady();
+}
