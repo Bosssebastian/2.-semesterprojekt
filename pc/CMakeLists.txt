@@ -30,6 +30,7 @@ add_executable(pc
     src/vision/VisionRunner.cpp
     src/vision/VisionController.cpp
     src/orchestrator/Orchestrator.cpp
+    src/orchestrator/StorageManager.cpp
     src/web/WebServerRunner.cpp
     ${SHARED_SOURCES}
 )

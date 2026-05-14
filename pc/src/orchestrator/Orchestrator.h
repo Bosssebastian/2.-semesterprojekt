@@ -1,5 +1,6 @@
 #pragma once
 #include "OrchestratorState.h"
+#include "StorageManager.h"
 #include "io/Interface.h"
 #include <string>
 #include "movement.h"
@@ -39,6 +40,8 @@ private:
 
     void handleStarting();
     void handleIdle();
+
+    void handleInStorGetStorageSlot();
     void handleInStorStorageMoveToSlot();
     void handleInStorRobotOverInput();
     void handleInStorRobotToCube();
@@ -66,6 +69,8 @@ private:
     bool mStopRequested{false};
     bool mPendingSkipRequest{false};
     bool mStateJustEntered{true};
+    StorageManager mStorageManager;
+    int mActiveStorageSlot{-1};
     
     Movement move("192.168.1.11", 29998);
 };
