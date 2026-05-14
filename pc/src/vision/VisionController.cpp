@@ -56,6 +56,9 @@ VisionController::VisionController()
     mObjectPoints.push_back(cv::Point3f(S, 0, 0));       // Top-Right
     mObjectPoints.push_back(cv::Point3f(S, S, 0));       // Bottom-Right
     mObjectPoints.push_back(cv::Point3f(0, S, 0));       // Bottom-Left
+
+    mCam->retrieve(mTempFrame);
+    cv::imwrite("test.jpg",mTempFrame); 
 }
 
 VisionController::~VisionController()
@@ -76,7 +79,7 @@ void VisionController::scanForObject(){
 
     cv::Mat transDiff = mOldTransVec;
 
-    while(sameSpot < 5 && !mData.empty()){
+    while(sameSpot < 5 || mData.empty()){
         // take an image and save it as mTempFrame
         mCam->grab();
         mCam->retrieve(mTempFrame);
@@ -139,7 +142,7 @@ void VisionController::scanForObject(){
         
         transDiff = OldTransVec - mTransVec;
 
-        if (transDiff.at<double>(0,0) > -mMaxOff && transDiff.at<double>(0,0) < mMaxOff && transDiff.at<double>(1,0) > -mMaxOff && transDiff.at<double>(1,0) < mMaxOff){
+        if (transDiff.at<double>(0,0) > -mMaxOff && transDiff.at<double>(0,0) < mMaxOff && transDiff.at<double>(1,0) > -mMaxOff && transDiff.at<double>(1,0) < mMaxOff && !mTransVec.empty()){
             sameSpot++;
         }
         else{
@@ -147,7 +150,7 @@ void VisionController::scanForObject(){
         }
         OldTransVec = mTransVec;
     }
-    std::cout << "a object was found\n";
+    std::cout << "an object was found\n";
     std::cout << mTransVec << "\n";
     mStatus = true;
 }
