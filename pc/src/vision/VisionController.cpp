@@ -199,5 +199,6 @@ void VisionController::setSameSpot(int i){
 
 void VisionController::getObjectRot(double& output){
     output = fmod(mRotVec.at<double>(3,0), (M_PI/2));
+    std::cout << output << "\n";
 }
 
