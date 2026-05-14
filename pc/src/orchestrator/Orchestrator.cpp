@@ -185,12 +185,11 @@ void Orchestrator::handleStarting() {
 void Orchestrator::handleIdle() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Idle. Waiting for input...");
-        mVision.start();
+        mVision.scanForObject();
     });
 
     if (mVision.objectReady){
         mVision.getPos(inputFromVision);
-        mVision.stop();
         transitionTo(OrchestratorState::InStor_StorageMoveToSlot);
     }
 

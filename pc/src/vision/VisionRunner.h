@@ -12,6 +12,7 @@ public:
     void stop();
     void getPos(std::vector<std::vector<double>>);
     bool objectReady();
+    void scanForObject();
     
 private:
     void run();

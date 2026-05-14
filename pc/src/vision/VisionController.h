@@ -8,6 +8,7 @@ public:
     ~VisionController();
 
     void scanForObject();
+    void setSameSpot(int);
 
     bool objectReady();
     void getObjectPosition(std::vector<std::vector<double>> outputPos);
@@ -24,6 +25,8 @@ private:
     std::string mData;
     std::string mObject, mColor;
     int mSize;
+
+    int sameSpot = 0;
 
     double mMaxOff = 0.005;
 

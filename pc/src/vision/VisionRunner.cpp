@@ -24,6 +24,10 @@ void VisionRunner::stop() {
     }
 }
 
+void VisionRunner::scanForObject(){
+    mVision.setSameSpot(0);
+}
+
 void VisionRunner::run() {
     mVision.scanForObject();
 }

@@ -73,8 +73,6 @@ void VisionController::scanForObject(){
         return;
     }
 
-    int sameSpot = 0;
-
     cv::Mat OldTransVec = (cv::Mat_<double>(3,1) <<  0, 0, 0);
 
     cv::Mat transDiff = mOldTransVec;
@@ -172,5 +170,10 @@ void VisionController::getObjectInfo(std::string& object, std::string& size, std
     size = mSize;
     color = mColor;
     return;
+}
+
+void VisionController::setSameSpot(int i){
+    sameSpot = i;
+    mStatus = false;
 }
 
