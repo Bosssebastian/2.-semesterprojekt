@@ -15,7 +15,10 @@ public:
     DataBase& operator=(const DataBase&) = delete;
 
     bool execute(const std::string& sql);
-
+    void createTables();
+    void insertVisionObject(const std::string& object, int size, const std::string& color);
+    void updateStorageSlot(int storageId, int objectId, int occupied);
+    void insertHistory(int objectId, int slot, double timestamp);
 };
 
 #endif

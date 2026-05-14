@@ -33,3 +33,44 @@ bool DataBase:: execute(const std::string& sql) {
 
     return true;
 }
+
+void DataBase::createTables() {
+     std::string current_state_storage =
+        "CREATE TABLE IF NOT EXISTS current_state_storage ("
+        "storage_id INTEGER PRIMARY KEY, "
+        "object_id INTEGER, "
+        "occupied INTEGER NOT NULL"
+
+        ");";
+    
+    std::string current_state_vision = 
+        "CREATE TABLE IF NOT EXISTS current_state_vision ("
+        "object_id INTEGER PRIMARY KEY, "
+        "object TEXT NOT NULL, "
+        "size INTEGER NOT NULL, "
+        "color TEXT NOT NULL"
+        ");";
+
+    std::string history = 
+        "CREATE TABLE IF NOT EXISTS history ("
+        "object_id INTEGER, "
+        "slot INTEGER NOT NULL, "
+        "time_stamp REAL NOT NULL"
+        ");";
+    
+    execute(current_state_storage);
+    execute(current_state_vision);
+    execute(history);
+}
+
+void DataBase::insertVisionObject(const std::string& object, int size, const std::string& color) {
+    "SELECT from ? INSERT INTO current_state_vision";
+}
+
+void DataBase::updateStorageSlot(int storageId, int objectId, int occupied) {
+    "UPDATE";
+}
+
+void DataBase::insertHistory(int objectId, int slot, double timestamp) {
+    "SELECT from ? INSERT INTO history";
+}
