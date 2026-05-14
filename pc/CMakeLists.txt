@@ -49,6 +49,8 @@ target_include_directories(pc PRIVATE
     ${SHARED_DIR}
 )
 
+target_link_libraries(pc PRIVATE ${OpenCV_LIBS})
+
 if(MSVC)
     target_compile_options(pc PRIVATE /W4)
 else()

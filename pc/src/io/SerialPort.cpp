@@ -74,6 +74,10 @@ const std::string& SerialPort::devicePath() const {
     return mDevicePath;
 }
 
+const std::string& SerialPort::lastProbeResponse() const {
+    return mLastProbeResponse;
+}
+
 void SerialPort::closePort() {
 }
 
@@ -193,6 +197,7 @@ void SerialPort::setup() {
 
         mLastProbeResponse = line;
         if (startsWith(line, "OK PING ")) {
+            mLastProbeResponse = line;
             mIdentifiedDevice = line.substr(std::strlen("OK PING "));
         }
 
@@ -284,6 +289,10 @@ const std::string& SerialPort::lastProbeResponse() const {
 
 const std::string& SerialPort::devicePath() const {
     return mDevicePath;
+}
+
+const std::string& SerialPort::lastProbeResponse() const {
+    return mLastProbeResponse;
 }
 
 void SerialPort::closePort() {
