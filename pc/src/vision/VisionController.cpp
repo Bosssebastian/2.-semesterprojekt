@@ -160,6 +160,8 @@ void VisionController::scanForObject(){
     std::cout << "an object was found\n";
     std::vector<std::vector<double>> outputPos;
     getObjectPosition(outputPos);
+    double rot;
+    getObjectRot(rot);
     return;
 }
 
