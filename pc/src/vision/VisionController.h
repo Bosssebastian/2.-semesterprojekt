@@ -11,7 +11,7 @@ public:
     void setSameSpot(int);
 
     bool objectReady();
-    void getObjectPosition(std::vector<std::vector<double>> outputPos);
+    void getObjectPosition(std::vector<std::vector<double>>& outputPos);
     void getObjectInfo(std::string&, std::string&, std::string&);
 
 private:
@@ -41,5 +41,7 @@ private:
         0,  0,  1);
 
     cv::Mat mDistCoeffs = cv::Mat::zeros(5, 1, CV_64F);
+
+    int test = 0;
 
 };

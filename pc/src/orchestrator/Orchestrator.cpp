@@ -176,8 +176,8 @@ bool Orchestrator::skipRequested() {
 void Orchestrator::handleStarting() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Starting up...");
-        move.home(); // Move to home pose
-        move.setTransform(); // Set up transformation matrices
+        // move.home(); // Move to home pose
+        // move.setTransform(); // Set up transformation matrices
     });
     transitionTo(OrchestratorState::Idle);
 }
@@ -185,10 +185,10 @@ void Orchestrator::handleStarting() {
 void Orchestrator::handleIdle() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Idle. Waiting for input...");
-        mVision.scanForObject();
+        mVision.run();
     });
 
-    if (mVision.objectReady){
+    if (mVision.objectReady()){
         mVision.getPos(inputFromVision);
         transitionTo(OrchestratorState::InStor_StorageMoveToSlot);
     }
@@ -216,7 +216,7 @@ void Orchestrator::handleInStorRobotOverInput() {
         double speed = 0.5;
         double acc = 0.2;
         double customZ = 0.07;
-        move.move(inputFromVision,speed,acc,customZ); // Move to coordinates provided by vision
+        // move.move(inputFromVision,speed,acc,customZ); // Move to coordinates provided by vision
     });
 
     if (skipRequested()) {
@@ -224,15 +224,15 @@ void Orchestrator::handleInStorRobotOverInput() {
         return;
     }
 
-    If (move.isDone()){ // Check if async movement is done
-        transitionTo(OrchestratorState::InStor_RobotToCube);
-    }
+    // if (move.isDone()){ // Check if async movement is done
+    //   transitionTo(OrchestratorState::InStor_RobotToCube);
+    // }
 }
 
 void Orchestrator::handleInStorRobotToCube() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Commanding move to cube...");
-        move.moveDown("base"); // Moves down
+        // move.moveDown("base"); // Moves down
     });
 
 
@@ -241,9 +241,9 @@ void Orchestrator::handleInStorRobotToCube() {
         return;
     }
 
-    If (move.isDone()){ // Check if async movement is done
-        transitionTo(OrchestratorState::InStor_RobotToCube);
-    }
+    // if (move.isDone()){ // Check if async movement is done
+    //    transitionTo(OrchestratorState::InStor_RobotToCube);
+    // }
 }
 
 void Orchestrator::handleInStorGripperClose() {
@@ -276,7 +276,7 @@ void Orchestrator::handleInStorGripperClose() {
 void Orchestrator::handleInStorRobotOverStorage() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Robot over storage placeholder state.");
-        move.moveJStock("storage");
+        // move.moveJStock("storage");
     });
 
     if (skipRequested()) {
@@ -284,9 +284,9 @@ void Orchestrator::handleInStorRobotOverStorage() {
         return;
     }
 
-    If (move.isDone()){ // Check if async movement is done
-        transitionTo(OrchestratorState::InStor_RobotToCube);
-    }
+    // if (move.isDone()){ // Check if async movement is done
+    //    transitionTo(OrchestratorState::InStor_RobotToCube);
+    // }
 }
 
 void Orchestrator::handleInStorStorageMoveToPos() {
@@ -303,7 +303,7 @@ void Orchestrator::handleInStorStorageMoveToPos() {
 void Orchestrator::handleInStorRobotDownToSlot() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Robot down to slot placeholder state.");
-        move.moveDown("storage"); // Move to put object down in storage
+        // move.moveDown("storage"); // Move to put object down in storage
     });
 
     if (skipRequested()) {   
@@ -311,9 +311,9 @@ void Orchestrator::handleInStorRobotDownToSlot() {
         return;
     }
 
-    If (move.isDone()){ // Check if async movement is done
-        transitionTo(OrchestratorState::InStor_RobotToCube);
-    }
+    // if (move.isDone()){ // Check if async movement is done
+    //    transitionTo(OrchestratorState::InStor_RobotToCube);
+    // }
 }
 
 void Orchestrator::handleInStorGripperOpen() {
@@ -346,7 +346,7 @@ void Orchestrator::handleInStorGripperOpen() {
 void Orchestrator::handleInStorRobotUpFromSlot() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Robot up from slot placeholder state.");
-        move.moveUp("storage")
+        // move.moveUp("storage");
     });
 
     if (skipRequested()) {
@@ -354,9 +354,9 @@ void Orchestrator::handleInStorRobotUpFromSlot() {
         return;
     }
 
-    If (move.isDone()){ // Check if async movement is done
-        transitionTo(OrchestratorState::InStor_RobotToCube);
-    }
+    //if (move.isDone()){ // Check if async movement is done
+    //    transitionTo(OrchestratorState::InStor_RobotToCube);
+    //}
 }
 
 void Orchestrator::handleInStorComplete() {
@@ -370,7 +370,7 @@ void Orchestrator::handleResetting() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Resetting system...");
     });
-    move.home()
+    //move.home()
     stopMotion();
     mFaultReason.clear();
     mPendingSkipRequest = false;

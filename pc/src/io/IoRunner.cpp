@@ -18,6 +18,7 @@ namespace {
 constexpr int kBaudRate = 115200;
 constexpr char kPicoVendorId[] = "2e8a";
 
+/*
 bool isRaspberryPiPicoPort(const std::string& portPath) {
 #ifdef _WIN32
     (void)portPath;
@@ -49,6 +50,7 @@ bool isRaspberryPiPicoPort(const std::string& portPath) {
     return true;
 #endif
 }
+*/
 
 std::vector<std::string> discoverCandidatePorts() {
     std::vector<std::string> ports;

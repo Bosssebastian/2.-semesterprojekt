@@ -66,6 +66,8 @@ private:
     bool mStopRequested{false};
     bool mPendingSkipRequest{false};
     bool mStateJustEntered{true};
+
+    std::vector<std::vector<double>> inputFromVision;
     
-    Movement move("192.168.1.11", 29998);
+    // Movement move("192.168.1.11", 29998);
 };

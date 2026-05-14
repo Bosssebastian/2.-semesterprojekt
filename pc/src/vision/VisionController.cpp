@@ -44,8 +44,16 @@ VisionController::VisionController()
         mCam->grab(); // Just grab the data, don't decode it yet to save time
     }
 
-    // use a calibriation already made
-    cv::FileStorage fs("../src/vision/camera_params.yaml", cv::FileStorage::READ);
+    // use a calibration already made
+    const std::filesystem::path configPath = std::filesystem::path(__FILE__).parent_path() / "camera_params.yaml";
+    cv::FileStorage fs(configPath.string(), cv::FileStorage::READ);
+    if (!fs.isOpened()) {
+        std::cerr << "VisionController: failed to open calibration file " << configPath << "\n";
+        delete mCam;
+        mCam = nullptr;
+        return;
+    }
+    // OpenCV automatically processes the rows, cols, and data tags
     fs["camera_matrix"] >> mCameraMatrix;
     fs["distortion_coefficients"] >> mDistCoeffs;
     fs.release();
@@ -57,8 +65,9 @@ VisionController::VisionController()
     mObjectPoints.push_back(cv::Point3f(S, S, 0));       // Bottom-Right
     mObjectPoints.push_back(cv::Point3f(0, S, 0));       // Bottom-Left
 
-    mCam->retrieve(mTempFrame);
-    cv::imwrite("test.jpg",mTempFrame); 
+    // just for testing
+    //mCam->retrieve(mTempFrame);
+    //cv::imwrite("test.jpg",mTempFrame); 
 }
 
 VisionController::~VisionController()
@@ -120,7 +129,7 @@ void VisionController::scanForObject(){
         }
 
         // just for testing
-        //std::cout << mTransVec << "\n";
+        //std::cout << mTransVec << "\n"; // print the location
 
         if (!mData.empty()) {
             try{
@@ -140,7 +149,7 @@ void VisionController::scanForObject(){
         
         transDiff = OldTransVec - mTransVec;
 
-        if (transDiff.at<double>(0,0) > -mMaxOff && transDiff.at<double>(0,0) < mMaxOff && transDiff.at<double>(1,0) > -mMaxOff && transDiff.at<double>(1,0) < mMaxOff && !mTransVec.empty()){
+        if (transDiff.at<double>(0,0) > -mMaxOff && transDiff.at<double>(0,0) < mMaxOff && transDiff.at<double>(1,0) > -mMaxOff && transDiff.at<double>(1,0) < mMaxOff && !mTransVec.empty() && !mData.empty()){
             sameSpot++;
         }
         else{
@@ -149,19 +158,32 @@ void VisionController::scanForObject(){
         OldTransVec = mTransVec;
     }
     std::cout << "an object was found\n";
-    std::cout << mTransVec << "\n";
-    mStatus = true;
+    std::vector<std::vector<double>> outputPos;
+    getObjectPosition(outputPos);
+    return;
 }
 
 bool VisionController::objectReady(){
     return mStatus;
 }
 
-void VisionController::getObjectPosition(std::vector<std::vector<double>> outputPos){
+void VisionController::getObjectPosition(std::vector<std::vector<double>>& outputPos){
+    if (outputPos.size() < 2) {
+        outputPos.assign(2, std::vector<double>(1));
+    }
+    if (outputPos[0].size() < 1) {
+        outputPos[0].resize(1);
+    }
+    if (outputPos[1].size() < 1) {
+        outputPos[1].resize(1);
+    }
+
     outputPos[0][0] = mTransVec.at<double>(0,0);
     outputPos[1][0] = mTransVec.at<double>(1,0);
+    std::cout << "test\n";
+    std::cout << "x:" << mTransVec.at<double>(0,0) << "\n";
+    std::cout << "y:" << mTransVec.at<double>(1,0) << "\n";
     mStatus = false;
-    return;
 }
 
 
