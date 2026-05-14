@@ -1,5 +1,6 @@
 #include <opencv2/opencv.hpp>
 #include <vector>
+#include <math.h>
 
 class VisionController
 {
@@ -13,6 +14,7 @@ public:
     bool objectReady();
     void getObjectPosition(std::vector<std::vector<double>>& outputPos);
     void getObjectInfo(std::string&, std::string&, std::string&);
+    void getObjectRot(double&);
 
 private:
     cv::VideoCapture* mCam;

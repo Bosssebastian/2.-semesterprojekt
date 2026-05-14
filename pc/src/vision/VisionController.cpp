@@ -59,7 +59,7 @@ VisionController::VisionController()
     fs.release();
 
 
-    float S = 0.05; // size of the qr Code
+    float S = 0.041; // size of the qr Code
     mObjectPoints.push_back(cv::Point3f(0, 0, 0));       // Top-Left
     mObjectPoints.push_back(cv::Point3f(S, 0, 0));       // Top-Right
     mObjectPoints.push_back(cv::Point3f(S, S, 0));       // Bottom-Right
@@ -160,7 +160,6 @@ void VisionController::scanForObject(){
     std::cout << "an object was found\n";
     std::vector<std::vector<double>> outputPos;
     getObjectPosition(outputPos);
-    std::cout << mRotVec << "\n";
     return;
 }
 
@@ -169,6 +168,7 @@ bool VisionController::objectReady(){
 }
 
 void VisionController::getObjectPosition(std::vector<std::vector<double>>& outputPos){
+    //just in case the output vector is not intialzed correct
     if (outputPos.size() < 2) {
         outputPos.assign(2, std::vector<double>(1));
     }
@@ -181,9 +181,6 @@ void VisionController::getObjectPosition(std::vector<std::vector<double>>& outpu
 
     outputPos[0][0] = mTransVec.at<double>(0,0);
     outputPos[1][0] = mTransVec.at<double>(1,0);
-    std::cout << "test\n";
-    std::cout << "x:" << mTransVec.at<double>(0,0) << "\n";
-    std::cout << "y:" << mTransVec.at<double>(1,0) << "\n";
     mStatus = false;
 }
 
@@ -198,5 +195,9 @@ void VisionController::getObjectInfo(std::string& object, std::string& size, std
 void VisionController::setSameSpot(int i){
     sameSpot = i;
     mStatus = false;
+}
+
+void VisionController::getObjectRot(double& output){
+    output = fmod(mRotVec.at<double>(3,0), (M_PI/2));
 }
 

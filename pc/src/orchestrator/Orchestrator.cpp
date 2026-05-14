@@ -189,7 +189,7 @@ void Orchestrator::handleIdle() {
     });
 
     if (mVision.objectReady()){
-        mVision.getPos(inputFromVision);
+        mVision.getPos(inputFromVision, rot);
         transitionTo(OrchestratorState::InStor_StorageMoveToSlot);
     }
 

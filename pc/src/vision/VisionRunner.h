@@ -10,7 +10,7 @@ public:
 
     void start();
     void stop();
-    void getPos(std::vector<std::vector<double>>);
+    void getPos(std::vector<std::vector<double>>& ,double&);
     bool objectReady();
     void run();
     

@@ -68,6 +68,7 @@ private:
     bool mStateJustEntered{true};
 
     std::vector<std::vector<double>> inputFromVision;
+    double rot;
     
     // Movement move("192.168.1.11", 29998);
 };

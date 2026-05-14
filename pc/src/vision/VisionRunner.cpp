@@ -29,8 +29,9 @@ void VisionRunner::run() {
     mVision.scanForObject();
 }
 
-void VisionRunner::getPos(std::vector<std::vector<double>> outputPos){
+void VisionRunner::getPos(std::vector<std::vector<double>>& outputPos, double& rotOut){
     mVision.getObjectPosition(outputPos);
+    mVision.getObjectRot(rotOut);
 }
 
 bool VisionRunner::objectReady(){
