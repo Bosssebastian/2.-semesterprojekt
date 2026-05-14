@@ -34,7 +34,7 @@ class ldrSensors
 
         float readCalibrated();
 
-        
+        int interpretRawValue(float value);
 
         float TOP_PERCENT = 0.96;
 

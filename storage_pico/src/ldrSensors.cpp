@@ -48,14 +48,7 @@ int ldrSensors::interpretValue()
 {   
     float currentValue = readAverage();
 
-    if (currentValue > _threshold)
-    {
-        return 0;
-    }
-    else
-    {
-        return 1;
-    }
+    return interpretRawValue(currentValue);
     /*
     float currentValue = readAverage();
     float threshold = _calibratedValueHigh * initialDrop;
@@ -68,6 +61,18 @@ int ldrSensors::interpretValue()
         return 0;
     }
     */
+}
+
+int ldrSensors::interpretRawValue(float value)
+{
+    if (value > _threshold)
+    {
+        return 0;
+    }
+    else
+    {
+        return 1;
+    }
 }
 
 void ldrSensors::saveValue()

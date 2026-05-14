@@ -98,15 +98,19 @@ int main() {
 
     int oldPosition = target; //Should probably be set to the actual old target
 
+    //float move = 0; not this
+    float move = shortcut.getClosestPosition();
+
     log1.timeTaskStart();
 
     while (true) {
 
         
 
-        int currentPos = decoder.decipher();
+        //int currentPos = decoder.decipherRaw();
+        int currentPos = decoder.decipherExpected(move);
 
-        std::array<int, 4> bits = decoder.readBits();
+        //std::array<int, 4> bits = decoder.readBits();
         
         /*
         printf("BITS: %d %d %d %d | POS: %d\n",
@@ -129,7 +133,7 @@ int main() {
 
         
 
-        float move = shortcut.getClosestPosition(); //finding closest path to target
+        move = shortcut.getClosestPosition(); //finding closest path to target
 
         if(move == 0) {
             motor.stop();

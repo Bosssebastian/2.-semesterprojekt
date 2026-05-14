@@ -12,10 +12,11 @@ class drejeBaenkDecoder
     public:
         drejeBaenkDecoder(ldrSensors& ldr1, ldrSensors& ldr2, ldrSensors& ldr3, ldrSensors& ldr4);
 
-        int decipher();
+        int decipherRaw();
+        int decipherExpected(float direction);
 
         std::array<int, 4> readBits();
-
+        std::array<int, 4> readBitsSynced();
         
             
             //Ciffertabel kunne cære graycode eller bit-mønster
@@ -30,7 +31,15 @@ class drejeBaenkDecoder
                 {1, 0, 1, 1},  // -> 8
         }};
 
-        int interpretValue();
+        //int interpretValue();
+
+        int preveousPosition(int pos) const;
+
+        int nextPosition(int pos) const;
+
+        int circularPosition(int a, int b) const;
+
+        
 
         void saveAllValues();
 
@@ -41,6 +50,11 @@ class drejeBaenkDecoder
         ldrSensors& _ldr2;
         ldrSensors& _ldr3;
         ldrSensors& _ldr4;
+
+        int mLastAccepted = -1;
+        int mLastRejected = -1;
+        int mRejectedRepeatCount = 0;
+        int mLastAcceptedTime;
        
 
 };
