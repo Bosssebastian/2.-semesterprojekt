@@ -12,9 +12,10 @@ public:
     void stop();
     void getPos(std::vector<std::vector<double>>& ,double&);
     bool objectReady();
-    void run();
+    void scanForObject();
     
 private:
+    void run();
     VisionController mVision;
     std::thread mWorker;
     std::atomic<bool> mRunning{false};

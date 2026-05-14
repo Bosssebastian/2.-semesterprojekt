@@ -185,7 +185,7 @@ void Orchestrator::handleStarting() {
 void Orchestrator::handleIdle() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Idle. Waiting for input...");
-        mVision.run();
+        mVision.scanForObject();
     });
 
     if (mVision.objectReady()){

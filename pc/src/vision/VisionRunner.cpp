@@ -25,8 +25,11 @@ void VisionRunner::stop() {
 }
 
 void VisionRunner::run() {
-    mVision.setSameSpot(0);
     mVision.scanForObject();
+}
+
+void VisionRunner::scanForObject(){
+    mVision.setStateFalse();
 }
 
 void VisionRunner::getPos(std::vector<std::vector<double>>& outputPos, double& rotOut){

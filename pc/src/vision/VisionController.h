@@ -9,12 +9,12 @@ public:
     ~VisionController();
 
     void scanForObject();
-    void setSameSpot(int);
 
     bool objectReady();
     void getObjectPosition(std::vector<std::vector<double>>& outputPos);
     void getObjectInfo(std::string&, std::string&, std::string&);
     void getObjectRot(double&);
+    void setStateFalse();
 
 private:
     cv::VideoCapture* mCam;
