@@ -17,6 +17,7 @@ public:
     const std::string& identifiedDevice() const;
     const std::string& lastProbeResponse() const;
     const std::string& devicePath() const;
+    const std::string& lastProbeResponse() const;
 
 private:
     void closePort();

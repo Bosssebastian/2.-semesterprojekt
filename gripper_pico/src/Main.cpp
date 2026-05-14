@@ -4,7 +4,6 @@
 #include "CurrentSensor.h"
 #include "Gripper.h"
 #include "interface/Interface.h"
-#include "interface/TestInterface.h"
 
 #include "pico/stdlib.h"
 

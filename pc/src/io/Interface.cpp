@@ -7,15 +7,14 @@
 #include <vector>
 
 namespace {
-constexpr double kCommandTimeoutSeconds = 20.0;
-
 bool commandWaitsForEvent(CmdType command) {
     return command == CmdType::OPEN || command == CmdType::CLOSE || command == CmdType::GOTO || command == CmdType::RESET;
 }
 }
 
-Interface::Interface(std::string devicePath, std::string portLabel, int baud)
-    : mSerialPort(std::move(devicePath), baud, std::move(portLabel)) {
+Interface::Interface(std::string devicePath, std::string portLabel, double commandTimeoutSeconds, int baud)
+    : mSerialPort(std::move(devicePath), baud, std::move(portLabel)),
+      mCommandTimeoutSeconds(commandTimeoutSeconds) {
     mCurrentSamples.resize(CurrentSampleCapacity);
 }
 
@@ -223,7 +222,7 @@ void Interface::handleTimeouts() {
             continue;
         }
 
-        if (std::difftime(currentTime, state.timestamp) > kCommandTimeoutSeconds) {
+        if (std::difftime(currentTime, state.timestamp) > mCommandTimeoutSeconds) {
             state.status = CmdStatus::TIMED_OUT;
             state.active = false;
         }

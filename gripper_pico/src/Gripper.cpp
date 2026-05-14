@@ -104,7 +104,11 @@ void Gripper::update() {
 
         case MoveStep::Open:
             if (axisResult == AxisMoveResult::Stalled) {
-                endMove(GripperMoveResult::Stalled, false);
+                publishMoveEvent(CmdType::OPEN, GripperMoveResult::Stalled);
+                mSilentReset = true;
+                if (!startMoveStep(MoveStep::ResetForward, ParameterConfig::GRIPPER_RESET_FORWARD_STEPS, false)) {
+                    endMove(GripperMoveResult::Error, false);
+                }
             } else if (axisResult == AxisMoveResult::Done) {
                 publishMoveEvent(CmdType::OPEN, GripperMoveResult::Done);
                 startOpenResetPause();
