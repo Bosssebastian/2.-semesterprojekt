@@ -291,9 +291,9 @@ const std::string& SerialPort::devicePath() const {
     return mDevicePath;
 }
 
-const std::string& SerialPort::lastProbeResponse() const {
+/*const std::string& SerialPort::lastProbeResponse() const {
     return mLastProbeResponse;
-}
+}*/
 
 void SerialPort::closePort() {
     if (mFd >= 0) {

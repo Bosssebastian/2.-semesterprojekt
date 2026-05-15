@@ -24,16 +24,17 @@ void VisionRunner::stop() {
     }
 }
 
-void VisionRunner::scanForObject(){
-    mVision.setSameSpot(0);
-}
-
 void VisionRunner::run() {
     mVision.scanForObject();
 }
 
-void VisionRunner::getPos(std::vector<std::vector<double>> outputPos){
+void VisionRunner::scanForObject(){
+    mVision.setStateFalse();
+}
+
+void VisionRunner::getPos(std::vector<std::vector<double>>& outputPos, double& rotOut){
     mVision.getObjectPosition(outputPos);
+    mVision.getObjectRot(rotOut);
 }
 
 bool VisionRunner::objectReady(){

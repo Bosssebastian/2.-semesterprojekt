@@ -69,8 +69,11 @@ private:
     bool mStopRequested{false};
     bool mPendingSkipRequest{false};
     bool mStateJustEntered{true};
+
+    std::vector<std::vector<double>> inputFromVision;
+    double rot;
     StorageManager mStorageManager;
     int mActiveStorageSlot{-1};
     
-    Movement move("192.168.1.11", 29998);
+    // Movement move("192.168.1.11", 29998);
 };

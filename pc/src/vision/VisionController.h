@@ -1,5 +1,6 @@
 #include <opencv2/opencv.hpp>
 #include <vector>
+#include <math.h>
 
 class VisionController
 {
@@ -8,11 +9,12 @@ public:
     ~VisionController();
 
     void scanForObject();
-    void setSameSpot(int);
 
     bool objectReady();
-    void getObjectPosition(std::vector<std::vector<double>> outputPos);
+    void getObjectPosition(std::vector<std::vector<double>>& outputPos);
     void getObjectInfo(std::string&, std::string&, std::string&);
+    void getObjectRot(double&);
+    void setStateFalse();
 
 private:
     cv::VideoCapture* mCam;
@@ -20,7 +22,7 @@ private:
     cv::Mat mTempFrame, mFrame, mCorners, mRotVec, mTransVec, mOldTransVec;
     std::vector<cv::Point3f> mObjectPoints;
 
-    bool mStatus = false;    
+    bool mStatus = true;    
     
     std::string mData;
     std::string mObject, mColor;
@@ -41,5 +43,7 @@ private:
         0,  0,  1);
 
     cv::Mat mDistCoeffs = cv::Mat::zeros(5, 1, CV_64F);
+
+    int test = 0;
 
 };

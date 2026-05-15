@@ -148,8 +148,9 @@ void Orchestrator::handleIdle() {
         mVision.scanForObject();
     });
 
-    if (mVision.objectReady){
-        mVision.getPos(inputFromVision);
+    if (mVision.objectReady()){
+        LOG_INFO("Orchestrator: Object found");
+        mVision.getPos(inputFromVision, rot);
         transitionTo(OrchestratorState::InStor_StorageMoveToSlot);
     }
 
