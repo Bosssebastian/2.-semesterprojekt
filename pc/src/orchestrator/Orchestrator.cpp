@@ -181,11 +181,8 @@ void Orchestrator::handleInStorStorageMoveToSlot() {
         LOG_INFO("Orchestrator: Storage move to slot placeholder state.");
         mStorage.sendCommand(CmdType::GOTO, std::to_string(mActiveStorageSlot));
     });
-
-    if (skipRequested()) {
-        transitionTo(OrchestratorState::InStor_RobotOverInput);
-        return;
-    }
+    
+    transitionTo(OrchestratorState::InStor_RobotOverInput);
 }
 
 void Orchestrator::handleInStorRobotOverInput() {
