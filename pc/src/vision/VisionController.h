@@ -1,7 +1,5 @@
 #pragma once
-#ifdef PC_ENABLE_OPENCV
 #include <opencv2/opencv.hpp>
-#endif
 #include <string>
 #include <vector>
 #include <math.h>
@@ -36,7 +34,7 @@ private:
 
     int sameSpot = 0;
 
-    double mMaxOff = 0.005;
+    double mMaxOff = 0.0075;
 
     double fx = 1920.0; 
     double fy = 1920.0;
