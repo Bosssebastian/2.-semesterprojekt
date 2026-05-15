@@ -6,6 +6,7 @@ class DataBase {
 private:
     sqlite3* db;
     std::string filename; //the file which is created when database is opened
+    double timestamp{0};
 
 public:
     DataBase(const std::string& file); //opens database
@@ -17,8 +18,12 @@ public:
     bool execute(const std::string& sql);
     void createTables();
     void insertVisionObject(const std::string& object, int size, const std::string& color);
-    void updateStorageSlot(int storageId, int objectId, int occupied);
+    void updateStorageSlot(int slotId, int objectId, bool occupied);
     void insertHistory(int objectId, int slot, double timestamp);
+
+    double time();
+
+    
 };
 
 #endif

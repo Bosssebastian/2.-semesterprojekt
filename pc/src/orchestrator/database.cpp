@@ -1,6 +1,8 @@
 #include "database.h"
+#include "StorageManager.h"
 #include <sqlite3.h>
 #include <iostream>
+#include <chrono>
 
 DataBase::DataBase(const std::string& file) : filename(file), db(nullptr) {
 
@@ -38,7 +40,7 @@ bool DataBase:: execute(const std::string& sql) {
 void DataBase::createTables() {
      std::string current_state_storage =
         "CREATE TABLE IF NOT EXISTS current_state_storage ("
-        "storage_id INTEGER PRIMARY KEY, "
+        "slot_id INTEGER PRIMARY KEY, "
         "object_id INTEGER, "
         "occupied INTEGER NOT NULL"
 
@@ -66,7 +68,7 @@ void DataBase::createTables() {
     for(int i = 1; i <= 8; ++i) {
         std::string sql = 
         "INSERT OR IGNORE INTO current_state_storage "
-        "(storage_id, object_id, occupied) "
+        "(slot_id, object_id, occupied) "
         "VALUES(" + std::to_string(i) + ", NULL, 0);";
     execute(sql);
     };
@@ -79,12 +81,12 @@ void DataBase::insertVisionObject(const std::string& object, int size, const std
     execute(sql);
 }
 
-void DataBase::updateStorageSlot(int storageId, int objectId, int occupied) {
+void DataBase::updateStorageSlot(int slotId, int objectId, bool occupied) {
     std::string sql =
         "UPDATE current_state_storage SET "
         "object_id = " + std::to_string(objectId) + ", "
-        "occupied = " + std::to_string(occupied) +
-        " WHERE storage_id = " + std::to_string(storageId) + ";";
+        "occupied = " + std::to_string(occupied) +""
+        "WHERE slot_id = " + std::to_string(slotId) + ";";
 
     execute(sql);
 }
@@ -97,4 +99,11 @@ void DataBase::insertHistory(int objectId, int slot, double timestamp) {
         + std::to_string(timestamp) + ");";
 
     execute(sql);
+}
+
+//getting the time
+
+double DataBase::time() {
+    using namespace std::chrono;
+    return duration<double>(system_clock::now().time_since_epoch()).count();
 }
