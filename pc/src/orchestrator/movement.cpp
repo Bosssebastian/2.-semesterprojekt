@@ -70,26 +70,40 @@ void Movement::toggleAsync(){
     }
 }
 
-/*
+
 void Movement::moveUp(std::string start, double speed, double acc){ // Needs testing!!!
-    std::vector<double> curPos = rtde_control.getForwardKinematics();
+    /*std::vector<double> curPos = lastForwardPosition;
     curPos[2] += 100;
     curPos = rtde_control.getInverseKinematics(curPos); // Convert to joint angles
     curPos.push_back(speed);
     curPos.push_back(acc);
 
     int idx = 0; // Default to home position
-    for (int i = 0; i < stockName.size(); i++){ // Determine stock position idx
-        if (stock == stockName[i]){
+    for (size_t i = 0; i < stockName.size(); i++){ // Determine stock position idx
+        if (start == stockName[i]){
             idx = i;
         }
     }
     std::vector<double> stockVec = stockCollection[idx];
     stockVec.push_back(speed);
-    stockVec.push_back(acc);
-    rtde_control.moveJ({curPos,stockVec},asyncOn); // must have at least 3 points and ended by the stopScript() function
+    stockVec.push_back(acc);*/
+    std::vector<std::vector<double>> path;
+    if (start == "home"){
+        std::vector<double> pose1 = stockCollection[0];
+        //std::vector<double
+        pose1.push_back(speed);
+        pose1.push_back(acc);
+        pose1.push_back(0.0);
+        path.push_back(pose1);
+        std::vector<double> pose2 = stockCollection[1];
+        pose2.push_back(speed);
+        pose2.push_back(acc);
+        pose2.push_back(0.0);
+        path.push_back(pose2);
+    }
+    rtde_control.moveJ(path); // must have at least 3 points and ended by the stopScript() function
 }
-*/
+
 
 void Movement::moveDown(std::string start, double speed, double acc){
     double distanceToCube;

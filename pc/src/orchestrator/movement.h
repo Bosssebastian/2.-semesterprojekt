@@ -13,7 +13,7 @@ public:
     void moveJStock(std::string, double speed = 0.5, double acc = 0.2);
     void home(); // Shortcut for moveJStock("home")
     void moveZ(double, std::string, double speed = 0.5, double acc = 0.2); // + goes up, - goes down
-    //void moveUp(std::string, double speed = 0.5, double acc = 0.2); // Could not get async to work with path planning. Timing issue, which requires us to stall the program while it gets ready
+    void moveUp(std::string, double speed = 0.5, double acc = 0.2); // Could not get async to work with path planning. Timing issue, which requires us to stall the program while it gets ready
     void moveDown(std::string, double speed = 0.5, double acc = 0.2);
     bool isDone();
     void toggleAsync();

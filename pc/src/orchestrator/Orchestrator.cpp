@@ -184,8 +184,9 @@ void Orchestrator::handleStarting() {
 }
 
 void Orchestrator::handleIdle() {
-    onEnter([] {
+    onEnter([this] {
         LOG_INFO("Orchestrator: Idle. Waiting for input...");
+        mMove.home();
     });
 
     if (skipRequested()) {
@@ -274,6 +275,7 @@ void Orchestrator::handleInStorRobotOverStorage() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Robot over storage placeholder state.");
         mMove.moveJStock("storage");
+        //mMove.moveUp("home");
     });
 
     if (skipRequested()) {
