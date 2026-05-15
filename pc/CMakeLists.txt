@@ -26,6 +26,7 @@ add_executable(pc
     src/io/IoRunner.cpp
     src/io/Interface.cpp
     src/io/SerialPort.cpp
+    src/io/Uart.cpp
     src/logging/Logger.cpp
     src/vision/VisionRunner.cpp
     src/vision/VisionController.cpp

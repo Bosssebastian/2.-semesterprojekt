@@ -69,7 +69,7 @@ void Orchestrator::update() {
         case OrchestratorState::InStor_RobotToCube: handleInStorRobotToCube(); break;
         case OrchestratorState::InStor_GripperClose: handleInStorGripperClose(); break;
         case OrchestratorState::InStor_RobotOverStorage: handleInStorRobotOverStorage(); break;
-        case OrchestratorState::InStor_StorageMoveToPos: handleInStorStorageMoveToPos(); break;
+        case OrchestratorState::InStor_StorageWaitingOnMove: handleStorageWaitingOnMove(); break;
         case OrchestratorState::InStor_RobotDownToSlot: handleInStorRobotDownToSlot(); break;
         case OrchestratorState::InStor_GripperOpen: handleInStorGripperOpen(); break;
         case OrchestratorState::InStor_RobotUpFromSlot: handleInStorRobotUpFromSlot(); break;
@@ -179,6 +179,7 @@ void Orchestrator::handleInStorGetStorageSlot() {
 void Orchestrator::handleInStorStorageMoveToSlot() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Storage move to slot placeholder state.");
+        mStorage.sendCommand(CmdType::GOTO, std::to_string(mActiveStorageSlot));
     });
 
     if (skipRequested()) {
@@ -257,7 +258,7 @@ void Orchestrator::handleInStorRobotOverStorage() {
     });
 
     if (skipRequested()) {
-        transitionTo(OrchestratorState::InStor_StorageMoveToPos);
+        transitionTo(OrchestratorState::InStor_StorageWaitingOnMove);
         return;
     }
 
@@ -266,7 +267,7 @@ void Orchestrator::handleInStorRobotOverStorage() {
     //}
 }
 
-void Orchestrator::handleInStorStorageMoveToPos() {
+void Orchestrator::handleStorageWaitingOnMove() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Storage move to position placeholder state.");
     });
@@ -274,6 +275,20 @@ void Orchestrator::handleInStorStorageMoveToPos() {
     if (skipRequested()) {
         transitionTo(OrchestratorState::InStor_RobotDownToSlot);
         return;
+    }
+    switch (mStorage.getStatus(CmdType::GOTO)) {
+        case CmdStatus::DONE:
+            LOG_INFO("Storage System move completed successfully.");
+            transitionTo(OrchestratorState::InStor_RobotDownToSlot);
+            break;
+        case CmdStatus::FAILED:
+            transitionToFault("Storage System failed to move");
+            break;
+        case CmdStatus::TIMED_OUT:
+            transitionToFault("Storage System move timed out");
+            break;
+        default:
+            break;
     }
 }
 
