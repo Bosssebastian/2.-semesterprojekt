@@ -10,11 +10,11 @@
 int main() {
     stdio_init_all();
 
-    Gripper gripper;
-    gripper.setup();
-
     CurrentSensor currentSensor;
     currentSensor.setup();
+
+    Gripper gripper(currentSensor);
+    gripper.setup();
 
     Interface interface;
 
@@ -22,7 +22,7 @@ int main() {
     //testInterface.setup();
     //testInterface.setDriver(gripper.driver());
 
-    Controller controller(interface, gripper);
+    Controller controller(interface, gripper, currentSensor);
 
     while (true) {
         gripper.update();

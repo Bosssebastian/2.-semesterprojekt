@@ -22,7 +22,7 @@ private:
     cv::Mat mTempFrame, mFrame, mCorners, mRotVec, mTransVec, mOldTransVec;
     std::vector<cv::Point3f> mObjectPoints;
 
-    bool mStatus = false;    
+    bool mStatus = true;    
     
     std::string mData;
     std::string mObject, mColor;
