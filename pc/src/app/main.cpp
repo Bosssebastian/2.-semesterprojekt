@@ -16,6 +16,10 @@ int main() {
     //web.start();
     //orchestrator.run();
 
+    std::cout << "VisionRunner started. Press Enter to test..." << std::endl;
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    vision.scanForObject();
+
     std::cout << "VisionRunner started. Press Enter to stop..." << std::endl;
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
