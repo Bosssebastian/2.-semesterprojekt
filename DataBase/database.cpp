@@ -61,6 +61,15 @@ void DataBase::createTables() {
     execute(current_state_storage);
     execute(current_state_vision);
     execute(history);
+
+    for(int i = 1; i <= 8; ++i) {
+        std::string sql = 
+        "INSERT OR IGNORE IF NOT EXISTS INTO current_state_storage "
+        "(storage_id, object_id, occupied) "
+        "VALUES(" + std::to_string(i) + ", NULL, 0);";
+    execute(sql);
+    };
+    
 }
 
 void DataBase::insertVisionObject(const std::string& object, int size, const std::string& color) {
