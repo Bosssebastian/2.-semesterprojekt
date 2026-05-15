@@ -23,6 +23,10 @@ CmdType Interface::getCommand() {
         case CmdType::STATUS:
         case CmdType::STATISTICS:
         case CmdType::RESET:
+        case CmdType::CURRENT_EVENTS_ON:
+        case CmdType::CURRENT_EVENTS_OFF:
+        case CmdType::STALL_VALUES_ON:
+        case CmdType::STALL_VALUES_OFF:
             return command;
         default:
             return CmdType::NONE;

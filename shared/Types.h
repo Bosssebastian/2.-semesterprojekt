@@ -3,7 +3,21 @@
 #include <cstdint>
 #include <string>
 
-enum class CmdType {NONE, PING, OPEN, CLOSE, STOP, STATUS, STATISTICS, GOTO, RESET};
+enum class CmdType {
+    NONE,
+    PING,
+    OPEN,
+    CLOSE,
+    STOP,
+    STATUS,
+    STATISTICS,
+    GOTO,
+    RESET,
+    CURRENT_EVENTS_ON,
+    CURRENT_EVENTS_OFF,
+    STALL_VALUES_ON,
+    STALL_VALUES_OFF
+};
 enum class ResponseType {OK, ERROR};
 enum class EventType {ERROR, MOVE_DONE};
 enum class EventReason {NONE, STEPS_FINISHED, STALL, STOPPED, MOVE_ERROR};
@@ -28,6 +42,14 @@ inline const char* toString(CmdType type) {
             return "GOTO";
         case CmdType::RESET:
             return "RESET";
+        case CmdType::CURRENT_EVENTS_ON:
+            return "CURRENT_EVENTS_ON";
+        case CmdType::CURRENT_EVENTS_OFF:
+            return "CURRENT_EVENTS_OFF";
+        case CmdType::STALL_VALUES_ON:
+            return "STALL_VALUES_ON";
+        case CmdType::STALL_VALUES_OFF:
+            return "STALL_VALUES_OFF";
     }
 
     return "UNKNOWN";
@@ -99,6 +121,18 @@ inline CmdType toCmdType(const std::string& value) {
     }
     if (value == "RESET") {
         return CmdType::RESET;
+    }
+    if (value == "CURRENT_EVENTS_ON") {
+        return CmdType::CURRENT_EVENTS_ON;
+    }
+    if (value == "CURRENT_EVENTS_OFF") {
+        return CmdType::CURRENT_EVENTS_OFF;
+    }
+    if (value == "STALL_VALUES_ON") {
+        return CmdType::STALL_VALUES_ON;
+    }
+    if (value == "STALL_VALUES_OFF") {
+        return CmdType::STALL_VALUES_OFF;
     }
 
     return CmdType::NONE;

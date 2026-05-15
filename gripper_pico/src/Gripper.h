@@ -3,6 +3,7 @@
 #include <cstdint>
 
 #include "../../shared/Types.h"
+#include "CurrentSensor.h"
 #include "stepper/StepperAxis.h"
 #include "stepper/TMC2209Driver.h"
 #include "pico/time.h"
@@ -33,7 +34,7 @@ struct GripperMoveEvent {
 
 class Gripper {
 public:
-    Gripper();
+    explicit Gripper(CurrentSensor& currentSensor);
     void setup();
     void update();
 

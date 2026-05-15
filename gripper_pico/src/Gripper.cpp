@@ -2,9 +2,9 @@
 #include "config/ParameterConfig.h"
 #include "config/PinConfig.h"
 
-Gripper::Gripper()
+Gripper::Gripper(CurrentSensor& currentSensor)
     : mDriver(PinConfig::TMC_UART_PORT, PinConfig::TMC_UART_BAUD, PinConfig::TMC_ADDRESS),
-      mAxis(mDriver) {}
+      mAxis(mDriver, currentSensor) {}
 
 void Gripper::setup() {
     mDriver.setup();
