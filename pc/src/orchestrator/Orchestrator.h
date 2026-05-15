@@ -1,5 +1,6 @@
 #pragma once
 #include "OrchestratorState.h"
+#include "StorageManager.h"
 #include "io/Interface.h"
 #include <string>
 #include "movement.h"
@@ -39,6 +40,8 @@ private:
 
     void handleStarting();
     void handleIdle();
+
+    void handleInStorGetStorageSlot();
     void handleInStorStorageMoveToSlot();
     void handleInStorRobotOverInput();
     void handleInStorRobotToCube();
@@ -69,6 +72,8 @@ private:
 
     std::vector<std::vector<double>> inputFromVision;
     double rot;
+    StorageManager mStorageManager;
+    int mActiveStorageSlot{-1};
     
     // Movement move("192.168.1.11", 29998);
 };

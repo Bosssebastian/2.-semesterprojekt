@@ -13,6 +13,10 @@ void CurrentSensor::setup() {
     mNextSampleMs = mStartMs;
     mBatchStartMs = 0;
     mSampleCount = 0;
+    mLatestAmps = 0.0f;
+    mHasLatestSample = false;
+    mSampleSequence = 0;
+    mEventsEnabled = true;
 }
 
 void CurrentSensor::update() {
@@ -25,12 +29,35 @@ void CurrentSensor::update() {
         mBatchStartMs = mNextSampleMs - mStartMs;
     }
 
-    mSamples[mSampleCount++] = readAmps();
+    mLatestAmps = readAmps();
+    mHasLatestSample = true;
+    ++mSampleSequence;
+    mSamples[mSampleCount++] = mLatestAmps;
     mNextSampleMs += SamplePeriodMs;
 
     if (mSampleCount >= BatchSize) {
         flushBatch();
     }
+}
+
+bool CurrentSensor::hasLatestSample() const {
+    return mHasLatestSample;
+}
+
+float CurrentSensor::latestAmps() const {
+    return mLatestAmps;
+}
+
+uint32_t CurrentSensor::sampleSequence() const {
+    return mSampleSequence;
+}
+
+void CurrentSensor::setEventsEnabled(bool enabled) {
+    mEventsEnabled = enabled;
+}
+
+bool CurrentSensor::eventsEnabled() const {
+    return mEventsEnabled;
 }
 
 uint16_t CurrentSensor::readRaw() const {
@@ -44,7 +71,8 @@ float CurrentSensor::readAmps() const {
 }
 
 void CurrentSensor::flushBatch() {
-    if (mSampleCount == 0) {
+    if (mSampleCount == 0 || !mEventsEnabled) {
+        mSampleCount = 0;
         return;
     }
 

@@ -30,7 +30,7 @@ struct CurrentSample {
 
 class Interface {
 public:
-    Interface(std::string devicePath, std::string portLabel = "", int baud = 115200);
+    Interface(std::string devicePath, std::string portLabel = "", double commandTimeoutSeconds = 20.0, int baud = 115200);
 
     void setDevicePath(std::string devicePath);
     void setup();
@@ -44,6 +44,7 @@ private:
     static constexpr std::size_t CurrentSampleCapacity = 30000;
 
     SerialPort mSerialPort;
+    double mCommandTimeoutSeconds;
     std::map<CmdType, CmdState> mCmdStates;
     std::vector<CurrentSample> mCurrentSamples;
     std::size_t mCurrentWriteIndex = 0;

@@ -2,9 +2,9 @@
 #include "config/ParameterConfig.h"
 #include "config/PinConfig.h"
 
-Gripper::Gripper()
+Gripper::Gripper(CurrentSensor& currentSensor)
     : mDriver(PinConfig::TMC_UART_PORT, PinConfig::TMC_UART_BAUD, PinConfig::TMC_ADDRESS),
-      mAxis(mDriver) {}
+      mAxis(mDriver, currentSensor) {}
 
 void Gripper::setup() {
     mDriver.setup();
@@ -229,8 +229,9 @@ void Gripper::endMove(GripperMoveResult result, bool keepMotorEnabled) {
     mSilentReset = false;
     mIsBusy = false;
     mLastResult = result;
-    if ((completedCommand == CmdType::OPEN || completedCommand == CmdType::CLOSE || completedCommand == CmdType::RESET) &&
-        !(completedCommand == CmdType::OPEN && completedSilentReset)) {
+    if (completedCommand == CmdType::OPEN && completedSilentReset) {
+        publishMoveEvent(completedCommand, result, EventType::OPEN_SEQUENCE_DONE);
+    } else if (completedCommand == CmdType::OPEN || completedCommand == CmdType::CLOSE || completedCommand == CmdType::RESET) {
         publishMoveEvent(completedCommand, result);
     }
 
@@ -239,8 +240,9 @@ void Gripper::endMove(GripperMoveResult result, bool keepMotorEnabled) {
     }
 }
 
-void Gripper::publishMoveEvent(CmdType cmd, GripperMoveResult result) {
+void Gripper::publishMoveEvent(CmdType cmd, GripperMoveResult result, EventType eventType) {
     mMoveEvent.cmd = cmd;
+    mMoveEvent.eventType = eventType;
     mMoveEvent.result = result;
     mHasMoveEvent = true;
 }
