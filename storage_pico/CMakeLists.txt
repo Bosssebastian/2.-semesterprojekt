@@ -45,6 +45,8 @@ add_executable(storage_pico
         src/uartClass.cpp
         src/Interface.cpp
         src/datalogger.cpp
+
+        ../../gripper_pico/src/CurrentSensor.cpp
 )
 
 pico_set_program_name(storage_pico "storage_pico")
@@ -60,6 +62,7 @@ target_link_libraries(storage_pico
         hardware_pwm
         hardware_gpio
         hardware_i2c
+        hardware_adc
 
 
 )
@@ -69,7 +72,8 @@ target_include_directories(storage_pico PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
         ${CMAKE_CURRENT_LIST_DIR}/src
         ${CMAKE_CURRENT_LIST_DIR}/../shared
-)
+        ${CMAKE_CURRENT_LIST_DIR}/../../gripper_pico/src
+) 
 
 pico_add_extra_outputs(storage_pico)
 

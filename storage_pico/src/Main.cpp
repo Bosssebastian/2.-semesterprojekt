@@ -18,11 +18,17 @@
 #include "Interface.h"
 #include "datalogger.h"
 
+#include "../../gripper_pico/src/CurrentSensor.h"
+
 int main() {
+
+
+    CurrentSensor currentSensor;
+    currentSensor.setup();
 
     clock_t ProgramStart = clock();
 
-    int dataloggingSpan = 1200;
+    int dataloggingSpan = 300;
 
     srand(time(0)); //for the random target generator to stress test
     
@@ -103,8 +109,11 @@ int main() {
 
     log1.timeTaskStart();
 
+    int limitingCount = 0;
+
     while (true) {
 
+        //currentSensor.update();
         
 
         //int currentPos = decoder.decipherRaw();
@@ -168,12 +177,13 @@ int main() {
         }
         else if(move > 0) {
             motor.forwards();
-
+            //currentSensor.update();
+            
 
         }
         else if(move < 0) {
             motor.backwards();
-            
+            //currentSensor.update();
         }
 
 
@@ -246,7 +256,7 @@ int main() {
         
 
 //        printf("Channels: %d %d %d %d %d %d %d %d\n", channel1, channel2, channel3, channel4, channel5, channel6, channel7, channel8);
-
+        //currentSensor.update();
         sleep_ms(100);
         tight_loop_contents();
     }   

@@ -2,9 +2,9 @@
 #define PATHFINDER_H
 class pathFinder {
 private:
-    int target;
-    int currentPosition;
-    int maxPosition;
+    int mTarget;
+    int mCurrentPosition;
+    int mMaxPosition;
 
 public:
     pathFinder(int target, int currentPosition, int maxPosition);
