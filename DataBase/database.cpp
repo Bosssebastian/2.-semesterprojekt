@@ -17,6 +17,7 @@ DataBase::DataBase(const std::string& file) : filename(file), db(nullptr) {
 DataBase::~DataBase() {
     if(db) {
         sqlite3_close(db);
+        std::cout << "Database closed \n";
     }
 }
 
@@ -64,7 +65,7 @@ void DataBase::createTables() {
 
     for(int i = 1; i <= 8; ++i) {
         std::string sql = 
-        "INSERT OR IGNORE IF NOT EXISTS INTO current_state_storage "
+        "INSERT OR IGNORE INTO current_state_storage "
         "(storage_id, object_id, occupied) "
         "VALUES(" + std::to_string(i) + ", NULL, 0);";
     execute(sql);
