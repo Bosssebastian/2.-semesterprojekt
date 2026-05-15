@@ -13,6 +13,8 @@ enum class CmdType {
     STATISTICS,
     GOTO,
     RESET,
+    OPEN_RESET,
+    OPEN_RESET_FORWARD,
     CURRENT_EVENTS_ON,
     CURRENT_EVENTS_OFF,
     STALL_VALUES_ON,
@@ -42,6 +44,10 @@ inline const char* toString(CmdType type) {
             return "GOTO";
         case CmdType::RESET:
             return "RESET";
+        case CmdType::OPEN_RESET:
+            return "OPEN_RESET";
+        case CmdType::OPEN_RESET_FORWARD:
+            return "OPEN_RESET_FORWARD";
         case CmdType::CURRENT_EVENTS_ON:
             return "CURRENT_EVENTS_ON";
         case CmdType::CURRENT_EVENTS_OFF:
@@ -125,6 +131,12 @@ inline CmdType toCmdType(const std::string& value) {
     }
     if (value == "RESET") {
         return CmdType::RESET;
+    }
+    if (value == "OPEN_RESET") {
+        return CmdType::OPEN_RESET;
+    }
+    if (value == "OPEN_RESET_FORWARD") {
+        return CmdType::OPEN_RESET_FORWARD;
     }
     if (value == "CURRENT_EVENTS_ON") {
         return CmdType::CURRENT_EVENTS_ON;
