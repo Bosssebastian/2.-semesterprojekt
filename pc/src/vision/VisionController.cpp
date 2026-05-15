@@ -154,9 +154,7 @@ void VisionController::scanForObject(){
             }
             std::cout << "An object was found\n";
             std::vector<std::vector<double>> outputPos;
-            getObjectPosition(outputPos);
-            double rot;
-            getObjectRot(rot);
+            mStatus = true;
         }
     }
     
@@ -197,7 +195,6 @@ void VisionController::setStateFalse(){
 
 void VisionController::getObjectRot(double& output){
     output = fmod(mRotVec.at<double>(2,0), (M_PI/2));
-    std::cout << output << "\n";
     return;
 }
 
