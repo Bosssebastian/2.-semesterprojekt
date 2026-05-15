@@ -1,30 +1,26 @@
 #include <iostream>
 #include <limits>
-//#include "io/IoRunner.h"
+#include "io/IoRunner.h"
 #include "vision/VisionRunner.h"
-//#include "orchestrator/Orchestrator.h"
-//#include "web/WebServerRunner.h"
+#include "orchestrator/Orchestrator.h"
+#include "web/WebServerRunner.h"
 
 int main() {
-    //IoRunner io;
+    IoRunner io;
     VisionRunner vision;
-    //WebServerRunner web(io.gripper());
-    //Orchestrator orchestrator(io, vision, web);
+    WebServerRunner web(io.gripper());
+    Orchestrator orchestrator(io, vision, web);
 
-    //io.start();
+    io.start();
     vision.start();
-    //web.start();
-    //orchestrator.run();
-
-    std::cout << "VisionRunner started. Press Enter to test..." << std::endl;
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    vision.scanForObject();
+    web.start();
+    orchestrator.run();
 
     std::cout << "VisionRunner started. Press Enter to stop..." << std::endl;
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
-    //io.stop();
+    io.stop();
     vision.stop();
-    //web.stop();
+    web.stop();
     return 0;
 }
