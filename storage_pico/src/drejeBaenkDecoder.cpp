@@ -159,17 +159,17 @@ std::array<int, 4> drejeBaenkDecoder::readBitsSynced()
     for (int i = 0; i < samples; i++)
     {
         total1 += _ldr1.readRaw();
-        total2 += _ldr1.readRaw();
-        total3 += _ldr1.readRaw();
-        total4 += _ldr1.readRaw();
+        total2 += _ldr2.readRaw();
+        total3 += _ldr3.readRaw();
+        total4 += _ldr4.readRaw();
 
         sleep_ms(2);
     }
 
     float avg1 = total1 / samples;
-    float avg2 = total1 / samples;
-    float avg3 = total1 / samples;
-    float avg4 = total1 / samples;
+    float avg2 = total2 / samples;
+    float avg3 = total3 / samples;
+    float avg4 = total4 / samples;
 
     return 
     std::array<int, 4>
