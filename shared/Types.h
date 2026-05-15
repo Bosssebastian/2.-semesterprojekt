@@ -19,7 +19,7 @@ enum class CmdType {
     STALL_VALUES_OFF
 };
 enum class ResponseType {OK, ERROR};
-enum class EventType {ERROR, MOVE_DONE};
+enum class EventType {UNKNOWN, ERROR, MOVE_DONE, OPEN_SEQUENCE_DONE};
 enum class EventReason {NONE, STEPS_FINISHED, STALL, STOPPED, MOVE_ERROR};
 
 inline const char* toString(CmdType type) {
@@ -68,10 +68,14 @@ inline const char* toString(ResponseType type) {
 
 inline const char* toString(EventType type) {
     switch (type) {
+        case EventType::UNKNOWN:
+            return "UNKNOWN";
         case EventType::ERROR:
             return "ERROR";
         case EventType::MOVE_DONE:
             return "MOVE_DONE";
+        case EventType::OPEN_SEQUENCE_DONE:
+            return "OPEN_SEQUENCE_DONE";
     }
 
     return "UNKNOWN";
@@ -156,8 +160,11 @@ inline EventType toEventType(const std::string& value) {
     if (value == "MOVE_DONE") {
         return EventType::MOVE_DONE;
     }
+    if (value == "OPEN_SEQUENCE_DONE") {
+        return EventType::OPEN_SEQUENCE_DONE;
+    }
 
-    return EventType::ERROR;
+    return EventType::UNKNOWN;
 }
 
 inline EventReason toEventReason(const std::string& value) {

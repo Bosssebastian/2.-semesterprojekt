@@ -87,15 +87,17 @@ void Controller::setStallValues(bool enabled) {
 }
 
 void Controller::sendMoveCompletionEvent(const GripperMoveEvent& moveEvent) {
+    const EventType doneEvent = moveEvent.eventType;
+
     switch (moveEvent.result) {
         case GripperMoveResult::Done:
-            mInterface.sendEvent(moveEvent.cmd, EventType::MOVE_DONE, EventReason::STEPS_FINISHED);
+            mInterface.sendEvent(moveEvent.cmd, doneEvent, EventReason::STEPS_FINISHED);
             break;
         case GripperMoveResult::Stalled:
-            mInterface.sendEvent(moveEvent.cmd, EventType::MOVE_DONE, EventReason::STALL);
+            mInterface.sendEvent(moveEvent.cmd, doneEvent, EventReason::STALL);
             break;
         case GripperMoveResult::Stopped:
-            mInterface.sendEvent(moveEvent.cmd, EventType::MOVE_DONE, EventReason::STOPPED);
+            mInterface.sendEvent(moveEvent.cmd, doneEvent, EventReason::STOPPED);
             break;
         case GripperMoveResult::Error:
             mInterface.sendEvent(moveEvent.cmd, EventType::ERROR, EventReason::MOVE_ERROR);

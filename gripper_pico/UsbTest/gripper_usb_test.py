@@ -25,6 +25,8 @@ COMMANDS = {
 
 SETUP_COMMANDS = ("CURRENT_EVENTS_OFF", "STALL_VALUES_ON")
 RESTORE_COMMANDS = ("STALL_VALUES_OFF", "CURRENT_EVENTS_ON")
+OPEN_SEQUENCE_DONE = "EVENT OPEN_SEQUENCE_DONE OPEN"
+CLOSE_DONE = "EVENT MOVE_DONE CLOSE"
 
 
 def open_serial(port, baudrate, timeout):
@@ -190,6 +192,76 @@ def print_stall_data(stall_samples):
         print(f"{index:04d} {sample['mode']} {sample['value']}")
 
 
+def wait_for_event(ser, timeout, expected_prefixes, stall_samples):
+    while True:
+        event = read_line(ser, timeout)
+        if event is None:
+            return None
+
+        if event.startswith("EVENT CURRENT "):
+            continue
+
+        stall_value = parse_stall_value(event)
+        if stall_value is not None:
+            stall_samples.append(stall_value)
+            continue
+
+        print(f"< {event}")
+        if event.startswith("EVENT ERROR "):
+            return event
+        if any(event.startswith(prefix) for prefix in expected_prefixes):
+            return event
+
+
+def run_auto_sequence(ser, timeout, cycles, delay, stall_samples):
+    good_runs = 0
+    attempted_runs = 0
+    event_timeout = max(timeout, 30.0)
+
+    print("Starting auto open/close sequence. Press Ctrl+C to stop.")
+    try:
+        while cycles == 0 or attempted_runs < cycles:
+            attempted_runs += 1
+            print(f"\nRun {attempted_runs} starting. Good full runs: {good_runs}")
+
+            if run_command(ser, "OPEN", timeout, False, stall_samples) != 0:
+                print("Open command failed.", file=sys.stderr)
+                return 1
+
+            print("Waiting for full open sequence event...")
+            open_event = wait_for_event(ser, event_timeout, [OPEN_SEQUENCE_DONE], stall_samples)
+            if open_event is None:
+                print("Timed out waiting for full open sequence.", file=sys.stderr)
+                return 1
+            if not open_event.startswith(OPEN_SEQUENCE_DONE):
+                print("Open sequence failed.", file=sys.stderr)
+                return 1
+
+            good_runs += 1
+            print(f"Good full runs: {good_runs}")
+
+            if run_command(ser, "CLOSE", timeout, False, stall_samples) != 0:
+                print("Close command failed.", file=sys.stderr)
+                return 1
+
+            print("Waiting for close movement event...")
+            close_event = wait_for_event(ser, event_timeout, [CLOSE_DONE], stall_samples)
+            if close_event is None:
+                print("Timed out waiting for close movement.", file=sys.stderr)
+                return 1
+            if not close_event.startswith(CLOSE_DONE):
+                print("Close movement failed.", file=sys.stderr)
+                return 1
+
+            if delay > 0:
+                time.sleep(delay)
+    except KeyboardInterrupt:
+        print()
+
+    print(f"Auto sequence stopped. Good full runs: {good_runs} / attempted: {attempted_runs}")
+    return 0
+
+
 def listen_for_messages(ser, stall_samples):
     print("Listening for gripper messages. Press Ctrl+C to stop.")
     try:
@@ -204,7 +276,7 @@ def listen_for_messages(ser, stall_samples):
 
 def interactive_loop(ser, timeout, wait_for_event, stall_samples):
     print("Connected.")
-    print("Commands: ping, open, close, stop, status, statistics, listen, data, clear, quit")
+    print("Commands: ping, open, close, stop, status, statistics, listen, data, clear, auto, quit")
 
     while True:
         try:
@@ -227,9 +299,12 @@ def interactive_loop(ser, timeout, wait_for_event, stall_samples):
             stall_samples.clear()
             print("Stall data cleared.")
             continue
+        if command == "auto":
+            run_auto_sequence(ser, timeout, 0, 0.0, stall_samples)
+            continue
         if command not in COMMANDS:
             print("Unknown command.")
-            print("Use: ping, open, close, stop, status, statistics, listen, data, clear, quit")
+            print("Use: ping, open, close, stop, status, statistics, listen, data, clear, auto, quit")
             continue
 
         run_command(ser, COMMANDS[command], timeout, wait_for_event, stall_samples)
@@ -237,7 +312,7 @@ def interactive_loop(ser, timeout, wait_for_event, stall_samples):
 
 def main():
     parser = argparse.ArgumentParser(description="Windows USB serial test tool for the Pico gripper.")
-    parser.add_argument("command", nargs="?", choices=[*COMMANDS.keys(), "listen", "data", "clear"], help="Command to send.")
+    parser.add_argument("command", nargs="?", choices=[*COMMANDS.keys(), "listen", "data", "clear", "auto"], help="Command to send.")
     parser.add_argument("--port", help="COM port, for example COM5. If omitted, the script scans for the gripper.")
     parser.add_argument("--baud", type=int, default=BAUDRATE, help=f"Serial baud rate. Default: {BAUDRATE}")
     parser.add_argument("--timeout", type=float, default=TIMEOUT_SECONDS, help="Read timeout in seconds.")
@@ -245,6 +320,18 @@ def main():
         "--wait-for-event",
         action="store_true",
         help="After open/close, wait for EVENT MOVE_DONE or EVENT ERROR.",
+    )
+    parser.add_argument(
+        "--cycles",
+        type=int,
+        default=0,
+        help="Auto mode cycle count. Use 0 to run until Ctrl+C. Default: 0",
+    )
+    parser.add_argument(
+        "--delay",
+        type=float,
+        default=0.0,
+        help="Auto mode delay between completed close and next open, in seconds. Default: 0",
     )
     args = parser.parse_args()
 
@@ -273,6 +360,8 @@ def main():
             stall_samples.clear()
             print("Stall data cleared.")
             return 0
+        if args.command == "auto":
+            return run_auto_sequence(ser, args.timeout, args.cycles, args.delay, stall_samples)
 
         result = run_command(ser, COMMANDS[args.command], args.timeout, args.wait_for_event, stall_samples)
         if args.command in {"open", "close"}:

@@ -178,10 +178,16 @@ void Interface::handleEvent(const std::vector<std::string>& parts) {
     CmdType cmd = toCmdType(parts[2]);
     CmdState& state = mCmdStates[cmd];
 
+    if (!state.active) {
+        return;
+    }
+
     if (eventType == EventType::MOVE_DONE) {
         state.status = CmdStatus::DONE;
-    } else {
+    } else if (eventType == EventType::ERROR) {
         state.status = CmdStatus::FAILED;
+    } else {
+        return;
     }
 
     state.active = false;

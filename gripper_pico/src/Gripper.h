@@ -29,6 +29,7 @@ inline const char* toString(GripperMoveResult result) {
 
 struct GripperMoveEvent {
     CmdType cmd = CmdType::NONE;
+    EventType eventType = EventType::MOVE_DONE;
     GripperMoveResult result = GripperMoveResult::None;
 };
 
@@ -70,5 +71,5 @@ private:
     void startOpenResetPause();
     bool startResetSequence(bool silent);
     void endMove(GripperMoveResult result, bool keepMotorEnabled);
-    void publishMoveEvent(CmdType cmd, GripperMoveResult result);
+    void publishMoveEvent(CmdType cmd, GripperMoveResult result, EventType eventType = EventType::MOVE_DONE);
 };
