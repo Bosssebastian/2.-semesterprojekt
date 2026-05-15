@@ -1,4 +1,8 @@
+#pragma once
+#ifdef PC_ENABLE_OPENCV
 #include <opencv2/opencv.hpp>
+#endif
+#include <string>
 #include <vector>
 #include <math.h>
 
@@ -17,10 +21,12 @@ public:
     void setStateFalse();
 
 private:
+#ifdef PC_ENABLE_OPENCV
     cv::VideoCapture* mCam;
     cv::QRCodeDetector mQR;
     cv::Mat mTempFrame, mFrame, mCorners, mRotVec, mTransVec, mOldTransVec;
     std::vector<cv::Point3f> mObjectPoints;
+#endif
 
     bool mStatus = true;    
     

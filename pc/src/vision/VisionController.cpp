@@ -1,5 +1,7 @@
 #include "VisionController.h"
 #include <iostream>
+
+#ifdef PC_ENABLE_OPENCV
 #include <filesystem>
 
 void getValue(std::string& value, std::string& object, std::string& color, int& size)
@@ -180,7 +182,6 @@ void VisionController::getObjectPosition(std::vector<std::vector<double>>& outpu
     outputPos[0][0] = mTransVec.at<double>(0,0);
     outputPos[1][0] = mTransVec.at<double>(1,0);
 }
-
 
 void VisionController::getObjectInfo(std::string& object, std::string& size, std::string& color){
     object = mObject;

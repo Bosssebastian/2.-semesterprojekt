@@ -4,7 +4,7 @@
         {
             "label": "Configure Project",
             "type": "process",
-            "command": "${userHome}/.pico-sdk/cmake/v3.31.5/bin/cmake",
+            "command": "/usr/bin/cmake",
             "args": [
                 "-S",
                 "${workspaceFolder}",
@@ -28,7 +28,7 @@
             "isBuildCommand": true,
             "dependsOn": "Configure Project",
             "dependsOrder": "sequence",
-            "command": "${userHome}/.pico-sdk/ninja/v1.12.1/ninja",
+            "command": "/usr/bin/ninja",
             "args": ["-C", "${workspaceFolder}/build"],
             "group": "build",
             "presentation": {

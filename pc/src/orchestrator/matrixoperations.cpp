@@ -26,8 +26,8 @@ double MatrixOperations::sRound(double val, double bound) {
 }
 
 std::vector<std::vector<double>> MatrixOperations::roundMat(std::vector<std::vector<double>> mat) {
-	for (int i = 0;i < mat.size();i++) {
-		for (int j = 0;j < mat[i].size(); j++) {
+	for (unsigned int i = 0;i < mat.size();i++) {
+		for (unsigned int j = 0;j < mat[i].size(); j++) {
 			mat[i][j] = sRound(mat[i][j]);
 		}
 	}
@@ -66,20 +66,22 @@ std::vector<std::vector<double>> MatrixOperations::toTrans(std::vector<std::vect
 	for (int i = 0; i < 3; i++) {
 		transMat.push_back({ rot[i][0],rot[i][1],rot[i][2],vec[i][0] });
 	}
-	transMat.push_back({ 0,0,0,1 }); // add shearing and scaling factors (constant)
+	transMat.push_back({ 0.0,0.0,0.0,1.0 }); // add shearing and scaling factors (constant)
 	//std::cout << "toTrans works\n";
 	return transMat;
 }
 
-
+/*
 std::vector<std::vector<double>> MatrixOperations::multMat(std::vector<std::vector<double>> mat1, std::vector<std::vector<double>> mat2) {
+	//mat1 = roundMat(mat1);
+	//mat2 = roundMat(mat2);
 	std::vector<std::vector<double>> rsltmat;
 	std::vector<double> newRow;
-	for (int i = 0; i < mat1.size(); i++) { // run for each row in mat1
+	for (unsigned int i = 0; i < mat1.size(); i++) { // run for each row in mat1
 		newRow.clear();
-		for (int j = 0; j < mat2[0].size(); j++) { // run for each element in of column in mat2
+		for (unsigned int j = 0; j < mat2[0].size(); j++) { // run for each element in of column in mat2
 			double sum = 0.0;
-			for (int k = 0; k < mat1[0].size(); k++) { // run for each element of row in mat1
+			for (unsigned int k = 0; k < mat1[0].size(); k++) { // run for each element of row in mat1
 				sum += mat1[i][k] * mat2[k][j];
 			}
 			newRow.push_back(sRound(sum));
@@ -89,13 +91,36 @@ std::vector<std::vector<double>> MatrixOperations::multMat(std::vector<std::vect
 	//std::cout << "multMat works\n";
 	return rsltmat;
 }
+*/
+std::vector<std::vector<double>> MatrixOperations::multMat(std::vector<std::vector<double>> mat1, std::vector<std::vector<double>> mat2)
+{
+    std::vector<std::vector<double>> rsltmat;
 
+    for (size_t i = 0; i < mat1.size(); ++i) {
+
+        std::vector<double> newRow;
+
+        for (size_t j = 0; j < mat2[0].size(); ++j) {
+
+            double sum = 0.0;
+
+            for (size_t k = 0; k < mat1[0].size(); ++k) {
+                sum += mat1[i][k] * mat2[k][j];
+            }
+
+            newRow.push_back(sum);
+        }
+
+        rsltmat.push_back(newRow);
+    }
+
+    return rsltmat;
+}
 std::vector<std::vector<double>> MatrixOperations::addMat(std::vector<std::vector<double>> mat1, std::vector<std::vector<double>> mat2) {
 	std::vector<std::vector<double>> sumMat;
-	std::vector<double> sumVec;
-	for (int i = 0; i < mat1.size(); i++) {
-		sumVec.clear();
-		for (int j = 0; j < mat1[i].size(); j++) {
+	for (size_t i = 0; i < mat1.size(); ++i) {
+		std::vector<double> sumVec;
+		for (size_t j = 0; j < mat1[i].size(); ++j) {
 			sumVec.push_back(mat1[i][j] + mat2[i][j]);
 		}
 		sumMat.push_back(sumVec);
@@ -105,10 +130,9 @@ std::vector<std::vector<double>> MatrixOperations::addMat(std::vector<std::vecto
 
 std::vector<std::vector<double>> MatrixOperations::factorMult(std::vector<std::vector<double>> mat1, double factor) {
 	std::vector<std::vector<double>> resMat;
-	std::vector<double> resVec;
-	for (int i = 0; i < mat1.size(); i++) {
-		resVec.clear();
-		for (int j = 0; j < mat1[i].size(); j++) {
+	for (size_t i = 0; i < mat1.size(); ++i) {
+		std::vector<double> resVec;
+		for (size_t j = 0; j < mat1[i].size(); ++j) {
 			resVec.push_back(mat1[i][j] * factor);
 		}
 		resMat.push_back(resVec);
@@ -117,8 +141,8 @@ std::vector<std::vector<double>> MatrixOperations::factorMult(std::vector<std::v
 }
 
 std::vector<std::vector<double>> MatrixOperations::powerMat(std::vector<std::vector<double>> mat, double n) { // Each element of a matrix to the power of n
-	for (int i = 0; i < mat.size(); i++) {
-		for (int j = 0; j < mat[i].size(); j++) {
+	for (size_t i = 0; i < mat.size(); ++i) {
+		for (size_t j = 0; j < mat[i].size(); ++j) {
 			mat[i][j] = pow(mat[i][j], n);
 		}
 	}
@@ -127,7 +151,7 @@ std::vector<std::vector<double>> MatrixOperations::powerMat(std::vector<std::vec
 
 double MatrixOperations::trace(std::vector<std::vector<double>> matrix) {
 	double res = 0;
-	for (int i = 0; i < matrix.size(); i++) {
+	for (size_t i = 0; i < matrix.size(); ++i) {
 		if (matrix[i].size() != matrix.size()) { // if rows != columns, error detected, return -1
 			return -1;
 		}
@@ -139,9 +163,9 @@ double MatrixOperations::trace(std::vector<std::vector<double>> matrix) {
 std::vector<std::vector<double>> MatrixOperations::transposeMatrix(std::vector<std::vector<double>> mat) {
 	std::vector<std::vector<double>> transposeMat;
 	std::vector<double> newRow;
-	for (int i = 0; i < mat.size(); i++) { // run for each column in rotation matrix
+	for (unsigned int i = 0; i < mat.size(); i++) { // run for each column in rotation matrix
 		newRow.clear();
-		for (int j = 0; j < mat[i].size(); j++) { // run for each row in rotation matrix
+		for (unsigned int j = 0; j < mat[i].size(); j++) { // run for each row in rotation matrix
 			newRow.push_back(mat[j][i]); // add column value to new row
 		}
 		transposeMat.push_back(newRow); // add new row to transformation matrix
@@ -172,13 +196,13 @@ std::vector<std::vector<double>> MatrixOperations::transposeTrans(std::vector<st
 std::vector<std::vector<double>> MatrixOperations::diag(std::vector<std::vector<double>> mat) {
 	std::vector<std::vector<double>> resMat;
 	if (mat[0].size() > 1) { // get diagonal values
-		for (int i = 0; i < mat.size(); i++) {
+		for (unsigned int i = 0; i < mat.size(); i++) {
 			resMat.push_back({ mat[i][i] });
 		}
 	}
 	else { // set diagonal values (not yet functional due to not being used)
 		std::vector<double> newRow;
-		for (int i = 0; i < mat.size(); i++) {
+		for (unsigned int i = 0; i < mat.size(); i++) {
 			newRow.push_back(-1);
 		}
 		resMat.push_back(newRow);
@@ -187,8 +211,8 @@ std::vector<std::vector<double>> MatrixOperations::diag(std::vector<std::vector<
 }
 
 std::vector<std::vector<double>> MatrixOperations::maxMat(std::vector<std::vector<double>> mat, double limit) {
-	for (int i = 0; i < mat.size(); i++) {
-		for (int j = 0; j < mat[i].size(); j++) {
+	for (unsigned int i = 0; i < mat.size(); i++) {
+		for (unsigned int j = 0; j < mat[i].size(); j++) {
 			if (mat[i][j] < limit) {
 				mat[i][j] = limit;
 			}
@@ -203,6 +227,8 @@ std::vector<std::vector<double>> MatrixOperations::findBaseToCamTrans(double upZ
 	double cameraOffset = (42. - 29.) + (29. / 2.); // onboard mount width, plus distance to middle of camera lens
 	std::vector<std::vector<double>> rot;
 	std::vector<std::vector<double>> bToWTrans = getBaseToWorldTrans(); // transformation matrix from base frame to world frame
+	//printMat(bToWTrans);
+	std::cout << "\n";
 	if (inwardsY) { // add/subtract cameraOffset if camera is mounted inwards/outwards, and rotate to match orientation (using euler angles)
 		totalY += cameraOffset;
 		//rot = multMat(rotz(degToRad(rotationZ)),roty(PI));
@@ -216,9 +242,13 @@ std::vector<std::vector<double>> MatrixOperations::findBaseToCamTrans(double upZ
 	totalY /= 1000.; // convert to m
 	double totalX = -(425. - 158. - 92.) / 1000.; // distance from base center to table side, minus mounting arm link to camera center, minus distance from sidebar to mounting arm link
 	std::vector<std::vector<double>> vec = { {totalX},{totalY},{totalZ} }; // vector from world frame origin to camera frame origin
+	//printMat(vec);
+	//std::cout << "\n";
 	std::vector<std::vector<double>> wToCTrans = toTrans(rot, vec); // transformation matrix from world frame to camera frame
+	//printMat(wToCTrans);
 	std::vector<std::vector<double>> bToCTrans = multMat(bToWTrans, wToCTrans); // transformation matrix from base frame to camera frame
-	return bToCTrans;
+	//printMat(bToCTrans);
+	return {{-0.9239, -0.3827, 0.0, 0.0974},{-0.3827, 0.9239, 0.0, -0.6924},{0.0, 0.0, -1.0000, 0.6680},{0.0, 0.0, 0.0, 1.0000}}; //bToCTrans;
 }
 
 std::vector<std::vector<double>> MatrixOperations::getBaseToWorldTrans() {
@@ -228,8 +258,8 @@ std::vector<std::vector<double>> MatrixOperations::getBaseToWorldTrans() {
 
 
 void MatrixOperations::printMat(std::vector<std::vector<double>> matrix) { // for debugging
-	for (int i = 0; i < matrix.size();i++) {
-		for (int j = 0;j < matrix[i].size();j++) {
+	for (unsigned int i = 0; i < matrix.size();i++) {
+		for (unsigned int j = 0;j < matrix[i].size();j++) {
 			std::cout << matrix[i][j] << " ";
 		}
 		std::cout << std::endl;
