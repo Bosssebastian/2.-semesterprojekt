@@ -45,7 +45,7 @@ inline const char* toString(StallDetectionMode mode) {
 
     return "Unknown";
 }
-constexpr StallDetectionMode STALL_DETECTION_MODE = StallDetectionMode::Uart;
+constexpr StallDetectionMode STALL_DETECTION_MODE = StallDetectionMode::Current;
 constexpr uint32_t DIAG_IRQ_EVENT_MASK = GPIO_IRQ_EDGE_RISE;
 
 }
