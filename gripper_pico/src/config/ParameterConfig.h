@@ -18,7 +18,7 @@ constexpr uint32_t DRIVER_PWM_THRESHOLD = 0;
 constexpr uint32_t DRIVER_COOL_THRESHOLD = 0x000fffff;
 // Firmware stop cutoff for filtered SG_RESULT. Free motion is around 300+,
 // while loaded stall/contact falls below this value.
-constexpr uint16_t DRIVER_STALL_THRESHOLD = 250;
+constexpr uint16_t DRIVER_STALL_THRESHOLD = 320;
 constexpr uint8_t DRIVER_STALL_GUARD_REGISTER_VALUE = static_cast<uint8_t>(DRIVER_STALL_THRESHOLD / 2u);
 constexpr uint16_t DRIVER_STALL_RAMP_THRESHOLD = 200;
 constexpr uint32_t DRIVER_STALL_ARM_DELAY_US = 100000;
