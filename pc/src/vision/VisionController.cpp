@@ -1,6 +1,6 @@
+#include <filesystem>
 #include "VisionController.h"
 #include <iostream>
-#include <filesystem>
 
 void getValue(std::string& value, std::string& object, std::string& color, int& size)
 /*input string, object type string, color string, size int*/
@@ -52,11 +52,13 @@ VisionController::VisionController()
     fs.release();
 
 
-    float S = 0.041; // size of the qr Code
-    mObjectPoints.push_back(cv::Point3f(0, 0, 0));       // Top-Left
-    mObjectPoints.push_back(cv::Point3f(S, 0, 0));       // Top-Right
-    mObjectPoints.push_back(cv::Point3f(S, S, 0));       // Bottom-Right
-    mObjectPoints.push_back(cv::Point3f(0, S, 0));       // Bottom-Left
+    float S = 0.041 / 2.0; // Half-size of the QR code (meters)
+    // the connors have to be giving the the way a cameras coordinate system is unlike a normal coordinate system.
+    mObjectPoints.clear();
+    mObjectPoints.push_back(cv::Point3f(-S, -S, 0));  // 0: Top-Left  (Negative X, Negative Y)
+    mObjectPoints.push_back(cv::Point3f( S, -S, 0));  // 1: Top-Right (Positive X, Negative Y)
+    mObjectPoints.push_back(cv::Point3f( S,  S, 0));  // 2: Bottom-Right (Positive X, Positive Y)
+    mObjectPoints.push_back(cv::Point3f(-S,  S, 0));  // 3: Bottom-Left  (Negative X, Positive Y)
 
     // just for testing
     //mCam->retrieve(mTempFrame);
@@ -124,7 +126,7 @@ void VisionController::scanForObject(){
                 }
 
                 // just for testing
-                //std::cout << mTransVec << "\n"; // print the location
+                // std::cout << mTransVec << "\n"; // print the location
 
                 if (!mData.empty()) {
                     try{
@@ -181,7 +183,6 @@ void VisionController::getObjectPosition(std::vector<std::vector<double>>& outpu
     outputPos[1][0] = mTransVec.at<double>(1,0);
 }
 
-
 void VisionController::getObjectInfo(std::string& object, std::string& size, std::string& color){
     object = mObject;
     size = mSize;
@@ -194,7 +195,10 @@ void VisionController::setStateFalse(){
 }
 
 void VisionController::getObjectRot(double& output){
-    output = fmod(mRotVec.at<double>(2,0), (M_PI/2));
+    output = mRotVec.at<double>(2,0); //fmod(mRotVec.at<double>(2,0), (M_PI/2.));
+    std::cout << output << "\n";
+    if (output < -M_PI/4.){
+        output += M_PI/2.;
+    }
     return;
 }
-

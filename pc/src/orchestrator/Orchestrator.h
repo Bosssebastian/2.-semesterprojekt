@@ -63,6 +63,7 @@ private:
     WebServerRunner& mWeb;
     Interface& mGripper;
     Interface& mStorage;
+    Movement mMove;
 
     OrchestratorState mState{OrchestratorState::Stopped};
     std::string mFaultReason;
