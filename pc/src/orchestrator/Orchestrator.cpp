@@ -255,7 +255,7 @@ void Orchestrator::handleInStorGripperClose() {
 void Orchestrator::handleInStorRobotOverStorage() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Robot over storage placeholder state.");
-        mMove.moveUp("base"); // part 2 of movement in handleInStorStorageMoveToPos()
+        mMove.moveUp("base"); // part 2 of movement in handleStorageWaitingOnMove()
         //mMove.moveUp("home");
     });
 
