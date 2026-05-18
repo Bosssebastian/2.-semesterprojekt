@@ -29,6 +29,18 @@ void Controller::update() {
             case CmdType::STATISTICS:
                 // ToDo
                 break;
+            case CmdType::CURRENT_EVENTS_ON:
+                setCurrentEvents(true);
+                break;
+            case CmdType::CURRENT_EVENTS_OFF:
+                setCurrentEvents(false);
+                break;
+            case CmdType::STALL_VALUES_ON:
+                setStallValues(true);
+                break;
+            case CmdType::STALL_VALUES_OFF:
+                setStallValues(false);
+                break;
             default:
                 mInterface.sendResponse(cmd, ResponseType::ERROR);
                 break;
@@ -64,16 +76,28 @@ void Controller::resetCommand() {
     }
 }
 
+void Controller::setCurrentEvents(bool enabled) {
+    mCurrentSensor.setEventsEnabled(enabled);
+    mInterface.sendResponse(enabled ? CmdType::CURRENT_EVENTS_ON : CmdType::CURRENT_EVENTS_OFF, ResponseType::OK);
+}
+
+void Controller::setStallValues(bool enabled) {
+    mGripper.axis().setStallValueEventsEnabled(enabled);
+    mInterface.sendResponse(enabled ? CmdType::STALL_VALUES_ON : CmdType::STALL_VALUES_OFF, ResponseType::OK);
+}
+
 void Controller::sendMoveCompletionEvent(const GripperMoveEvent& moveEvent) {
+    const EventType doneEvent = moveEvent.eventType;
+
     switch (moveEvent.result) {
         case GripperMoveResult::Done:
-            mInterface.sendEvent(moveEvent.cmd, EventType::MOVE_DONE, EventReason::STEPS_FINISHED);
+            mInterface.sendEvent(moveEvent.cmd, doneEvent, EventReason::STEPS_FINISHED);
             break;
         case GripperMoveResult::Stalled:
-            mInterface.sendEvent(moveEvent.cmd, EventType::MOVE_DONE, EventReason::STALL);
+            mInterface.sendEvent(moveEvent.cmd, doneEvent, EventReason::STALL);
             break;
         case GripperMoveResult::Stopped:
-            mInterface.sendEvent(moveEvent.cmd, EventType::MOVE_DONE, EventReason::STOPPED);
+            mInterface.sendEvent(moveEvent.cmd, doneEvent, EventReason::STOPPED);
             break;
         case GripperMoveResult::Error:
             mInterface.sendEvent(moveEvent.cmd, EventType::ERROR, EventReason::MOVE_ERROR);

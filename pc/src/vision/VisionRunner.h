@@ -2,6 +2,7 @@
 #include <atomic>
 #include <thread>
 #include "VisionController.h"
+#include <vector>
 
 class VisionRunner {
 public:

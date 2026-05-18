@@ -3,22 +3,16 @@
 enum class OrchestratorState {
     Starting,
     Idle,
+
+    InStor_GetStorageSlot,
     InStor_StorageMoveToSlot,
-
     InStor_RobotOverInput,
-
     InStor_RobotToCube,
-
     InStor_GripperClose,
-
     InStor_RobotOverStorage,
-
     InStor_StorageMoveToPos,
-
     InStor_RobotDownToSlot,
-
     InStor_GripperOpen,
-
     InStor_RobotUpFromSlot,
 
     InStor_Complete,
@@ -34,6 +28,8 @@ inline const char* toString(OrchestratorState state) {
             return "Starting";
         case OrchestratorState::Idle:
             return "Idle";
+        case OrchestratorState::InStor_GetStorageSlot:
+            return "InStor_GetStorageSlot";
         case OrchestratorState::InStor_StorageMoveToSlot:
             return "InStor_StorageMoveToSlot";
         case OrchestratorState::InStor_RobotOverInput:
@@ -73,6 +69,8 @@ inline const char* toUiString(OrchestratorState state) {
             return "Starting up";
         case OrchestratorState::Idle:
             return "Waiting for input";
+        case OrchestratorState::InStor_GetStorageSlot:
+            return "Getting storage slot";
         case OrchestratorState::InStor_StorageMoveToSlot:
             return "Storage move to slot";
         case OrchestratorState::InStor_RobotOverInput:

@@ -1,4 +1,6 @@
+#pragma once
 #include <opencv2/opencv.hpp>
+#include <string>
 #include <vector>
 #include <math.h>
 
@@ -17,6 +19,7 @@ public:
     void setStateFalse();
 
 private:
+
     cv::VideoCapture* mCam;
     cv::QRCodeDetector mQR;
     cv::Mat mTempFrame, mFrame, mCorners, mRotVec, mTransVec, mOldTransVec;
@@ -30,7 +33,7 @@ private:
 
     int sameSpot = 0;
 
-    double mMaxOff = 0.005;
+    double mMaxOff = 0.0075;
 
     double fx = 1920.0; 
     double fy = 1920.0;
