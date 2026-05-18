@@ -37,6 +37,14 @@ pico_sdk_init()
 
 add_executable(storage_pico
         src/Main.cpp
+        src/dcMotor.cpp
+        src/pathFinder.cpp
+        src/encoder.cpp
+        src/ldrSensors.cpp
+        src/drejeBaenkDecoder.cpp
+        src/uartClass.cpp
+        src/Interface.cpp
+        src/datalogger.cpp
 )
 
 pico_set_program_name(storage_pico "storage_pico")
@@ -49,12 +57,18 @@ pico_enable_stdio_usb(storage_pico 1)
 # Add the standard library to the build
 target_link_libraries(storage_pico
         pico_stdlib
+        hardware_pwm
+        hardware_gpio
+        hardware_i2c
+
+
 )
 
 # Add the standard include files to the build
 target_include_directories(storage_pico PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
         ${CMAKE_CURRENT_LIST_DIR}/src
+        ${CMAKE_CURRENT_LIST_DIR}/../shared
 )
 
 pico_add_extra_outputs(storage_pico)

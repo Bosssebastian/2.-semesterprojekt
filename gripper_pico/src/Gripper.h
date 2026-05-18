@@ -3,6 +3,7 @@
 #include <cstdint>
 
 #include "../../shared/Types.h"
+#include "CurrentSensor.h"
 #include "stepper/StepperAxis.h"
 #include "stepper/TMC2209Driver.h"
 #include "pico/time.h"
@@ -28,12 +29,13 @@ inline const char* toString(GripperMoveResult result) {
 
 struct GripperMoveEvent {
     CmdType cmd = CmdType::NONE;
+    EventType eventType = EventType::MOVE_DONE;
     GripperMoveResult result = GripperMoveResult::None;
 };
 
 class Gripper {
 public:
-    Gripper();
+    explicit Gripper(CurrentSensor& currentSensor);
     void setup();
     void update();
 
@@ -69,5 +71,6 @@ private:
     void startOpenResetPause();
     bool startResetSequence(bool silent);
     void endMove(GripperMoveResult result, bool keepMotorEnabled);
-    void publishMoveEvent(CmdType cmd, GripperMoveResult result);
+    CmdType moveStepCmd(MoveStep moveStep) const;
+    void publishMoveEvent(CmdType cmd, GripperMoveResult result, EventType eventType = EventType::MOVE_DONE);
 };

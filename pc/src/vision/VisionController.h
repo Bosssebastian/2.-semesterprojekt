@@ -1,5 +1,8 @@
+#pragma once
 #include <opencv2/opencv.hpp>
+#include <string>
 #include <vector>
+#include <math.h>
 
 class VisionController
 {
@@ -8,19 +11,21 @@ public:
     ~VisionController();
 
     void scanForObject();
-    void setSameSpot(int);
 
     bool objectReady();
-    void getObjectPosition(std::vector<std::vector<double>> outputPos);
-    void getObjectInfo(std::string&, std::string&, std::string&);
+    void getObjectPosition(std::vector<std::vector<double>>& outputPos);
+    void getObjectInfo(std::string& object, std::string& size, std::string& color);
+    void getObjectRot(double&);
+    void setStateFalse();
 
 private:
+
     cv::VideoCapture* mCam;
     cv::QRCodeDetector mQR;
     cv::Mat mTempFrame, mFrame, mCorners, mRotVec, mTransVec, mOldTransVec;
     std::vector<cv::Point3f> mObjectPoints;
 
-    bool mStatus = false;    
+    bool mStatus = true;    
     
     std::string mData;
     std::string mObject, mColor;
@@ -28,7 +33,7 @@ private:
 
     int sameSpot = 0;
 
-    double mMaxOff = 0.005;
+    double mMaxOff = 0.0075;
 
     double fx = 1920.0; 
     double fy = 1920.0;
@@ -41,5 +46,7 @@ private:
         0,  0,  1);
 
     cv::Mat mDistCoeffs = cv::Mat::zeros(5, 1, CV_64F);
+
+    int test = 0;
 
 };

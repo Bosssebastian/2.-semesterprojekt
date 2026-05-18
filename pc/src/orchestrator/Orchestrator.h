@@ -48,7 +48,7 @@ private:
     void handleInStorRobotToCube();
     void handleInStorGripperClose();
     void handleInStorRobotOverStorage();
-    void handleInStorStorageMoveToPos();
+    void handleStorageWaitingOnMove();
     void handleInStorRobotDownToSlot();
     void handleInStorGripperOpen();
     void handleInStorRobotUpFromSlot();
@@ -64,12 +64,16 @@ private:
     WebServerRunner& mWeb;
     Interface& mGripper;
     Interface& mStorage;
+    Movement mMove;
 
     OrchestratorState mState{OrchestratorState::Stopped};
     std::string mFaultReason;
     bool mStopRequested{false};
     bool mPendingSkipRequest{false};
     bool mStateJustEntered{true};
+
+    std::vector<std::vector<double>> inputFromVision;
+    double rot;
     StorageManager mStorageManager;
     DataBase mDatabase{"storage.db"}; //database file
     int mActiveStorageSlot{-1};

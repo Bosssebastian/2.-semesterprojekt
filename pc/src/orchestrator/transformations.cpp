@@ -18,8 +18,8 @@ std::vector<std::vector<double>> Transformations::getCamToBaseTrans(){
 std::vector<double> Transformations::getMovementVec(std::vector<std::vector<double>> endpoint, double toolAngleRot, bool testWithoutCam) {
 	double posX,posY,posZ;
     if (endpoint.size() == 3){
-        endpoint[2][0] += 115./1000.; // +115 to account for tool length
-        endpoint.push_back({1}); // add element for processing
+        //endpoint[2][0] += 115./1000.; // +115mm to z-axis to account for tool length // Needs updating
+        endpoint.push_back({1.0}); // add element for processing {x,y,z,1}
         std::vector<std::vector<double>> transform;
         if (testWithoutCam) {
             transform = matop.getBaseToWorldTrans();
@@ -28,6 +28,7 @@ std::vector<double> Transformations::getMovementVec(std::vector<std::vector<doub
             transform = baseToCamTransform;
         }
         std::vector<std::vector<double>> newPoint = matop.multMat(transform,endpoint);
+        //matop.printMat(newPoint);
         newPoint.pop_back(); // remove element
         posX = newPoint[0][0];
         posY = newPoint[1][0];
