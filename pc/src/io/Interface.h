@@ -46,6 +46,7 @@ public:
 
     bool sendCommand(CmdType command, const std::string& argument = "");
     CmdStatus getStatus(CmdType cmd) const;
+    void resetCommandStates();
     std::vector<CurrentSample> getRecentCurrentSamples(uint32_t windowMs) const;
 
 private:
