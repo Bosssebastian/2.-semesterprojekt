@@ -157,7 +157,7 @@ void Orchestrator::handleIdle() {
         LOG_INFO("Orchestrator: Object found");
         mVision.getPos(inputFromVision, rot);
         mVision.getInfo(object, size, color);
-        mDatabase.insertVisionObject(object, color, size);// missing data input (object type, color, size) 
+        mDatabase.insertVisionObject(object, color, size);// data input form vision (object type, color, size) 
         transitionTo(OrchestratorState::InStor_GetStorageSlot);
     }
 
