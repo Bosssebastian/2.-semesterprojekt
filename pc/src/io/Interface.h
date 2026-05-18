@@ -7,6 +7,7 @@
 #include <mutex>
 #include <string>
 #include <vector>
+#include "Uart.h"
 
 enum class CmdStatus {
     IDLE,

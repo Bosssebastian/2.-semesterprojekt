@@ -182,16 +182,15 @@ void Orchestrator::handleInStorGetStorageSlot() {
     mStorageManager.occupySlot(mActiveStorageSlot);
     mDatabase.updateStorageSlot(mActiveStorageSlot, mActiveObjectId, true); //(int slotId, int objectId, bool occupied) 0 empty 1 occupied
     mDatabase.insertHistory(mActiveObjectId, mActiveStorageSlot, mDatabase.time()); // (int objectId, int slot, double timestamp)
-    LOG_INFO("Storage: Using storage slot " + std::to_string(mActiveStorageSlot));
+    LOG_INFO("Storage: Using storage slot " + std::to_string(mActiveStorageSlot + 1)); // 0-7 incorrect logic, 1-8
     transitionTo(OrchestratorState::InStor_StorageMoveToSlot);
 }
 
 void Orchestrator::handleInStorStorageMoveToSlot() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Storage move to slot placeholder state.");
-        mStorage.sendCommand(CmdType::GOTO, std::to_string(mActiveStorageSlot));
+        mStorage.sendCommand(CmdType::GOTO, std::to_string(mActiveStorageSlot + 1));
     });
-    
     transitionTo(OrchestratorState::InStor_RobotOverInput);
 }
 
