@@ -71,5 +71,6 @@ private:
     void startOpenResetPause();
     bool startResetSequence(bool silent);
     void endMove(GripperMoveResult result, bool keepMotorEnabled);
+    CmdType moveStepCmd(MoveStep moveStep) const;
     void publishMoveEvent(CmdType cmd, GripperMoveResult result, EventType eventType = EventType::MOVE_DONE);
 };

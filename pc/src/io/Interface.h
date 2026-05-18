@@ -1,6 +1,7 @@
 #pragma once
 #include "Types.h"
 #include "SerialPort.h"
+#include "Uart.h"
 #include <ctime>
 #include <map>
 #include <mutex>
@@ -14,6 +15,11 @@ enum class CmdStatus {
     DONE,
     FAILED,
     TIMED_OUT
+};
+
+enum class configType {
+    SERIALPORT,
+    UART
 };
 
 struct CmdState {
@@ -31,6 +37,7 @@ struct CurrentSample {
 class Interface {
 public:
     Interface(std::string devicePath, std::string portLabel = "", double commandTimeoutSeconds = 20.0, int baud = 115200);
+    Interface(std::string devicePath, configType configuration, std::string portLabel = "", double commandTimeoutSeconds = 20.0, int baud = 115200);
 
     void setDevicePath(std::string devicePath);
     void setup();
@@ -43,7 +50,9 @@ public:
 private:
     static constexpr std::size_t CurrentSampleCapacity = 30000;
 
+    configType mConfiguration = configType::SERIALPORT;
     SerialPort mSerialPort;
+    UartClass mUart;
     double mCommandTimeoutSeconds;
     std::map<CmdType, CmdState> mCmdStates;
     std::vector<CurrentSample> mCurrentSamples;

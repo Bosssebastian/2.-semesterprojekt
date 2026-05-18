@@ -190,7 +190,14 @@ bool StepperAxis::checkStall() {
             }
             (void)triggered;
 
-            const uint16_t compareValue = static_cast<uint16_t>(threshold) * 2u;
+            const bool rampingUp = isRampingUp();
+            const uint16_t compareValue = rampingUp
+                ? ParameterConfig::DRIVER_STALL_RAMP_THRESHOLD
+                : ParameterConfig::DRIVER_STALL_THRESHOLD;
+            const uint8_t requiredConsecutiveSamples = rampingUp
+                ? ParameterConfig::DRIVER_STALL_RAMP_CONSECUTIVE_SAMPLES
+                : ParameterConfig::DRIVER_STALL_CONSECUTIVE_SAMPLES;
+            (void)threshold;
 
             if (!mHasFilteredStallGuardResult) {
                 mFilteredStallGuardResult = sgResult;
@@ -218,8 +225,7 @@ bool StepperAxis::checkStall() {
                 mConsecutiveUartStallSamples = 0;
             }
 
-            const bool stopTriggered =
-                mConsecutiveUartStallSamples >= ParameterConfig::DRIVER_STALL_CONSECUTIVE_SAMPLES;
+            const bool stopTriggered = mConsecutiveUartStallSamples >= requiredConsecutiveSamples;
             return stopTriggered;
         }
 
@@ -309,6 +315,10 @@ bool StepperAxis::isInBrakingZone() const {
     const float brakingWindowSteps =
         stepsToBrake + static_cast<float>(ParameterConfig::DRIVER_STALL_BRAKE_MARGIN_STEPS);
     return static_cast<float>(mRemainingSteps) <= brakingWindowSteps;
+}
+
+bool StepperAxis::isRampingUp() const {
+    return mCurrentStepFrequencyHz < static_cast<float>(ParameterConfig::AXIS_TARGET_SPEED_SPS);
 }
 
 void StepperAxis::updateStallGuardPriming(uint16_t sgResult, uint16_t compareValue) {

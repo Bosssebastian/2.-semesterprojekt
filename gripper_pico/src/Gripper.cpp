@@ -12,7 +12,7 @@ void Gripper::setup() {
     mDriver.setMicrosteps(ParameterConfig::DRIVER_MICROSTEPS);
     mDriver.enableSpreadCycle(ParameterConfig::DRIVER_SPREAD_CYCLE_ENABLED);
     mDriver.setPwmThreshold(ParameterConfig::DRIVER_PWM_THRESHOLD);
-    mDriver.configureStallGuard(ParameterConfig::DRIVER_COOL_THRESHOLD, ParameterConfig::DRIVER_STALL_THRESHOLD);
+    mDriver.configureStallGuard(ParameterConfig::DRIVER_COOL_THRESHOLD, ParameterConfig::DRIVER_STALL_GUARD_REGISTER_VALUE);
 
     mAxis.setup();
     mMoveStep = MoveStep::Idle;
@@ -111,7 +111,9 @@ void Gripper::update() {
                 }
             } else if (axisResult == AxisMoveResult::Done) {
                 publishMoveEvent(CmdType::OPEN, GripperMoveResult::Done);
-                startOpenResetPause();
+                if (!startResetSequence(true)) {
+                    endMove(GripperMoveResult::Error, false);
+                }
             } else {
                 endMove(GripperMoveResult::Stopped, false);
             }
@@ -122,13 +124,26 @@ void Gripper::update() {
 
         case MoveStep::ResetOpen:
             if (axisResult == AxisMoveResult::Stalled) {
+                publishMoveEvent(CmdType::OPEN_RESET, GripperMoveResult::Stalled);
                 if (!startMoveStep(MoveStep::ResetForward, ParameterConfig::GRIPPER_RESET_FORWARD_STEPS, false)) {
                     endMove(GripperMoveResult::Error, false);
                 }
             } else if (axisResult == AxisMoveResult::Done) {
-                endMove(GripperMoveResult::Error, false);
+                publishMoveEvent(CmdType::OPEN_RESET, GripperMoveResult::Done);
+                mMoveStep = MoveStep::Idle;
+                mActiveCommand = CmdType::NONE;
+                mSilentReset = false;
+                mIsBusy = false;
+                mLastResult = GripperMoveResult::Error;
+                mAxis.setEnabled(false);
             } else {
-                endMove(GripperMoveResult::Stopped, false);
+                publishMoveEvent(CmdType::OPEN_RESET, GripperMoveResult::Stopped);
+                mMoveStep = MoveStep::Idle;
+                mActiveCommand = CmdType::NONE;
+                mSilentReset = false;
+                mIsBusy = false;
+                mLastResult = GripperMoveResult::Stopped;
+                mAxis.setEnabled(false);
             }
             return;
 
@@ -222,22 +237,38 @@ bool Gripper::startResetSequence(bool silent) {
 
 void Gripper::endMove(GripperMoveResult result, bool keepMotorEnabled) {
     const CmdType completedCommand = mActiveCommand;
-    const bool completedSilentReset = mSilentReset;
+    const CmdType completedMoveCommand = moveStepCmd(mMoveStep);
 
     mMoveStep = MoveStep::Idle;
     mActiveCommand = CmdType::NONE;
     mSilentReset = false;
     mIsBusy = false;
     mLastResult = result;
-    if (completedCommand == CmdType::OPEN && completedSilentReset) {
-        publishMoveEvent(completedCommand, result, EventType::OPEN_SEQUENCE_DONE);
-    } else if (completedCommand == CmdType::OPEN || completedCommand == CmdType::CLOSE || completedCommand == CmdType::RESET) {
-        publishMoveEvent(completedCommand, result);
+    if (completedCommand == CmdType::OPEN || completedCommand == CmdType::CLOSE || completedCommand == CmdType::RESET) {
+        publishMoveEvent(completedMoveCommand, result);
     }
 
     if (!keepMotorEnabled) {
         mAxis.setEnabled(false);
     }
+}
+
+CmdType Gripper::moveStepCmd(MoveStep moveStep) const {
+    switch (moveStep) {
+        case MoveStep::Close:
+            return CmdType::CLOSE;
+        case MoveStep::Open:
+            return CmdType::OPEN;
+        case MoveStep::ResetOpen:
+            return CmdType::OPEN_RESET;
+        case MoveStep::ResetForward:
+            return CmdType::OPEN_RESET_FORWARD;
+        case MoveStep::OpenResetPause:
+        case MoveStep::Idle:
+            return mActiveCommand;
+    }
+
+    return mActiveCommand;
 }
 
 void Gripper::publishMoveEvent(CmdType cmd, GripperMoveResult result, EventType eventType) {

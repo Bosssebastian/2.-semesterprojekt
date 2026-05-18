@@ -19,7 +19,7 @@ private:
     void run();
 
     Interface mGripper{"", "GRIPPER"};
-    Interface mStorage{"", "STORAGE", 120.0};
+    Interface mStorage{"", configType::UART, "STORAGE", 120.0};
     std::thread mWorker;
     std::atomic<bool> mRunning{false};
 };

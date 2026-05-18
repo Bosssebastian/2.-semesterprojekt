@@ -13,14 +13,16 @@ enum class CmdType {
     STATISTICS,
     GOTO,
     RESET,
+    OPEN_RESET,
+    OPEN_RESET_FORWARD,
     CURRENT_EVENTS_ON,
     CURRENT_EVENTS_OFF,
     STALL_VALUES_ON,
     STALL_VALUES_OFF
 };
 enum class ResponseType {OK, ERROR};
-enum class EventType {UNKNOWN, ERROR, MOVE_DONE, OPEN_SEQUENCE_DONE};
-enum class EventReason {NONE, STEPS_FINISHED, STALL, STOPPED, MOVE_ERROR};
+enum class EventType {UNKNOWN, ERROR, MOVE_DONE, OPEN_SEQUENCE_DONE, CURRENT_POSITION};
+enum class EventReason {NONE, STEPS_FINISHED, STALL, STOPPED, MOVE_ERROR, REACHED_POSITION};
 
 inline const char* toString(CmdType type) {
     switch (type) {
@@ -42,6 +44,10 @@ inline const char* toString(CmdType type) {
             return "GOTO";
         case CmdType::RESET:
             return "RESET";
+        case CmdType::OPEN_RESET:
+            return "OPEN_RESET";
+        case CmdType::OPEN_RESET_FORWARD:
+            return "OPEN_RESET_FORWARD";
         case CmdType::CURRENT_EVENTS_ON:
             return "CURRENT_EVENTS_ON";
         case CmdType::CURRENT_EVENTS_OFF:
@@ -76,6 +82,8 @@ inline const char* toString(EventType type) {
             return "MOVE_DONE";
         case EventType::OPEN_SEQUENCE_DONE:
             return "OPEN_SEQUENCE_DONE";
+        case EventType::CURRENT_POSITION:
+            return "CURRENT_POSITION";
     }
 
     return "UNKNOWN";
@@ -93,6 +101,8 @@ inline const char* toString(EventReason reason) {
             return "STOPPED";
         case EventReason::MOVE_ERROR:
             return "MOVE_ERROR";
+        case EventReason::REACHED_POSITION:
+            return "REACHED_POSITION";
     }
 
     return "UNKNOWN";
@@ -125,6 +135,12 @@ inline CmdType toCmdType(const std::string& value) {
     }
     if (value == "RESET") {
         return CmdType::RESET;
+    }
+    if (value == "OPEN_RESET") {
+        return CmdType::OPEN_RESET;
+    }
+    if (value == "OPEN_RESET_FORWARD") {
+        return CmdType::OPEN_RESET_FORWARD;
     }
     if (value == "CURRENT_EVENTS_ON") {
         return CmdType::CURRENT_EVENTS_ON;
@@ -163,6 +179,9 @@ inline EventType toEventType(const std::string& value) {
     if (value == "OPEN_SEQUENCE_DONE") {
         return EventType::OPEN_SEQUENCE_DONE;
     }
+    if (value == "CURRENT_POSITION") {
+        return EventType::CURRENT_POSITION;
+    }
 
     return EventType::UNKNOWN;
 }
@@ -183,6 +202,7 @@ inline EventReason toEventReason(const std::string& value) {
     if (value == "MOVE_ERROR") {
         return EventReason::MOVE_ERROR;
     }
+    if (value == "REACHED_POSITION") return EventReason::REACHED_POSITION;
 
     return EventReason::NONE;
 }
