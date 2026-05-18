@@ -140,10 +140,21 @@ bool Orchestrator::skipRequested() {
 void Orchestrator::handleStarting() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Starting up...");
+        mGripper.sendCommand(CmdType::RESET);
         mMove.home(); // Move to home pose
         mMove.setTransform(); // Set up transformation matrices
     });
-    transitionTo(OrchestratorState::Idle);
+
+    if ( mGripper.getStatus(CmdType::RESET) == CmdStatus::DONE) {
+        LOG_INFO("Gripper reset completed successfully.");
+        transitionTo(OrchestratorState::Idle);
+    }
+     else if (mGripper.getStatus(CmdType::RESET) == CmdStatus::FAILED) {
+        transitionToFault("Gripper failed to reset");
+    }
+    else if (mGripper.getStatus(CmdType::RESET) == CmdStatus::TIMED_OUT) {
+        transitionToFault("Gripper reset timed out");
+    }
 }
 
 void Orchestrator::handleIdle() {
