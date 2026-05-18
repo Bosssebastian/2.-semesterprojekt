@@ -157,6 +157,7 @@ void Orchestrator::handleIdle() {
     }
 
     if (skipRequested()) {
+        mVision.stopScan();
         transitionTo(OrchestratorState::InStor_GetStorageSlot);
         return;
     }
