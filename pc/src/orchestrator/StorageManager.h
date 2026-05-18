@@ -10,6 +10,7 @@ public:
     int getFreeSlot() const;
     void occupySlot(int slotIndex);
     void freeSlot(int slotIndex);
+    std::vector<bool> getSlotStates() const;
 
 private:
     const int slotCount;

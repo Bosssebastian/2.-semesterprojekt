@@ -14,6 +14,11 @@ export type CurrentSample = {
 	a: number;
 };
 
+export type StorageSlot = {
+	index: number;
+	occupied: boolean;
+};
+
 function getControllerBaseUrl() {
 	return env.CONTROLLER_BASE_URL ?? DEFAULT_CONTROLLER_BASE_URL;
 }
@@ -127,6 +132,32 @@ export async function fetchGripperCurrent(
 	}
 
 	return payload.samples;
+}
+
+function isStorageSlot(value: unknown): value is StorageSlot {
+	if (typeof value !== 'object' || value === null) {
+		return false;
+	}
+
+	const slot = value as Record<string, unknown>;
+	return typeof slot.index === 'number' && typeof slot.occupied === 'boolean';
+}
+
+export async function fetchStorageSlots(fetchImpl: typeof fetch): Promise<StorageSlot[]> {
+	const response = await fetchImpl(`${getControllerBaseUrl()}/storage/slots`);
+	const payload = await parseJsonResponse(response);
+
+	if (!response.ok) {
+		throw new Error(
+			typeof payload?.error === 'string' ? payload.error : 'Failed to fetch storage slots'
+		);
+	}
+
+	if (!Array.isArray(payload?.slots) || !payload.slots.every(isStorageSlot)) {
+		throw new Error('Storage slot response did not include valid slots');
+	}
+
+	return payload.slots;
 }
 
 export async function sendControllerCommand(

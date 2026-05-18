@@ -8,6 +8,7 @@
 #include <optional>
 #include <string>
 #include <thread>
+#include <vector>
 
 namespace httplib {
 class Request;
@@ -39,6 +40,8 @@ public:
 
     void setState(OrchestratorState state);
     OrchestratorState getState() const;
+    void setStorageSlotStates(const std::vector<bool>& slotStates);
+    std::vector<bool> getStorageSlotStates() const;
 
 private:
     void run();
@@ -47,6 +50,7 @@ private:
     bool queueCommand(WebCommandType type);
 
     void handleGetState(const httplib::Request& request, httplib::Response& response) const;
+    void handleGetStorageSlots(const httplib::Request& request, httplib::Response& response) const;
     void handleGetLogs(const httplib::Request& request, httplib::Response& response) const;
     void handleGetGripperCurrent(const httplib::Request& request, httplib::Response& response) const;
     void handleStart(const httplib::Request& request, httplib::Response& response);
@@ -62,5 +66,7 @@ private:
     std::optional<WebCommand> mPendingCommand;
     mutable std::mutex mStateMutex;
     OrchestratorState mState{OrchestratorState::Stopped};
+    mutable std::mutex mStorageSlotMutex;
+    std::vector<bool> mStorageSlotStates;
     Interface& mGripper;
 };

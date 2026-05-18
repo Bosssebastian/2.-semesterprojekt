@@ -88,6 +88,23 @@ std::string buildStateJsonBody(OrchestratorState state) {
     return stream.str();
 }
 
+std::string buildStorageSlotsJsonBody(const std::vector<bool>& slotStates) {
+    std::ostringstream stream;
+    stream << "{\"slots\":[";
+
+    for (std::size_t index = 0; index < slotStates.size(); ++index) {
+        if (index > 0) {
+            stream << ',';
+        }
+
+        stream << "{\"index\":" << index
+               << ",\"occupied\":" << (slotStates[index] ? "true" : "false") << "}";
+    }
+
+    stream << "]}";
+    return stream.str();
+}
+
 std::string buildCurrentJsonBody(const std::vector<CurrentSample>& samples) {
     std::ostringstream stream;
     stream << "{\"samples\":[";
@@ -184,6 +201,16 @@ OrchestratorState WebServerRunner::getState() const {
     return mState;
 }
 
+void WebServerRunner::setStorageSlotStates(const std::vector<bool>& slotStates) {
+    std::lock_guard<std::mutex> lock(mStorageSlotMutex);
+    mStorageSlotStates = slotStates;
+}
+
+std::vector<bool> WebServerRunner::getStorageSlotStates() const {
+    std::lock_guard<std::mutex> lock(mStorageSlotMutex);
+    return mStorageSlotStates;
+}
+
 bool WebServerRunner::tryStoreCommand(const WebCommand& command) {
     std::lock_guard<std::mutex> lock(mCommandMutex);
     if (mPendingCommand.has_value()) {
@@ -200,6 +227,11 @@ bool WebServerRunner::queueCommand(WebCommandType type) {
 
 void WebServerRunner::handleGetState(const httplib::Request&, httplib::Response& response) const {
     response.set_content(buildStateJsonBody(getState()), "application/json");
+    response.set_header("Access-Control-Allow-Origin", "*");
+}
+
+void WebServerRunner::handleGetStorageSlots(const httplib::Request&, httplib::Response& response) const {
+    response.set_content(buildStorageSlotsJsonBody(getStorageSlotStates()), "application/json");
     response.set_header("Access-Control-Allow-Origin", "*");
 }
 
@@ -258,6 +290,9 @@ void WebServerRunner::run() {
     auto server = std::make_unique<httplib::Server>();
     server->Get("/getstate", [this](const httplib::Request& request, httplib::Response& response) {
         handleGetState(request, response);
+    });
+    server->Get("/storage/slots", [this](const httplib::Request& request, httplib::Response& response) {
+        handleGetStorageSlots(request, response);
     });
     server->Get("/logs", [this](const httplib::Request& request, httplib::Response& response) {
         handleGetLogs(request, response);

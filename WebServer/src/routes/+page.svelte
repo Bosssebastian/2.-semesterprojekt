@@ -10,7 +10,7 @@
 	import * as Dialog from "$lib/components/ui/dialog";
 	import * as Tabs from "$lib/components/ui/tabs";
 	import { LineChart } from "layerchart";
-	import type { ControllerStatus, CurrentSample } from "$lib/server/controller";
+	import type { ControllerStatus, CurrentSample, StorageSlot } from "$lib/server/controller";
 
 	type ChartTab = "chart-a" | "chart-b" | "chart-c";
 	type ObjectTab = "objects" | "log";
@@ -36,12 +36,15 @@
 	let controllerOnline = $state(false);
 	let controllerState = $state("Unavailable");
 	let offlineReason = $state<string | null>(null);
+	let showOfflineDialog = $state(true);
 	let logEntries = $state<LogEntry[]>([]);
 	let logError = $state<string | null>(null);
 	let logInterval: number | null = null;
 	let currentSamples = $state<CurrentSample[]>([]);
 	let currentError = $state<string | null>(null);
 	let currentInterval: number | null = null;
+	let storageSlots = $state<StorageSlot[]>([]);
+	let storageError = $state<string | null>(null);
 
 	$effect(() => {
 		controllerOnline = data.initialStatus.online;
@@ -114,6 +117,26 @@
 			typeof payload?.state === "string" && payload.state.length > 0 ? payload.state : "Unavailable";
 		offlineReason =
 			typeof payload?.error === "string" && payload.error.length > 0 ? payload.error : null;
+	}
+
+	async function refreshStorageSlots() {
+		try {
+			const response = await fetch("/api/controller/storage");
+			const payload = await response.json();
+
+			if (!response.ok) {
+				storageSlots = [];
+				storageError =
+					typeof payload?.error === "string" ? payload.error : "Failed to fetch storage slots";
+				return;
+			}
+
+			storageSlots = Array.isArray(payload?.slots) ? payload.slots : [];
+			storageError = null;
+		} catch (error) {
+			storageSlots = [];
+			storageError = error instanceof Error ? error.message : "Failed to fetch storage slots";
+		}
 	}
 
 	async function refreshLogs() {
@@ -279,9 +302,11 @@
 	onMount(() => {
 		const interval = window.setInterval(() => {
 			void refreshControllerStatus();
+			void refreshStorageSlots();
 		}, 1000);
 
 		void refreshControllerStatus();
+		void refreshStorageSlots();
 		if (activeChartTab === "chart-a") {
 			startCurrentPolling();
 		}
@@ -320,7 +345,7 @@
 	/>
 </svelte:head>
 
-<Dialog.Root open={!controllerOnline}>
+<Dialog.Root open={!controllerOnline && showOfflineDialog}>
 	<Dialog.Content>
 		<Dialog.Header>
 			<p class="text-xs font-semibold uppercase tracking-[0.28em] text-destructive">Controller Offline</p>
@@ -337,7 +362,19 @@
 
 		<Dialog.Footer>
 			<Button
-				onclick={() => void refreshControllerStatus()}
+				onclick={() => {
+					showOfflineDialog = false;
+				}}
+				variant="outline"
+				class="rounded-[1.2rem] px-5 py-3 text-sm font-semibold"
+			>
+				Hide
+			</Button>
+			<Button
+				onclick={() => {
+					showOfflineDialog = true;
+					void refreshControllerStatus();
+				}}
 				class="rounded-[1.2rem] bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800"
 			>
 				Retry Connection
@@ -517,7 +554,46 @@
 								{#if tab.value === "log"}
 									<LogViewer entries={logEntries} emptyMessage={logError ?? "No log entries yet."} />
 								{:else}
-									<div class="min-h-72 flex-1 lg:min-h-0"></div>
+									<div class="flex min-h-72 flex-1 flex-col gap-5 lg:min-h-0">
+										<div class="flex items-end justify-between gap-4">
+											<div>
+												<p class="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+													Storage slots
+												</p>
+											</div>
+											<p class="text-sm font-medium text-muted-foreground">
+												{storageSlots.filter((slot) => slot.occupied).length} / {storageSlots.length} occupied
+											</p>
+										</div>
+
+										{#if storageSlots.length > 0}
+											<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+												{#each storageSlots as slot}
+													<div
+														class={`flex min-h-28 flex-col justify-between rounded-[0.5rem] border p-4 ${
+															slot.occupied
+																? "border-emerald-700/25 bg-emerald-700/10 text-emerald-900"
+																: "border-slate-300 bg-slate-50 text-slate-700"
+														}`}
+													>
+														<span class="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+															Slot
+														</span>
+														<div class="flex flex-col gap-1">
+															<span class="text-3xl font-semibold">{slot.index + 1}</span>
+															<span class="text-sm font-semibold uppercase tracking-[0.12em]">
+																{slot.occupied ? "Occupied" : "Free"}
+															</span>
+														</div>
+													</div>
+												{/each}
+											</div>
+										{:else}
+											<div class="flex flex-1 items-center justify-center text-sm text-muted-foreground">
+												{storageError ?? "Waiting for storage slots"}
+											</div>
+										{/if}
+									</div>
 								{/if}
 							</Tabs.Content>
 						{/each}

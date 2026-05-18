@@ -32,6 +32,7 @@ add_executable(pc
     src/vision/VisionController.cpp
     src/orchestrator/Orchestrator.cpp
     src/orchestrator/StorageManager.cpp
+    src/orchestrator/database.cpp
     src/web/WebServerRunner.cpp
     src/orchestrator/matrixoperations.cpp
     src/orchestrator/transformations.cpp

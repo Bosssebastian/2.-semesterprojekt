@@ -33,3 +33,7 @@ void StorageManager::freeSlot(int slotIndex) {
         slotStates[slotIndex] = false;
     }
 }
+
+std::vector<bool> StorageManager::getSlotStates() const {
+    return slotStates;
+}
