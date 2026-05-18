@@ -71,9 +71,13 @@ private:
     bool mPendingSkipRequest{false};
     bool mStateJustEntered{true};
     StorageManager mStorageManager;
-    DataBase mDatabase("storage.db"); //database file
+    DataBase mDatabase{"storage.db"}; //database file
     int mActiveStorageSlot{-1};
+    int mActiveObjectId{-1};
     
     Movement move("192.168.1.11", 29998);
 
+  std::string object;
+  int size;
+std::string color;
 };

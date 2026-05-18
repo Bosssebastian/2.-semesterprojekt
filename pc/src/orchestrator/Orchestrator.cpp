@@ -27,7 +27,7 @@ namespace {
 }
 
 Orchestrator::Orchestrator(IoRunner& io, VisionRunner& vision, WebServerRunner& web)
-    : mIo(io), mVision(vision), mWeb(web), mGripper(io.gripper()), mStorage(io.storage()), mDatabase("storage.db") {
+    : mIo(io), mVision(vision), mWeb(web), mGripper(io.gripper()), mStorage(io.storage()) {
     mWeb.setState(mState);
 }
 
@@ -175,8 +175,8 @@ void Orchestrator::handleInStorGetStorageSlot() {
 
     mActiveStorageSlot = mStorageManager.getFreeSlot();
     mStorageManager.occupySlot(mActiveStorageSlot);
-    mDatabase.updateStorageSlot(...) //(int slotId, int objectId, bool occupied) 0 empty 1 occupied
-    mDatabase.insertHistory(objectId, slot, mDatabase.time()) // (int objectId, int slot, double timestamp)
+    mDatabase.updateStorageSlot(mActiveStorageSlot, mActiveObjectId, true); //(int slotId, int objectId, bool occupied) 0 empty 1 occupied
+    mDatabase.insertHistory(mActiveObjectId, mActiveStorageSlot, mDatabase.time()); // (int objectId, int slot, double timestamp)
     LOG_INFO("Storage: Using storage slot " + std::to_string(mActiveStorageSlot));
     transitionTo(OrchestratorState::InStor_StorageMoveToSlot);
 }

@@ -50,7 +50,7 @@ void DataBase::createTables() {
         "CREATE TABLE IF NOT EXISTS current_state_vision ("
         "object_id INTEGER PRIMARY KEY, "
         "object TEXT NOT NULL, "
-        "size INTEGER NOT NULL, "
+        "size TEXT NOT NULL, "
         "color TEXT NOT NULL"
         ");";
 
@@ -65,7 +65,7 @@ void DataBase::createTables() {
     execute(current_state_vision);
     execute(history);
 
-    for(int i = 1; i <= 8; ++i) {
+    for(int i = 0; i < 8; ++i) {
         std::string sql = 
         "INSERT OR IGNORE INTO current_state_storage "
         "(slot_id, object_id, occupied) "
@@ -75,9 +75,10 @@ void DataBase::createTables() {
     
 }
 
-void DataBase::insertVisionObject(const std::string& object, int size, const std::string& color) {
+void DataBase::insertVisionObject(const std::string& object, std::string size, const std::string& color) { 
     std::string sql = 
-    "INSERT INTO current_state_vision (object, size, color) VALUES ('"+ object +"' , " + std::to_string(size) + ", '" + color + "');";
+    "INSERT INTO current_state_vision (object, size, color) VALUES ('"+ object +"' , " + size + ", '" + color + "');";
+
     execute(sql);
 }
 
@@ -85,7 +86,7 @@ void DataBase::updateStorageSlot(int slotId, int objectId, bool occupied) {
     std::string sql =
         "UPDATE current_state_storage SET "
         "object_id = " + std::to_string(objectId) + ", "
-        "occupied = " + std::to_string(occupied) +""
+        "occupied = " + std::to_string(occupied) +" "
         "WHERE slot_id = " + std::to_string(slotId) + ";";
 
     execute(sql);

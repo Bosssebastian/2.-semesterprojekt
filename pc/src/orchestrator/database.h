@@ -17,7 +17,7 @@ public:
 
     bool execute(const std::string& sql);
     void createTables();
-    void insertVisionObject(const std::string& object, int size, const std::string& color);
+    void insertVisionObject(const std::string& object, std::string size, const std::string& color); 
     void updateStorageSlot(int slotId, int objectId, bool occupied);
     void insertHistory(int objectId, int slot, double timestamp);
 
