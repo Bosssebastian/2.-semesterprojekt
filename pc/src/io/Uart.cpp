@@ -1,4 +1,6 @@
 #include "Uart.h"
+#include "logging/Logger.h"
+#include <cerrno>
 #include <iostream> 
 #include <cstdio>
 #include <fcntl.h>
@@ -7,6 +9,28 @@
 #include <cstring>
 #include <chrono>
 #include <thread>
+#include <sstream>
+
+namespace {
+constexpr const char* SerialDevicePath = "/dev/ttyAMA0"; //Changed From "/dev/serial0"
+
+std::string errnoMessage(const std::string& action, int errorNumber)
+{
+    std::ostringstream message;
+    message << action << ": errno=" << errorNumber << " (" << std::strerror(errorNumber) << ")";
+    return message.str();
+}
+
+std::string printableLine(std::string line)
+{
+    if (!line.empty() && line.back() == '\n')
+    {
+        line.pop_back();
+    }
+
+    return line;
+}
+}
 
 
 UartClass::UartClass(int pin_tx, int pin_rx, int baud)
@@ -19,19 +43,26 @@ UartClass::UartClass(int pin_tx, int pin_rx, int baud)
 
 void UartClass::setup()
 {
-    serial_fd = open("/dev/serial0", O_RDWR | O_NOCTTY | O_SYNC);
+    LOG_INFO("UART setup starting");
+    LOG_INFO(std::string("UART opening device: ") + SerialDevicePath);
+
+    serial_fd = open(SerialDevicePath, O_RDWR | O_NOCTTY | O_SYNC);
 
     if (serial_fd < 0)
     {
-        std::cerr << "Failed to open /dev/serial0\n";
+        const int errorNumber = errno;
+        LOG_ERROR(errnoMessage(std::string("UART open failed for ") + SerialDevicePath, errorNumber));
         return;
     }
+
+    LOG_INFO(std::string("UART open succeeded for ") + SerialDevicePath);
 
     termios tty{};
 
     if (tcgetattr(serial_fd, &tty) != 0)
     {
-        std::cerr << "Failed to get serial settings\n";
+        const int errorNumber = errno;
+        LOG_ERROR(errnoMessage("UART tcgetattr failed", errorNumber));
         close(serial_fd);
         serial_fd = -1;
         return;
@@ -63,7 +94,7 @@ void UartClass::setup()
             break;
 
         default:
-            std::cerr << "Unsupported baud rate: " << baud << "\n";
+            LOG_ERROR("Unsupported baud rate: " + std::to_string(baud));
             close(serial_fd);
             serial_fd = -1;
             return;
@@ -103,25 +134,48 @@ void UartClass::setup()
 
     if (tcsetattr(serial_fd, TCSANOW, &tty) != 0)
     {
-        std::cerr << "Failed to apply serial settings\n";
+        const int errorNumber = errno;
+        LOG_ERROR(errnoMessage("UART tcsetattr failed", errorNumber));
         close(serial_fd);
         serial_fd = -1;
         return;
     }
 
-    std::cout << "UART opened on /dev/serial0 at " << baud << " baud\n";
+    LOG_INFO("UART settings applied successfully");
+    LOG_INFO("UART opened on " + std::string(SerialDevicePath) + " at " + std::to_string(baud) + " baud");
 }
 
 void UartClass::sendLine(std::string line)
 {
     if (serial_fd < 0)
     {
+        LOG_ERROR("UART send skipped: serial_fd is not open");
         return;
     }
 
-    line += '\n';
+    LOG_INFO("UART TX: " + printableLine(line));
 
-    write(serial_fd, line.c_str(), line.length());
+    const ssize_t bytesWritten = write(serial_fd, line.c_str(), line.length());
+    const ssize_t bytesRequested = static_cast<ssize_t>(line.length());
+
+    std::ostringstream result;
+    result << "UART write result: requested " << bytesRequested << " bytes, wrote " << bytesWritten << " bytes";
+
+    if (bytesWritten < 0)
+    {
+        const int errorNumber = errno;
+        LOG_ERROR(result.str() + "; " + errnoMessage("write failed", errorNumber));
+        return;
+    }
+
+    if (bytesWritten != bytesRequested)
+    {
+        const int errorNumber = errno;
+        LOG_ERROR(result.str() + "; " + errnoMessage("short write", errorNumber));
+        return;
+    }
+
+    LOG_INFO(result.str());
 }
 
 std::string UartClass::getLine()
