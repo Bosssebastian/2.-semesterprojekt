@@ -16,7 +16,7 @@ public:
     void getObjectPosition(std::vector<std::vector<double>>& outputPos);
     void getObjectInfo(std::string& object, std::string& size, std::string& color);
     void getObjectRot(double&);
-    void setStateFalse();
+    void setState(bool newState);
 
 private:
 

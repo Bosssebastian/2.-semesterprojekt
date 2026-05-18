@@ -190,15 +190,18 @@ void VisionController::getObjectInfo(std::string& object, std::string& size, std
     return;
 }
 
-void VisionController::setStateFalse(){
-    mStatus = false;
+void VisionController::setState(bool newState){
+    mStatus = newState;
 }
 
 void VisionController::getObjectRot(double& output){
-    output = mRotVec.at<double>(2,0); //fmod(mRotVec.at<double>(2,0), (M_PI/2.));
+    output = fmod(mRotVec.at<double>(2,0), (M_PI/2.)); //mRotVec.at<double>(2,0);
     std::cout << output << "\n";
     if (output < -M_PI/4.){
         output += M_PI/2.;
+    }
+    if (output > M_PI/4.){
+        output -= M_PI/2.;
     }
     return;
 }
