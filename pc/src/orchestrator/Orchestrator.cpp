@@ -265,7 +265,7 @@ void Orchestrator::handleInStorRobotOverStorage() {
     }
 
     if (mMove.isDone()){ // Check if async movement is done
-        transitionTo(OrchestratorState::InStor_StorageMoveToPos);
+        transitionTo(OrchestratorState::InStor_StorageWaitingOnMove);
     }
 }
 
