@@ -44,6 +44,9 @@ void Orchestrator::run() {
 void Orchestrator::start() {
     mStopRequested = false;
     mFaultReason.clear();
+    
+    mDatabase.createTables();
+    
     transitionTo(OrchestratorState::Stopped);
 }
 
@@ -153,6 +156,8 @@ void Orchestrator::handleIdle() {
     if (mVision.objectReady()){
         LOG_INFO("Orchestrator: Object found");
         mVision.getPos(inputFromVision, rot);
+        mVision.getInfo(object, size, color);
+        mDatabase.insertVisionObject(object, color, size);// missing data input (object type, color, size) 
         transitionTo(OrchestratorState::InStor_GetStorageSlot);
     }
 
@@ -175,6 +180,8 @@ void Orchestrator::handleInStorGetStorageSlot() {
 
     mActiveStorageSlot = mStorageManager.getFreeSlot();
     mStorageManager.occupySlot(mActiveStorageSlot);
+    mDatabase.updateStorageSlot(mActiveStorageSlot, mActiveObjectId, true); //(int slotId, int objectId, bool occupied) 0 empty 1 occupied
+    mDatabase.insertHistory(mActiveObjectId, mActiveStorageSlot, mDatabase.time()); // (int objectId, int slot, double timestamp)
     LOG_INFO("Storage: Using storage slot " + std::to_string(mActiveStorageSlot));
     transitionTo(OrchestratorState::InStor_StorageMoveToSlot);
 }

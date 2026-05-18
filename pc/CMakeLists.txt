@@ -37,10 +37,11 @@ add_executable(pc
     src/orchestrator/transformations.cpp
     src/orchestrator/orientation.cpp
     src/orchestrator/movement.cpp
+    src/orchestrator/database.cpp
     ${SHARED_SOURCES}
 )
 
-target_link_libraries(pc PRIVATE ur_rtde::rtde)
+target_link_libraries(pc PRIVATE ur_rtde::rtde sqlite3)
 
 set_target_properties(pc PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"

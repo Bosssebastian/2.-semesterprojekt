@@ -1,5 +1,5 @@
 #include "StorageManager.h"
-
+#include "database.h"
 StorageManager::StorageManager(int slotCount) : slotCount(slotCount), slotStates(slotCount, false) {
 }
 
