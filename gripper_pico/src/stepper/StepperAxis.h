@@ -76,6 +76,7 @@ private:
     void endMove(AxisMoveResult result);
     bool isBasicStallWindowActive() const;
     bool isInBrakingZone() const;
+    bool isRampingUp() const;
     void updateStallGuardPriming(uint16_t sgResult, uint16_t compareValue);
     bool isStallDetectionActive() const;
     bool isCurrentStallDetectionActive() const;
