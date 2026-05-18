@@ -81,7 +81,5 @@ private:
     
     Movement move("192.168.1.11", 29998);
 
-  std::string object;
-  int size;
-std::string color;
+  std::string object, size, color;
 };
