@@ -155,9 +155,9 @@ void Orchestrator::handleIdle() {
 
     if (mVision.objectReady()){
         LOG_INFO("Orchestrator: Object found");
-        mVision.getPos(inputFromVision, rot);
-        mVision.getInfo(object, size, color);
-        mDatabase.insertVisionObject(object, color, size);// data input form vision (object type, color, size) 
+        mVision.getPos(mInputFromVision, mRot);
+        mVision.getInfo(mObject, mSize, mColor);
+        mDatabase.insertVisionObject(mObject, mColor, mSize);// data input form vision (object type, color, size) 
         transitionTo(OrchestratorState::InStor_GetStorageSlot);
     }
 
@@ -202,7 +202,7 @@ void Orchestrator::handleInStorRobotOverInput() {
         double speed = 0.3;
         double acc = 0.2;
         double customZ = 0.18;
-        double rotZ = matop.degToRad(22.5) - rot;
+        double rotZ = matop.degToRad(22.5) - mRot;
         mMove.move({inputFromVision[0],inputFromVision[1],{0.24}},speed,acc,customZ,rotZ); // Move to coordinates provided by vision
     });
 
