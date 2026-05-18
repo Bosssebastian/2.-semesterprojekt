@@ -11,6 +11,7 @@ public:
     void start();
     void stop();
     void getPos(std::vector<std::vector<double>>& ,double&);
+    void getInfo(std::string& object, std::string& size, std::string& color);
     bool objectReady();
     void scanForObject();
     

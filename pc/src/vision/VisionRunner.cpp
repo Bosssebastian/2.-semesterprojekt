@@ -40,3 +40,8 @@ void VisionRunner::getPos(std::vector<std::vector<double>>& outputPos, double& r
 bool VisionRunner::objectReady(){
     return mVision.objectReady();
 }
+
+void VisionRunner::getInfo(std::string& object, std::string& size, std::string& color){
+    mVision.getObjectInfo(object, size, color);
+    return;
+}

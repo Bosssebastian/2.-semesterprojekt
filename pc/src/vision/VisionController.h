@@ -12,7 +12,7 @@ public:
 
     bool objectReady();
     void getObjectPosition(std::vector<std::vector<double>>& outputPos);
-    void getObjectInfo(std::string&, std::string&, std::string&);
+    void getObjectInfo(std::string& object, std::string& size, std::string& color);
     void getObjectRot(double&);
     void setStateFalse();
 
