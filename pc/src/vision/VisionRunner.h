@@ -2,6 +2,7 @@
 #include <atomic>
 #include <thread>
 #include "VisionController.h"
+#include <vector>
 
 class VisionRunner {
 public:
@@ -10,10 +11,13 @@ public:
 
     void start();
     void stop();
+    void getPos(std::vector<std::vector<double>>& ,double&);
+    void getInfo(std::string& object, std::string& size, std::string& color);
+    bool objectReady();
+    void scanForObject();
     
 private:
     void run();
-
     VisionController mVision;
     std::thread mWorker;
     std::atomic<bool> mRunning{false};

@@ -18,19 +18,29 @@ list(FILTER SHARED_SOURCES EXCLUDE REGEX ".*/[Uu]artClass\\.(c|cc|cpp|cxx)$")
 list(FILTER SHARED_SOURCES EXCLUDE REGEX ".*/serialPort\\.(c|cc|cpp|cxx)$")
 
 find_package(OpenCV REQUIRED)
+#set(DIR ${CMAKE_CURRENT_SOURCE_DIR})
+find_package(ur_rtde REQUIRED) #PATHS "${DIR}/../../ur_rtde/Build/ur_rtde" "${DIR}/../../ur_rtde/build/ur_rtde")
 
 add_executable(pc
     src/app/main.cpp
     src/io/IoRunner.cpp
     src/io/Interface.cpp
     src/io/SerialPort.cpp
+    src/io/Uart.cpp
     src/logging/Logger.cpp
     src/vision/VisionRunner.cpp
     src/vision/VisionController.cpp
     src/orchestrator/Orchestrator.cpp
+    src/orchestrator/StorageManager.cpp
     src/web/WebServerRunner.cpp
+    src/orchestrator/matrixoperations.cpp
+    src/orchestrator/transformations.cpp
+    src/orchestrator/orientation.cpp
+    src/orchestrator/movement.cpp
     ${SHARED_SOURCES}
 )
+
+target_link_libraries(pc PRIVATE ur_rtde::rtde)
 
 set_target_properties(pc PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"

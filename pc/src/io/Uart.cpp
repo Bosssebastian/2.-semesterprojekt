@@ -5,11 +5,13 @@
 #include <unistd.h>
 #include <termios.h>
 #include <cstring>
+#include <chrono>
+#include <thread>
 
 
 UartClass::UartClass(int pin_tx, int pin_rx, int baud)
 {
-    this->uart_id = uart_id;
+    this->uart_id = 0;
     this->pin_tx = pin_tx;
     this->pin_rx = pin_rx;
     this->baud = baud;
@@ -125,7 +127,7 @@ void UartClass::sendLine(std::string line)
 std::string UartClass::getLine()
 {
     while (!hasLine()) {
-        sleep_ms(1);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
     std::string line = rxBuffer;
@@ -142,7 +144,7 @@ bool UartClass::hasLine()
 
     if (serial_fd < 0)
     {
-        return;
+        return false;
     }
 
     char c;

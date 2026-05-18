@@ -7,21 +7,20 @@
 #include <vector>
 
 namespace {
-constexpr double kCommandTimeoutSeconds = 20.0;
-
 bool commandWaitsForEvent(CmdType command) {
     return command == CmdType::OPEN || command == CmdType::CLOSE || command == CmdType::GOTO || command == CmdType::RESET;
 }
 }
 
-Interface::Interface(std::string devicePath, configType mConfiguration, std::string portLabel, int baud) {
-    
-    if (mConfiguration == configType::SERIALPORT) {
-        mSerialPort(std::move(devicePath), baud, std::move(portLabel))
-    } else {
-        mUart() //Remember to input parameters
-    }
+Interface::Interface(std::string devicePath, std::string portLabel, double commandTimeoutSeconds, int baud)
+    : Interface(std::move(devicePath), configType::SERIALPORT, std::move(portLabel), commandTimeoutSeconds, baud) {
+}
 
+Interface::Interface(std::string devicePath, configType configuration, std::string portLabel, double commandTimeoutSeconds, int baud)
+    : mConfiguration(configuration),
+      mSerialPort(std::move(devicePath), baud, std::move(portLabel)),
+      mUart(0, 0, baud),
+      mCommandTimeoutSeconds(commandTimeoutSeconds) {
     mCurrentSamples.resize(CurrentSampleCapacity);
 }
 
@@ -30,7 +29,6 @@ void Interface::setDevicePath(std::string devicePath) {
     {
         mSerialPort.setDevicePath(std::move(devicePath));
     }
-    
 }
 
 void Interface::setup() {
@@ -55,8 +53,6 @@ void Interface::update() {
         }
     }
 
-    
-
     handleTimeouts();
 }
 
@@ -80,9 +76,9 @@ bool Interface::sendCommand(CmdType command, const std::string& argument) {
     if (mConfiguration == configType::SERIALPORT) {
         mSerialPort.writePackage(package);
     } else {
-       mUart.sendLine(package); 
+        mUart.sendLine(package);
     }
-   
+
     return true;
 }
 
@@ -207,10 +203,16 @@ void Interface::handleEvent(const std::vector<std::string>& parts) {
     CmdType cmd = toCmdType(parts[2]);
     CmdState& state = mCmdStates[cmd];
 
+    if (!state.active) {
+        return;
+    }
+
     if (eventType == EventType::MOVE_DONE) {
         state.status = CmdStatus::DONE;
-    } else {
+    } else if (eventType == EventType::ERROR) {
         state.status = CmdStatus::FAILED;
+    } else {
+        return;
     }
 
     state.active = false;
@@ -251,7 +253,7 @@ void Interface::handleTimeouts() {
             continue;
         }
 
-        if (std::difftime(currentTime, state.timestamp) > kCommandTimeoutSeconds) {
+        if (std::difftime(currentTime, state.timestamp) > mCommandTimeoutSeconds) {
             state.status = CmdStatus::TIMED_OUT;
             state.active = false;
         }

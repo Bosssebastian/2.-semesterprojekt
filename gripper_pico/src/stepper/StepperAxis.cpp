@@ -3,12 +3,14 @@
 #include "interface/TestInterface.h"
 #include "stepper/TMC2209Driver.h"
 #include <cmath>
+#include <cstdio>
 #include "hardware/gpio.h"
 
 StepperAxis* StepperAxis::mDiagOwners[StepperAxis::MaxGpioCount] = {};
 
-StepperAxis::StepperAxis(TMC2209Driver& driver)
-    : mDriver(driver) {}
+StepperAxis::StepperAxis(TMC2209Driver& driver, CurrentSensor& currentSensor)
+    : mDriver(driver),
+      mCurrentSensor(currentSensor) {}
 
 void StepperAxis::setup() {
     gpio_init(PinConfig::DIR_PIN);
@@ -42,9 +44,14 @@ bool StepperAxis::move(int32_t steps, bool stopOnStall) {
     mDiagStallLatched = false;
     mLastMoveResult = AxisMoveResult::None;
     mExecutedSteps = 0;
-    mStallDetectionArmedAt = make_timeout_time_us(ParameterConfig::DRIVER_STALL_ARM_DELAY_US);
+    mStallDetectionArmedAt = make_timeout_time_us(
+        (PinConfig::STALL_DETECTION_MODE == PinConfig::StallDetectionMode::Current)
+            ? ParameterConfig::CURRENT_STALL_ARM_DELAY_US
+            : ParameterConfig::DRIVER_STALL_ARM_DELAY_US);
     mNextUartStallPollAt = get_absolute_time();
     mConsecutiveUartStallSamples = 0;
+    mConsecutiveCurrentStallSamples = 0;
+    mLastCurrentStallSampleSequence = mCurrentSensor.sampleSequence();
     mPeakStallGuardResult = 0;
     mStallGuardPrimed = false;
     mFilteredStallGuardResult = 0;
@@ -117,6 +124,14 @@ AxisMoveResult StepperAxis::getLastMoveResult() const {
     return mLastMoveResult;
 }
 
+void StepperAxis::setStallValueEventsEnabled(bool enabled) {
+    mStallValueEventsEnabled = enabled;
+}
+
+bool StepperAxis::stallValueEventsEnabled() const {
+    return mStallValueEventsEnabled;
+}
+
 void StepperAxis::configureStallInterrupt() {
     if (PinConfig::DIAG_PIN >= MaxGpioCount) {
         return;
@@ -175,7 +190,14 @@ bool StepperAxis::checkStall() {
             }
             (void)triggered;
 
-            const uint16_t compareValue = static_cast<uint16_t>(threshold) * 2u;
+            const bool rampingUp = isRampingUp();
+            const uint16_t compareValue = rampingUp
+                ? ParameterConfig::DRIVER_STALL_RAMP_THRESHOLD
+                : ParameterConfig::DRIVER_STALL_THRESHOLD;
+            const uint8_t requiredConsecutiveSamples = rampingUp
+                ? ParameterConfig::DRIVER_STALL_RAMP_CONSECUTIVE_SAMPLES
+                : ParameterConfig::DRIVER_STALL_CONSECUTIVE_SAMPLES;
+            (void)threshold;
 
             if (!mHasFilteredStallGuardResult) {
                 mFilteredStallGuardResult = sgResult;
@@ -185,6 +207,7 @@ bool StepperAxis::checkStall() {
             }
 
             TestInterface::logf("%u\r\n", static_cast<unsigned>(mFilteredStallGuardResult));
+            sendStallValueEvent("Uart", mFilteredStallGuardResult);
 
             updateStallGuardPriming(mFilteredStallGuardResult, compareValue);
             const bool detectionActive = isStallDetectionActive();
@@ -202,9 +225,37 @@ bool StepperAxis::checkStall() {
                 mConsecutiveUartStallSamples = 0;
             }
 
-            const bool stopTriggered =
-                mConsecutiveUartStallSamples >= ParameterConfig::DRIVER_STALL_CONSECUTIVE_SAMPLES;
+            const bool stopTriggered = mConsecutiveUartStallSamples >= requiredConsecutiveSamples;
             return stopTriggered;
+        }
+
+        case PinConfig::StallDetectionMode::Current: {
+            if (!isCurrentStallDetectionActive()) {
+                mConsecutiveCurrentStallSamples = 0;
+                return false;
+            }
+
+            if (!mCurrentSensor.hasLatestSample()) {
+                return false;
+            }
+
+            const uint32_t sampleSequence = mCurrentSensor.sampleSequence();
+            if (sampleSequence == mLastCurrentStallSampleSequence) {
+                return false;
+            }
+
+            mLastCurrentStallSampleSequence = sampleSequence;
+            sendStallValueEvent("Current", mCurrentSensor.latestAmps());
+
+            if (mCurrentSensor.latestAmps() >= ParameterConfig::CURRENT_STALL_THRESHOLD_AMPS) {
+                if (mConsecutiveCurrentStallSamples < 0xFFu) {
+                    ++mConsecutiveCurrentStallSamples;
+                }
+            } else {
+                mConsecutiveCurrentStallSamples = 0;
+            }
+
+            return mConsecutiveCurrentStallSamples >= ParameterConfig::CURRENT_STALL_CONSECUTIVE_SAMPLES;
         }
 
         case PinConfig::StallDetectionMode::DiagInterrupt: {
@@ -229,6 +280,8 @@ void StepperAxis::endMove(AxisMoveResult result) {
     mDiagStallLatched = false;
     mStopOnStall = false;
     mConsecutiveUartStallSamples = 0;
+    mConsecutiveCurrentStallSamples = 0;
+    mLastCurrentStallSampleSequence = mCurrentSensor.sampleSequence();
     mPeakStallGuardResult = 0;
     mStallGuardPrimed = false;
     mFilteredStallGuardResult = 0;
@@ -262,6 +315,10 @@ bool StepperAxis::isInBrakingZone() const {
     const float brakingWindowSteps =
         stepsToBrake + static_cast<float>(ParameterConfig::DRIVER_STALL_BRAKE_MARGIN_STEPS);
     return static_cast<float>(mRemainingSteps) <= brakingWindowSteps;
+}
+
+bool StepperAxis::isRampingUp() const {
+    return mCurrentStepFrequencyHz < static_cast<float>(ParameterConfig::AXIS_TARGET_SPEED_SPS);
 }
 
 void StepperAxis::updateStallGuardPriming(uint16_t sgResult, uint16_t compareValue) {
@@ -299,6 +356,31 @@ bool StepperAxis::isStallDetectionActive() const {
     }
 
     return true;
+}
+
+bool StepperAxis::isCurrentStallDetectionActive() const {
+    const int64_t armDelayRemainingUs = absolute_time_diff_us(get_absolute_time(), mStallDetectionArmedAt);
+    if (armDelayRemainingUs > 0) {
+        return false;
+    }
+
+    return mExecutedSteps >= ParameterConfig::CURRENT_STALL_ARM_STEPS;
+}
+
+void StepperAxis::sendStallValueEvent(const char* mode, float value) const {
+    if (!mStallValueEventsEnabled) {
+        return;
+    }
+
+    std::printf("EVENT STALL_VALUE %s %.3f\n", mode, static_cast<double>(value));
+}
+
+void StepperAxis::sendStallValueEvent(const char* mode, uint16_t value) const {
+    if (!mStallValueEventsEnabled) {
+        return;
+    }
+
+    std::printf("EVENT STALL_VALUE %s %u\n", mode, static_cast<unsigned>(value));
 }
 
 void StepperAxis::updateMotionSpeed() {

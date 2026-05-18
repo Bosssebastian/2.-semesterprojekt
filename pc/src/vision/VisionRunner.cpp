@@ -25,8 +25,23 @@ void VisionRunner::stop() {
 }
 
 void VisionRunner::run() {
-    while (mRunning) {
-        mVision.scanForObject();
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
+    mVision.scanForObject();
+}
+
+void VisionRunner::scanForObject(){
+    mVision.setStateFalse();
+}
+
+void VisionRunner::getPos(std::vector<std::vector<double>>& outputPos, double& rotOut){
+    mVision.getObjectPosition(outputPos);
+    mVision.getObjectRot(rotOut);
+}
+
+bool VisionRunner::objectReady(){
+    return mVision.objectReady();
+}
+
+void VisionRunner::getInfo(std::string& object, std::string& size, std::string& color){
+    mVision.getObjectInfo(object, size, color);
+    return;
 }

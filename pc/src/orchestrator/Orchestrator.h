@@ -1,7 +1,9 @@
 #pragma once
 #include "OrchestratorState.h"
+#include "StorageManager.h"
 #include "io/Interface.h"
 #include <string>
+#include "movement.h"
 
 class IoRunner;
 class VisionRunner;
@@ -38,6 +40,8 @@ private:
 
     void handleStarting();
     void handleIdle();
+
+    void handleInStorGetStorageSlot();
     void handleInStorStorageMoveToSlot();
     void handleInStorRobotOverInput();
     void handleInStorRobotToCube();
@@ -59,10 +63,18 @@ private:
     WebServerRunner& mWeb;
     Interface& mGripper;
     Interface& mStorage;
+    Movement mMove;
 
     OrchestratorState mState{OrchestratorState::Stopped};
     std::string mFaultReason;
     bool mStopRequested{false};
     bool mPendingSkipRequest{false};
     bool mStateJustEntered{true};
+
+    std::vector<std::vector<double>> inputFromVision;
+    double rot;
+    StorageManager mStorageManager;
+    int mActiveStorageSlot{-1};
+    
+    // Movement move("192.168.1.11", 29998);
 };

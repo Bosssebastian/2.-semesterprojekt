@@ -6,6 +6,11 @@ class CurrentSensor {
 public:
     void setup();
     void update();
+    bool hasLatestSample() const;
+    float latestAmps() const;
+    uint32_t sampleSequence() const;
+    void setEventsEnabled(bool enabled);
+    bool eventsEnabled() const;
 
 private:
     static constexpr uint32_t CurrentSenseGpio = 26;
@@ -22,6 +27,10 @@ private:
     uint32_t mBatchStartMs = 0;
     float mSamples[BatchSize] = {};
     uint8_t mSampleCount = 0;
+    float mLatestAmps = 0.0f;
+    bool mHasLatestSample = false;
+    uint32_t mSampleSequence = 0;
+    bool mEventsEnabled = true;
 
     uint16_t readRaw() const;
     float readAmps() const;
