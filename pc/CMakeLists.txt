@@ -17,12 +17,7 @@ file(GLOB_RECURSE SHARED_SOURCES CONFIGURE_DEPENDS
 list(FILTER SHARED_SOURCES EXCLUDE REGEX ".*/[Uu]artClass\\.(c|cc|cpp|cxx)$")
 list(FILTER SHARED_SOURCES EXCLUDE REGEX ".*/serialPort\\.(c|cc|cpp|cxx)$")
 
-# Temporary: build without OpenCV while it is not installed.
-# Re-enable with -DPC_ENABLE_OPENCV=ON after installing OpenCV.
-option(PC_ENABLE_OPENCV "Build camera/QR vision support with OpenCV" OFF)
-if(PC_ENABLE_OPENCV)
-    find_package(OpenCV REQUIRED)
-endif()
+find_package(OpenCV REQUIRED)
 #set(DIR ${CMAKE_CURRENT_SOURCE_DIR})
 find_package(ur_rtde REQUIRED) #PATHS "${DIR}/../../ur_rtde/Build/ur_rtde" "${DIR}/../../ur_rtde/build/ur_rtde")
 
@@ -73,7 +68,4 @@ else()
     target_link_libraries(pc PRIVATE ws2_32)
 endif()
 
-if(PC_ENABLE_OPENCV)
-    target_compile_definitions(pc PRIVATE PC_ENABLE_OPENCV=1)
-    target_link_libraries(pc PRIVATE ${OpenCV_LIBS})
-endif()
+target_link_libraries(pc PRIVATE ${OpenCV_LIBS})

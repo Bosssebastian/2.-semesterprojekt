@@ -1,4 +1,3 @@
-#ifdef PC_ENABLE_OPENCV
 #include <filesystem>
 #include "VisionController.h"
 #include <iostream>
@@ -203,4 +202,3 @@ void VisionController::getObjectRot(double& output){
     }
     return;
 }
-#endif
