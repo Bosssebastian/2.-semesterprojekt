@@ -72,6 +72,9 @@ void Movement::toggleAsync(){
 
 
 void Movement::moveUp(std::string start, double speed, double acc){ // Needs testing!!!
+    std::vector<double> curPos = lastForwardPosition;
+    curPos[1] = 0.45;
+    rtde_control.moveL(curPos,speed,acc,asyncOn); // backup solution
     /*std::vector<double> curPos = lastForwardPosition;
     curPos[2] += 100;
     curPos = rtde_control.getInverseKinematics(curPos); // Convert to joint angles
@@ -87,21 +90,48 @@ void Movement::moveUp(std::string start, double speed, double acc){ // Needs tes
     std::vector<double> stockVec = stockCollection[idx];
     stockVec.push_back(speed);
     stockVec.push_back(acc);*/
-    std::vector<std::vector<double>> path;
+    /*std::vector<std::vector<double>> path;
     if (start == "home"){
+        std::cout << "path generating\n";
         std::vector<double> pose1 = stockCollection[0];
-        //std::vector<double
+        for (size_t i = 0; i < pose1.size(); ++i){
+            pose1[i] = matop.degToRad(pose1[i]);
+            std::cout << pose1[i] << " ";
+        }
+        for (double v : pose1)
+        {
+            if (std::abs(v) > 6.3)
+                std::cout << "BAD VALUE\n";
+        }
         pose1.push_back(speed);
         pose1.push_back(acc);
-        pose1.push_back(0.0);
+        pose1.push_back(0.05);
         path.push_back(pose1);
         std::vector<double> pose2 = stockCollection[1];
+        for (size_t i = 0; i < pose2.size(); ++i){
+            pose2[i] = matop.degToRad(pose2[i]);
+            std::cout << pose2[i] << " ";
+        }
+        for (double v : pose2)
+        {
+            if (std::abs(v) > 6.3)
+                std::cout << "BAD VALUE\n";
+        }
         pose2.push_back(speed);
         pose2.push_back(acc);
         pose2.push_back(0.0);
         path.push_back(pose2);
     }
-    rtde_control.moveJ(path); // must have at least 3 points and ended by the stopScript() function
+
+    std::cout << "Path size: " << path.size() << std::endl;
+    for (auto &p : path) {
+        std::cout << "Waypoint size: " << p.size() << std::endl;
+    }
+
+    std::cout << "Connected: " << rtde_control.isConnected() << std::endl;
+    bool ok = rtde_control.moveJ(path);
+    std::cout << ok << " movement done\n";*/
+    
 }
 
 

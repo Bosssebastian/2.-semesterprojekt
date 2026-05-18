@@ -255,7 +255,7 @@ void Orchestrator::handleInStorGripperClose() {
 void Orchestrator::handleInStorRobotOverStorage() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Robot over storage placeholder state.");
-        mMove.moveJStock("storage");
+        mMove.moveUp("base"); // part 2 of movement in handleInStorStorageMoveToPos()
         //mMove.moveUp("home");
     });
 
@@ -272,6 +272,7 @@ void Orchestrator::handleInStorRobotOverStorage() {
 void Orchestrator::handleStorageWaitingOnMove() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Storage move to position placeholder state.");
+        mMove.moveJStock("storage"); // part 1 of movement in handleInStorRobotOverStorage()
     });
 
     if (skipRequested()) {
@@ -291,6 +292,10 @@ void Orchestrator::handleStorageWaitingOnMove() {
             break;
         default:
             break;
+    }
+
+    if (mMove.isDone()){ // Check if async movement is done
+        transitionTo(OrchestratorState::InStor_RobotDownToSlot);
     }
 }
 
