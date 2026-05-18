@@ -37,6 +37,7 @@ add_executable(pc
     src/orchestrator/transformations.cpp
     src/orchestrator/orientation.cpp
     src/orchestrator/movement.cpp
+    src/io/Uart.cpp
     ${SHARED_SOURCES}
 )
 
