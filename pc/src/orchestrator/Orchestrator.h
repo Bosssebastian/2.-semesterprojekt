@@ -79,7 +79,7 @@ private:
     int mActiveStorageSlot{-1};
     int mActiveObjectId{-1};
     
-    Movement move("192.168.1.11", 29998);
+    //Movement move("192.168.1.11", 29998);
 
   std::string object, size, color;
 };
