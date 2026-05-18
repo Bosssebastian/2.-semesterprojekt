@@ -76,6 +76,7 @@ void DataBase::createTables() {
 }
 
 void DataBase::insertVisionObject(const std::string& object, std::string size, const std::string& color) { 
+    std::cout << "object = " << object << " size = " << size << " color = " << color << std::endl;
     std::string sql = 
     "INSERT INTO current_state_vision (object, size, color) VALUES ('"+ object +"' , " + size + ", '" + color + "');";
 
