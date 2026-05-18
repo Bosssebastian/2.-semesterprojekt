@@ -18,7 +18,7 @@ public:
     
 private:
     void run();
-    VisionController mVision;
+    VisionController mVision;   
     std::thread mWorker;
     std::atomic<bool> mRunning{false};
 };
