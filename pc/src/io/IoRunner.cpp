@@ -18,7 +18,7 @@ namespace {
 constexpr int kBaudRate = 115200;
 constexpr char kPicoVendorId[] = "2e8a";
 
-/*
+
 bool isRaspberryPiPicoPort(const std::string& portPath) {
 #ifdef _WIN32
     (void)portPath;
@@ -50,7 +50,7 @@ bool isRaspberryPiPicoPort(const std::string& portPath) {
     return true;
 #endif
 }
-*/
+
 
 std::vector<std::string> discoverCandidatePorts() {
     std::vector<std::string> ports;
@@ -103,7 +103,7 @@ void IoRunner::start() {
     } else {
         LOG_INFO(("Found " + std::to_string(ports.size()) + " serial port(s)").c_str());
     }
-    /*
+    
     for (const std::string& portPath : ports) {
         if (!isRaspberryPiPicoPort(portPath)) {
             LOG_WARN(("Ignoring " + portPath + " because it is not a Raspberry Pi Pico serial device").c_str());
@@ -123,7 +123,7 @@ void IoRunner::start() {
 
     mGripper.setup();
     mStorage.setup();
-    mWorker = std::thread(&IoRunner::run, this);*/
+    mWorker = std::thread(&IoRunner::run, this);
 }
 
 void IoRunner::stop() {
