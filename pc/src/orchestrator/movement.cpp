@@ -73,7 +73,7 @@ void Movement::toggleAsync(){
 
 void Movement::moveUp(std::string start, double speed, double acc){ // Needs testing!!!
     std::vector<double> curPos = lastForwardPosition;
-    curPos[1] = 0.4;
+    curPos[1] = 0.45;
     rtde_control.moveL(curPos,speed,acc,asyncOn); // backup solution
     /*std::vector<double> curPos = lastForwardPosition;
     curPos[2] += 100;
