@@ -177,6 +177,7 @@ int main()
         }
         motor.stop();
         printf("TARGET REACHED!");
+        mInterface.sendEvent(CmdType::GOTO, EventType::MOVE_DONE, EventReason::REACHED_POSITION);
     };
 
     printf("USB input test started\n");
@@ -190,17 +191,30 @@ int main()
             switch (cmd) 
                 {
                 case CmdType::PING:
+                std::cout << "COMMAND RECIEVED!" << std::endl;
                 mInterface.sendResponse(CmdType::PING, ResponseType::OK, "");
                 break;
                 ///ping tilbage
 
                 case CmdType::GOTO:
+                std::cout << "COMMAND RECIEVED!" << std::endl;
                 desiredPosition = mInterface.getPosition();
+
+                printf("COMMAND RECEIVED: GOTO %d\n", desiredPosition);
+
                 mInterface.sendResponse(CmdType::GOTO, ResponseType::OK, "");
                 goTo(); ///Run goto command
+
+                mInterface.sendEvent(
+                CmdType::GOTO,
+                EventType::MOVE_DONE,
+                EventReason::REACHED_POSITION
+                );
+
                 break;
 
                 case CmdType::STOP:
+                std::cout << "COMMAND RECIEVED!" << std::endl;
                 motor.stop(); ////RUN STOP Command
                 break;
                 }   
@@ -236,4 +250,3 @@ int main()
     }   
     return 0;
 }
-
