@@ -24,7 +24,7 @@ private:
     Transformations transform;
     MatrixOperations matop;
     std::vector<double> stockHome = {99.81, -86.87, 106.43, -109.51, -90, 9.76}; // in degrees
-    std::vector<double> stockStorage = {57.90, -110.39, 120.28, -99.85, -90, -60}; // in degrees
+    std::vector<double> stockStorage = {57.90, -110.39, 120.28, -99.85, -90, -60.0}; // in degrees
     std::vector<std::vector<double>> stockCollection = {stockHome,stockStorage};
     std::vector<std::string> stockName = {"home","storage"};
     std::vector<double> lastForwardPosition;
