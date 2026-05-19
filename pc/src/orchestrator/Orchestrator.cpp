@@ -198,8 +198,8 @@ void Orchestrator::handleInStorGetStorageSlot() {
 
     mActiveStorageSlot = mStorageManager.getFreeSlot();
     mStorageManager.occupySlot(mActiveStorageSlot, mActiveObjectId);
-    mDatabase.updateStorageSlot(mActiveStorageSlot + 1, mActiveObjectId, true); //(int slotId, int objectId, bool occupied) 0 empty 1 occupied
-    mDatabase.insertHistory(mActiveObjectId, mActiveStorageSlot + 1, mDatabase.time()); // (int objectId, int slot, double timestamp)
+    mDatabase.updateStorageSlot(mActiveStorageSlot, mActiveObjectId, true); //(int slotId, int objectId, bool occupied) 0 empty 1 occupied
+    mDatabase.insertHistory(mActiveObjectId, mActiveStorageSlot, mDatabase.time()); // (int objectId, int slot, double timestamp)
     LOG_INFO("Storage: Using storage slot " + std::to_string(mActiveStorageSlot + 1)); // 0-7 incorrect logic, 1-8
     transitionTo(OrchestratorState::InStor_StorageMoveToSlot);
 }
