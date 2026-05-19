@@ -2,12 +2,12 @@
 #include "VisionController.h"
 #include <iostream>
 
-void getValue(std::string& value, std::string& object, std::string& color, int& size)
+void getValue(std::string& value, std::string& object, std::string& color, std::string& size)
 /*input string, object type string, color string, size int*/
 {
     object = value.substr(0,3);
     color = value.substr(4,3);
-    size = stoi(value.substr(8,(value.length()-8)));
+    size = value.substr(8,(value.length()-8));
     return;
 }
 
@@ -197,11 +197,11 @@ void VisionController::setState(bool newState){
 void VisionController::getObjectRot(double& output){
     output = fmod(mRotVec.at<double>(2,0), (M_PI/2.)); //mRotVec.at<double>(2,0);
     std::cout << output << "\n";
-    if (output < 0){
+    if (output < -M_PI/4.){
         output += M_PI/2.;
     }
-    /*if (output > M_PI/2.){
+    if (output > M_PI/4.){
         output -= M_PI/2.;
-    }*/
+    }
     return;
 }
