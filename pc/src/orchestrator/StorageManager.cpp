@@ -5,30 +5,33 @@ StorageManager::StorageManager(int slotCount) : slotCount(slotCount), slotStates
 
 
 bool StorageManager::hasFreeSlot() const {
-        "SELECT COUNT(*) FROM current_state_storage, "
-        "WHERE occupied = 0;";
-    
+    for (int i = 0; i < slotCount; ++i) {
+        if (!slotStates[i]) {
+            return true;
+        }
+    }
     return false;
 }
 
 int StorageManager::getFreeSlot() const {
-    "SELECT slot_id FROM current_state_Storage, "
-    "WHERE occupied = 0, "
-    "LIMIT 1;";
+    for (int i = 0; i < slotCount; ++i) {
+        if (!slotStates[i]) {
+            return i;
+        }
+    }
+    return -1;
 }
 
 void StorageManager::occupySlot(int slotIndex) {
-    "UPDATE current_state_storage, "
-    "SET occupied = 1, "
-    "object_id = ?, "
-    "WHERE slot_id = ?;";
+    if (slotIndex >= 0 && slotIndex < slotCount) {
+        slotStates[slotIndex] = true;
+    }
 }
 
 void StorageManager::freeSlot(int slotIndex) {
-    "UPDATE current_state_storage, "
-    "SET occupied = 0, "
-    "object_id = ?, "
-    "WHERE slot_id = ?;";
+    if (slotIndex >= 0 && slotIndex < slotCount) {
+        slotStates[slotIndex] = false;
+    }
 }
 
 std::vector<bool> StorageManager::getSlotStates() const {
