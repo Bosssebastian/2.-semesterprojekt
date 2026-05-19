@@ -73,8 +73,10 @@ void Movement::toggleAsync(){
 
 void Movement::moveUp(std::string start, double speed, double acc){ // Needs testing!!!
     std::vector<double> curPos = lastForwardPosition;
-    curPos[1] = -0.45;
-    rtde_control.moveL(curPos,speed,acc,asyncOn); // backup solution
+    if (start == "base"){
+        curPos[1] = -0.45;
+        rtde_control.moveL(curPos,speed,acc,asyncOn); // backup solution   
+    }
     /*std::vector<double> curPos = lastForwardPosition;
     curPos[2] += 100;
     curPos = rtde_control.getInverseKinematics(curPos); // Convert to joint angles
@@ -146,7 +148,7 @@ void Movement::moveDown(std::string start, double speed, double acc){
     else {
         distanceToCube = 0; // Does not move on invallid starting position
     }
-    moveZ(-distanceToCube, start, speed,acc);
+    moveZ(-distanceToCube, start, speed, acc);
 }
 
 void Movement::stop(){
