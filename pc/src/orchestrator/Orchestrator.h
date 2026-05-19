@@ -50,6 +50,7 @@ private:
     void handleInStorRobotToCube();
     void handleInStorGripperClose();
     void handleInStorRobotOverStorage();
+    void handleInStorRobotOverStorage2();
     void handleStorageWaitingOnMove();
     void handleInStorRobotDownToSlot();
     void handleInStorGripperOpen();

@@ -76,6 +76,7 @@ void Orchestrator::update() {
         case OrchestratorState::InStor_RobotToCube: handleInStorRobotToCube(); break;
         case OrchestratorState::InStor_GripperClose: handleInStorGripperClose(); break;
         case OrchestratorState::InStor_RobotOverStorage: handleInStorRobotOverStorage(); break;
+        case OrchestratorState::InStor_RobotOverStorage2: handleInStorRobotOverStorage2(); break;
         case OrchestratorState::InStor_StorageWaitingOnMove: handleStorageWaitingOnMove(); break;
         case OrchestratorState::InStor_RobotDownToSlot: handleInStorRobotDownToSlot(); break;
         case OrchestratorState::InStor_GripperOpen: handleInStorGripperOpen(); break;
@@ -221,7 +222,9 @@ void Orchestrator::handleStarting() {
 void Orchestrator::handleIdle() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Idle. Waiting for input...");
-        mMove.home();
+        double speed = 0.2;
+        double acc = 0.1;
+        mMove.home(speed,acc);
         mVision.scanForObject();
     });
 
@@ -274,6 +277,7 @@ void Orchestrator::handleInStorRobotOverInput() {
         double acc = 0.2;
         double customZ = 0.18;
         double rotZ = matop.degToRad(22.5) - mRot;
+        mMove.stop();
         mMove.move({mInputFromVision[0],mInputFromVision[1],{0.24}},speed,acc,customZ,rotZ); // Move to coordinates provided by vision
     });
 
@@ -333,15 +337,30 @@ void Orchestrator::handleInStorGripperClose() {
 void Orchestrator::handleInStorRobotOverStorage() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Move robot over storage.");
-        mMove.moveUp("base"); // part 2 of movement in handleStorageWaitingOnMove()
+        mMove.moveUp("base"); // part 2 of movement in handleInStorRobotOverStorage2()
         //mMove.moveUp("home");
+    });
+
+    if (skipRequested()) {
+        transitionTo(OrchestratorState::InStor_RobotOverStorage2);
+        return;
+    }
+
+    if (mMove.isDone()){ // Check if async movement is done
+        transitionTo(OrchestratorState::InStor_RobotOverStorage2);
+    }
+}
+
+void Orchestrator::handleInStorRobotOverStorage2() {
+    onEnter([this] {
+        LOG_INFO("Orchestrator: Storage move to position placeholder state.");
+        mMove.moveJStock("storage"); // part 1 of movement in handleInStorRobotOverStorage()
     });
 
     if (skipRequested()) {
         transitionTo(OrchestratorState::InStor_StorageWaitingOnMove);
         return;
     }
-
     if (mMove.isDone()){ // Check if async movement is done
         transitionTo(OrchestratorState::InStor_StorageWaitingOnMove);
     }
@@ -350,7 +369,6 @@ void Orchestrator::handleInStorRobotOverStorage() {
 void Orchestrator::handleStorageWaitingOnMove() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Storage move to position placeholder state.");
-        mMove.moveJStock("storage"); // part 1 of movement in handleInStorRobotOverStorage()
     });
 
     if (skipRequested()) {
@@ -463,9 +481,10 @@ void Orchestrator::handleOutStorRobotOverStorage() {
         return;
     }
 
-    if (mMove.isDone()) {
+    if (mMove.isDone()){ // Check if async movement is done
         transitionTo(OrchestratorState::OutStor_StorageWaitingOnMove);
     }
+
 }
 
 void Orchestrator::handleOutStorStorageWaitingOnMove() {
@@ -557,7 +576,7 @@ void Orchestrator::handleOutStorRobotUpFromSlot() {
 void Orchestrator::handleOutStorRobotOverOutput() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Storage-to-output moving robot to output placeholder.");
-        mMove.home();
+        mMove.toOutput();
     });
 
     if (skipRequested()) {

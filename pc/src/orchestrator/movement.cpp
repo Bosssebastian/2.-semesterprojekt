@@ -28,14 +28,14 @@ void Movement::moveJStock(std::string stock, double speed, double acc){
     rtde_control.moveJ(stockVec,speed,acc,asyncOn); // Move to pose
 }
 
-void Movement::home() {
+void Movement::home(double speed, double acc) {
     double base = 1.742013;
     double shoulder = -1.516168;
     double elbow = 1.857554;
     double wrist1 = -1.911310;
     double wrist2 = -matop.PI_2;
     double wrist3 = 0.170344;
-    rtde_control.moveJ({base,shoulder,elbow,wrist1,wrist2,wrist3},0.5,0.2,asyncOn);
+    rtde_control.moveJ({base,shoulder,elbow,wrist1,wrist2,wrist3},speed,acc,asyncOn);
 }
 
 void Movement::moveZ(double diffZ, std::string state, double speed, double acc){
@@ -73,8 +73,14 @@ void Movement::toggleAsync(){
 
 void Movement::moveUp(std::string start, double speed, double acc){ // Needs testing!!!
     std::vector<double> curPos = lastForwardPosition;
-    curPos[1] = -0.45;
-    rtde_control.moveL(curPos,speed,acc,asyncOn); // backup solution
+    if (start == "base"){
+        curPos[1] = -0.45;
+        curPos[0] = 0.15;
+        rtde_control.moveL(curPos,speed,acc,asyncOn); // backup solution   
+    }
+    else if (start == "output"){
+        rtde_control.moveL(curPos,speed,acc,asyncOn);
+    }
     /*std::vector<double> curPos = lastForwardPosition;
     curPos[2] += 100;
     curPos = rtde_control.getInverseKinematics(curPos); // Convert to joint angles
@@ -153,4 +159,25 @@ void Movement::stop(){
     rtde_control.stopJ(1.0);
     rtde_control.stopL(1.0);
     rtde_control.stopScript(); // stops script on robot
+}
+
+void Movement::testScript(int maxIterations, double speed, double acc){
+    Transformations testTransform(14.*5.);
+    std::vector<double> point11 = testTransform.getMovementVec({{(0.05*3.)},{-(0.05*10.)},{0.25}},matop.degToRad(22.5),true);
+    std::vector<double> point21 = testTransform.getMovementVec({{(0.05*4.)},{-(0.05*14.)},{0.25}},matop.degToRad(22.5),true);
+    std::vector<double> point12 = point11;
+    point12[2] = 0.12;
+    std::vector<double> point22 = point21;
+    point12[2] = 0.12;
+    std::vector<std::vector<double>> waypoints = {point11, point12, point21, point22};
+    for (size_t i = 0; i < (waypoints.size() * maxIterations); ++i){
+        rtde_control.moveL(waypoints[(i % waypoints.size())],speed,acc);
+    }
+}
+
+void Movement::toOutput(double speed, double acc){
+    std::vector<double> outputZone = transform.getMovementVec({{0.05*5+0.005},{-0.05*5-0.005},{0.325}},matop.degToRad(22.5-90),true);
+    lastForwardPosition = outputZone;
+    outputZone[2] = 0.1;
+    rtde_control.moveL(outputZone,speed,acc,asyncOn);
 }

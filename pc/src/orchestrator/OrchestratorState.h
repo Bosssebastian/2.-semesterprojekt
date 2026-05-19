@@ -10,6 +10,7 @@ enum class OrchestratorState {
     InStor_RobotToCube,
     InStor_GripperClose,
     InStor_RobotOverStorage,
+    InStor_RobotOverStorage2,
     InStor_StorageWaitingOnMove,
     InStor_RobotDownToSlot,
     InStor_GripperOpen,
@@ -51,6 +52,8 @@ inline const char* toString(OrchestratorState state) {
             return "InStor_GripperClose";
         case OrchestratorState::InStor_RobotOverStorage:
             return "InStor_RobotOverStorage";
+         case OrchestratorState::InStor_RobotOverStorage2:
+            return "InStor_RobotOverStorage2";
         case OrchestratorState::InStor_StorageWaitingOnMove:
             return "InStor_StorageWaitingOnMove";
         case OrchestratorState::InStor_RobotDownToSlot:
@@ -109,6 +112,8 @@ inline const char* toUiString(OrchestratorState state) {
         case OrchestratorState::InStor_GripperClose:
             return "Closing gripper";
         case OrchestratorState::InStor_RobotOverStorage:
+            return "Moving robot up from collection";
+        case OrchestratorState::InStor_RobotOverStorage2:
             return "Moving robot over storage";
         case OrchestratorState::InStor_StorageWaitingOnMove:
             return "Waiting on Storage to move to position";
