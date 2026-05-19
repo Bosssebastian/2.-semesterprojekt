@@ -134,38 +134,61 @@ int main()
         shortcut.setTarget(desiredPosition);
         move = shortcut.getClosestPosition();
         */
+       
         while (move != 0)
         {
-            
-            currentPos = decoder.decipherExpected(move);
-            
-            shortcut.setCurrentPosition(currentPos);
+            if (mInterface.hasCommand())
+            {
+                CmdType interruptCmd = mInterface.getCommand();
 
+                if (interruptCmd == CmdType::STOP)
+                {
+                    motor.stop();
+                    mInterface.sendResponse(CmdType::STOP, ResponseType::OK, "");
+                    return;
+                }
+
+                if (interruptCmd == CmdType::PING)
+                {
+                    mInterface.sendResponse(CmdType::PING, ResponseType::OK, "");
+                }
+            }
+
+            currentPos = decoder.decipherExpected(move);
+
+            if (currentPos == -1)
+            {
+                motor.stop();
+                mInterface.sendEvent(
+                    CmdType::GOTO,
+                    EventType::ERROR,
+                    EventReason::MOVE_ERROR
+                );
+                return;
+            }
+
+            shortcut.setCurrentPosition(currentPos);
             move = shortcut.getClosestPosition();
 
-            //printf("DEBUG GOTO target=%d current=%d move=%.2f\n", desiredPosition, currentPos, move);
-
-            if(move > 0) {
+            if (move > 0)
+            {
                 oldDirection = 1;
                 motor.forwards();
-                //currentSensor.update();
-                
-
             }
-            else if(move < 0) {
+            else if (move < 0)
+            {
                 oldDirection = -1;
                 motor.backwards();
-                //currentSensor.update();
             }
-            else 
+            else
             {
                 motor.stop();
                 break;
             }
+
             sleep_ms(100);
-            tight_loop_contents();
-            
         }
+
         if (oldDirection == 1)
         {
             motor.forwards();
@@ -205,17 +228,21 @@ int main()
                 mInterface.sendResponse(CmdType::GOTO, ResponseType::OK, "");
                 goTo(); ///Run goto command
 
+                /*
                 mInterface.sendEvent(
                 CmdType::GOTO,
                 EventType::MOVE_DONE,
                 EventReason::REACHED_POSITION
                 );
 
+                */
+
                 break;
 
                 case CmdType::STOP:
                 std::cout << "COMMAND RECIEVED!" << std::endl;
                 motor.stop(); ////RUN STOP Command
+                mInterface.sendResponse(CmdType::STOP, ResponseType::OK, "");
                 break;
                 }   
             }
