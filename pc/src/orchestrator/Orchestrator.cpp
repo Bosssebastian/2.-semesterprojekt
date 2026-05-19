@@ -254,7 +254,7 @@ void Orchestrator::handleInStorGetStorageSlot() {
     }
 
     mActiveStorageSlot = mStorageManager.getFreeSlot();
-    mStorageManager.occupySlot(mActiveStorageSlot);
+    //mStorageManager.occupySlot(mActiveStorageSlot);
     LOG_INFO("Storage: Using storage slot " + std::to_string(mActiveStorageSlot + 1)); // 0-7 incorrect logic, 1-8
     mDatabase.insertHistory(mActiveObjectId, mActiveStorageSlot + 1, mDatabase.time()); // (int objectId, int slot, double timestamp)
     mDatabase.updateStorageSlot(mActiveStorageSlot + 1, mActiveObjectId, true); //(int slotId, int objectId, bool occupied) 0 empty 1 occupied
@@ -412,6 +412,7 @@ void Orchestrator::handleInStorGripperOpen() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Commanding gripper open...");
         mGripper.sendCommand(CmdType::OPEN);
+        mStorageManager.occupySlot(mActiveStorageSlot);
     });
 
     if (skipRequested()) {
@@ -561,6 +562,7 @@ void Orchestrator::handleOutStorRobotUpFromSlot() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Storage-to-output robot up from selected slot.");
         mMove.moveJStock("storage");
+        mStorageManager.freeSlot(mActiveStorageSlot);
     });
 
     if (skipRequested()) {
@@ -619,7 +621,7 @@ void Orchestrator::handleOutStorGripperOpen() {
 void Orchestrator::handleOutStorComplete() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Storage-to-output cycle complete.");
-        mStorageManager.freeSlot(mActiveStorageSlot);
+        //mStorageManager.freeSlot(mActiveStorageSlot);
         mGripper.sendCommand(CmdType::STATUS);
         mMove.moveUp("output");
     });
