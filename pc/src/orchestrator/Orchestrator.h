@@ -64,7 +64,6 @@ private:
     WebServerRunner& mWeb;
     Interface& mGripper;
     Interface& mStorage;
-    Movement mMove;
 
     OrchestratorState mState{OrchestratorState::Stopped};
     std::string mFaultReason;
@@ -74,8 +73,9 @@ private:
 
     std::vector<std::vector<double>> mInputFromVision;
     double mRot;
-    StorageManager mStorageManager;
     DataBase mDatabase{"storage.db"}; //database file
+    StorageManager mStorageManager;
+    Movement mMove;
     int mActiveStorageSlot{-1};
     int mActiveObjectId{-1};
     

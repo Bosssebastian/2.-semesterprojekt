@@ -28,8 +28,7 @@ private:
     bool mStatus = true;    
     
     std::string mData;
-    std::string mObject, mColor;
-    int mSize;
+    std::string mObject, mColor, mSize;
 
     int sameSpot = 0;
 

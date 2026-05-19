@@ -1,35 +1,54 @@
 #include "StorageManager.h"
 #include "database.h"
-StorageManager::StorageManager(int slotCount) : slotCount(slotCount), slotStates(slotCount, false) {
+StorageManager::StorageManager(DataBase& db) : mDatabase(db) {
+    sqlite3_exec(mDatabase.getHandle(), "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);//enable foreing keys
 }
 
 
 bool StorageManager::hasFreeSlot() const {
-    for (int i = 0; i < slotCount; ++i) {
-        if (!slotStates[i]) {
-            return true;
-        }
+    std::string sql = 
+        "SELECT COUNT(*) FROM current_state_storage WHERE occupied = 0;";
+    
+    sqlite3_stmt* stmt; 
+    sqlite3_prepare_v2(mDatabase.getHandle(), sql.c_str(), -1, &stmt, nullptr);
+
+    int count = 0;
+    if(sqlite3_step(stmt) == SQLITE_ROW) {
+        count = sqlite3_column_int(stmt, 0);
     }
-    return false;
+
+    sqlite3_finalize(stmt);
+    return count > 0;
 }
 
 int StorageManager::getFreeSlot() const {
-    for (int i = 0; i < slotCount; ++i) {
-        if (!slotStates[i]) {
-            return i;
-        }
+    std::string sql = 
+        "SELECT slot_id FROM current_state_storage WHERE occupied = 0 LIMIT 1;";
+    
+    sqlite3_stmt* stmt;
+    sqlite3_prepare_v2(mDatabase.getHandle(), sql.c_str(), -1, &stmt, nullptr);
+
+    int slot = -1;
+    if(sqlite3_step(stmt) == SQLITE_ROW) {
+        slot = sqlite3_column_int(stmt,0);
     }
-    return -1;
+    sqlite3_finalize(stmt);
+    return slot;
 }
 
-void StorageManager::occupySlot(int slotIndex) {
-    if (slotIndex >= 0 && slotIndex < slotCount) {
-        slotStates[slotIndex] = true;
-    }
+void StorageManager::occupySlot(int slotIndex, int objectId) {
+    std::string sql = 
+        "UPDATE current_state_storage SET occupied = 1, "
+        "object_id = " + std::to_string(objectId) + " WHERE slot_id = " + std::to_string(slotIndex) + ";";
+    
+    mDatabase.execute(sql);
 }
+
 
 void StorageManager::freeSlot(int slotIndex) {
-    if (slotIndex >= 0 && slotIndex < slotCount) {
-        slotStates[slotIndex] = false;
-    }
+std::string sql = 
+        "UPDATE current_state_storage SET occupied = 0, "
+        "object_id = NULL WHERE slot_id = " + std::to_string(slotIndex) + ";";
+    
+    mDatabase.execute(sql);
 }

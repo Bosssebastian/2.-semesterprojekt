@@ -28,7 +28,7 @@ namespace {
 }
 
 Orchestrator::Orchestrator(IoRunner& io, VisionRunner& vision, WebServerRunner& web)
-    : mIo(io), mVision(vision), mWeb(web), mGripper(io.gripper()), mStorage(io.storage()), mMove() {
+    : mIo(io), mVision(vision), mWeb(web), mGripper(io.gripper()), mStorage(io.storage()), mDatabase("storage.db"), mStorageManager(mDatabase), mMove() {
     mWeb.setState(mState);
 }
 
@@ -147,15 +147,19 @@ void Orchestrator::handleStarting() {
         mMove.setTransform(); // Set up transformation matrices
     });
 
-    if ( mGripper.getStatus(CmdType::RESET) == CmdStatus::DONE) {
-        LOG_INFO("Gripper reset completed successfully.");
-        transitionTo(OrchestratorState::Idle);
-    }
-     else if (mGripper.getStatus(CmdType::RESET) == CmdStatus::FAILED) {
-        transitionToFault("Gripper failed to reset");
-    }
-    else if (mGripper.getStatus(CmdType::RESET) == CmdStatus::TIMED_OUT) {
-        transitionToFault("Gripper reset timed out");
+    switch (mGripper.getStatus(CmdType::RESET)) {
+        case CmdStatus::DONE:
+            LOG_INFO("Gripper reset completed successfully.");
+            transitionTo(OrchestratorState::Idle);
+            break;
+        case CmdStatus::FAILED:
+            transitionToFault("Gripper failed to reset");
+            break;
+        case CmdStatus::TIMED_OUT:
+            transitionToFault("Gripper reset timed out");
+            break;
+        default:
+            break;
     }
     transitionTo(OrchestratorState::Idle);
 }
@@ -171,7 +175,7 @@ void Orchestrator::handleIdle() {
         LOG_INFO("Orchestrator: Object found");
         mVision.getPos(mInputFromVision, mRot);
         mVision.getInfo(mObject, mSize, mColor);
-        mDatabase.insertVisionObject(mObject, mColor, mSize);// data input form vision (object type, color, size) 
+        mActiveObjectId = mDatabase.insertVisionObject(mObject, mSize, mColor);// data input form vision (object type, size, color) 
         transitionTo(OrchestratorState::InStor_GetStorageSlot);
     }
 
@@ -193,25 +197,18 @@ void Orchestrator::handleInStorGetStorageSlot() {
     }
 
     mActiveStorageSlot = mStorageManager.getFreeSlot();
-    mStorageManager.occupySlot(mActiveStorageSlot);
-    mDatabase.updateStorageSlot(mActiveStorageSlot, mActiveObjectId, true); //(int slotId, int objectId, bool occupied) 0 empty 1 occupied
-    mDatabase.insertHistory(mActiveObjectId, mActiveStorageSlot, mDatabase.time()); // (int objectId, int slot, double timestamp)
+    mStorageManager.occupySlot(mActiveStorageSlot, mActiveObjectId);
+    mDatabase.updateStorageSlot(mActiveStorageSlot + 1, mActiveObjectId, true); //(int slotId, int objectId, bool occupied) 0 empty 1 occupied
+    mDatabase.insertHistory(mActiveObjectId, mActiveStorageSlot + 1, mDatabase.time()); // (int objectId, int slot, double timestamp)
     LOG_INFO("Storage: Using storage slot " + std::to_string(mActiveStorageSlot + 1)); // 0-7 incorrect logic, 1-8
     transitionTo(OrchestratorState::InStor_StorageMoveToSlot);
 }
 
 void Orchestrator::handleInStorStorageMoveToSlot() {
-    bool commandAccepted = true;
-    onEnter([this, &commandAccepted] {
-        LOG_INFO("Orchestrator: Storage move to slot placeholder state.");
-        if (!mStorage.sendCommand(CmdType::GOTO, std::to_string(mActiveStorageSlot + 1))) {
-            transitionToFault("Storage System rejected GOTO command because a previous command is still active");
-            commandAccepted = false;
-        }
+    onEnter([this] {
+        LOG_INFO("Orchestrator: Storage move to slot "+ std::to_string(mActiveStorageSlot + 1) + " state.");
+        mStorage.sendCommand(CmdType::GOTO, std::to_string(mActiveStorageSlot + 1));
     });
-    if (!commandAccepted) {
-        return;
-    }
     transitionTo(OrchestratorState::InStor_RobotOverInput);
 }
 
@@ -241,7 +238,6 @@ void Orchestrator::handleInStorRobotToCube() {
         LOG_INFO("Orchestrator: Commanding move to cube...");
         mMove.moveDown("base"); // Moves down
     });
-
 
     if (skipRequested()) {
         transitionTo(OrchestratorState::InStor_GripperClose);
@@ -282,7 +278,7 @@ void Orchestrator::handleInStorGripperClose() {
 
 void Orchestrator::handleInStorRobotOverStorage() {
     onEnter([this] {
-        LOG_INFO("Orchestrator: Robot over storage placeholder state.");
+        LOG_INFO("Orchestrator: Move robot over storage.");
         mMove.moveUp("base"); // part 2 of movement in handleStorageWaitingOnMove()
         //mMove.moveUp("home");
     });
@@ -304,6 +300,7 @@ void Orchestrator::handleStorageWaitingOnMove() {
     });
 
     if (skipRequested()) {
+        mStorage.resetCommandStates();
         transitionTo(OrchestratorState::InStor_RobotDownToSlot);
         return;
     }

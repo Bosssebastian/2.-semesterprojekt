@@ -1,18 +1,18 @@
 #pragma once
 #include <vector>
+#include "database.h"
 
 
 class StorageManager {
 public:
-    StorageManager(int slotCount = 8);
+    StorageManager(DataBase& db);
 
     bool hasFreeSlot() const;
     int getFreeSlot() const;
-    void occupySlot(int slotIndex);
+    void occupySlot(int slotIndex, int objectId);
     void freeSlot(int slotIndex);
 
 private:
-    const int slotCount;
-    std::vector<bool> slotStates; // true if occupied, false if free
+    DataBase& mDatabase; 
     
 };

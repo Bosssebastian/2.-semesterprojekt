@@ -19,7 +19,7 @@ std::string jsonEscape(const std::string& value) {
     std::string escaped;
     escaped.reserve(value.size());
 
-    for (const char c : value) {
+    for (const unsigned char c : value) {
         switch (c) {
             case '\\':
                 escaped += "\\\\";
@@ -37,7 +37,14 @@ std::string jsonEscape(const std::string& value) {
                 escaped += "\\t";
                 break;
             default:
-                escaped += c;
+                if (c < 0x20) {
+                    constexpr char hex[] = "0123456789abcdef";
+                    escaped += "\\u00";
+                    escaped += hex[(c >> 4) & 0x0f];
+                    escaped += hex[c & 0x0f];
+                } else {
+                    escaped += static_cast<char>(c);
+                }
                 break;
         }
     }

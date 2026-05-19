@@ -48,7 +48,7 @@ void DataBase::createTables() {
     
     std::string current_state_vision = 
         "CREATE TABLE IF NOT EXISTS current_state_vision ("
-        "object_id INTEGER PRIMARY KEY, "
+        "object_id INTEGER PRIMARY KEY AUTOINCREMENT, "
         "object TEXT NOT NULL, "
         "size TEXT NOT NULL, "
         "color TEXT NOT NULL"
@@ -56,9 +56,12 @@ void DataBase::createTables() {
 
     std::string history = 
         "CREATE TABLE IF NOT EXISTS history ("
+        "history_id INTEGER PRIMARY KEY AUTOINCREMENT, "
         "object_id INTEGER, "
         "slot INTEGER NOT NULL, "
-        "time_stamp REAL NOT NULL"
+        "time_stamp REAL, "
+        "action TEXT, "
+        "FOREIGN KEY(object_id) REFERENCES current_state_vision(object_id)"
         ");";
     
     execute(current_state_storage);
@@ -75,12 +78,22 @@ void DataBase::createTables() {
     
 }
 
-void DataBase::insertVisionObject(const std::string& object, std::string size, const std::string& color) { 
+int DataBase::insertVisionObject(const std::string& object, std::string size, const std::string& color) { 
+    
     std::cout << "object = " << object << " size = " << size << " color = " << color << std::endl;
+    
     std::string sql = 
-    "INSERT INTO current_state_vision (object, size, color) VALUES ('"+ object +"' , " + size + ", '" + color + "');";
+        "INSERT INTO current_state_vision (object, size, color) VALUES ('"+ object +"' , '" + size + "', '" + color + "');";
 
-    execute(sql);
+    if (!execute(sql)) {
+
+        std::cerr << "Vision insert failed: " << sql << std::endl;
+
+    return -1;
+    
+    }
+
+    return sqlite3_last_insert_rowid(db);
 }
 
 void DataBase::updateStorageSlot(int slotId, int objectId, bool occupied) {
