@@ -74,8 +74,8 @@ private:
 
     std::vector<std::vector<double>> mInputFromVision;
     double mRot;
-    StorageManager mStorageManager;
     DataBase mDatabase{"storage.db"}; //database file
+    StorageManager mStorageManager;
     int mActiveStorageSlot{-1};
     int mActiveObjectId{-1};
     

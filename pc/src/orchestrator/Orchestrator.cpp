@@ -28,7 +28,7 @@ namespace {
 }
 
 Orchestrator::Orchestrator(IoRunner& io, VisionRunner& vision, WebServerRunner& web)
-    : mIo(io), mVision(vision), mWeb(web), mGripper(io.gripper()), mStorage(io.storage()), mStorageManager(db), mMove() {
+    : mIo(io), mVision(vision), mWeb(web), mGripper(io.gripper()), mStorage(io.storage()), mDatabase("storage.db"), mStorageManager(mDatabase), mMove() {
     mWeb.setState(mState);
 }
 
