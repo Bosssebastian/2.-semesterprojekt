@@ -64,18 +64,23 @@ std::string readUsbLine()
 */
 
 
+
 int main() 
 {
+
 
     stdio_init_all();
 
     sleep_ms(2000); // Wait for USB serial to initialize
+
+    
 
     //variable:
     int target = 1; //making it global to use it more than just in one function
     int currentPos = 4;
     int desiredPosition;
     int oldDirection;
+    int oldTarget = 0;
 
     //Setups, Inits and Objects
     UartClass uartConnection(1, 8, 9, 115200); //First number is target position, second number is current position and last number is max number og positions
@@ -93,6 +98,8 @@ int main()
     ADS7830 ads1(i2c0, 0, 1, 100000, 0x48, 10);
     ads1.init(); //IMPORTANT without nothing is initialised 
 
+    ads1.init();
+
     ldrSensors ldr1(ads1, 1);
     ldrSensors ldr2(ads1, 2);
     ldrSensors ldr3(ads1, 4);
@@ -100,7 +107,6 @@ int main()
 
     drejeBaenkDecoder decoder(ldr1, ldr2, ldr3, ldr4);
 
-    
     decoder.timeBasedCalibration(motor, 2000); //Calibration
     
     
@@ -188,16 +194,21 @@ int main()
 
             sleep_ms(100);
         }
-
+        if (oldTarget != desiredPosition)
+        {
         if (oldDirection == 1)
         {
             motor.forwards();
             sleep_ms(200);
+            oldTarget = desiredPosition;
         }
         else {
             motor.backwards();
             sleep_ms(300);
+            oldTarget = desiredPosition;
         }
+        }
+        
         motor.stop();
         printf("TARGET REACHED!");
         mInterface.sendEvent(CmdType::GOTO, EventType::MOVE_DONE, EventReason::REACHED_POSITION);
@@ -214,13 +225,13 @@ int main()
             switch (cmd) 
                 {
                 case CmdType::PING:
-                std::cout << "COMMAND RECIEVED!" << std::endl;
+                std::cout << "COMMAND RECIEVED: PING" << std::endl;
                 mInterface.sendResponse(CmdType::PING, ResponseType::OK, "");
                 break;
                 ///ping tilbage
 
                 case CmdType::GOTO:
-                std::cout << "COMMAND RECIEVED!" << std::endl;
+                std::cout << "COMMAND RECIEVED: GOTO" << std::endl;
                 desiredPosition = mInterface.getPosition();
 
                 printf("COMMAND RECEIVED: GOTO %d\n", desiredPosition);
@@ -240,7 +251,7 @@ int main()
                 break;
 
                 case CmdType::STOP:
-                std::cout << "COMMAND RECIEVED!" << std::endl;
+                std::cout << "COMMAND RECIEVED: STOP" << std::endl;
                 motor.stop(); ////RUN STOP Command
                 mInterface.sendResponse(CmdType::STOP, ResponseType::OK, "");
                 break;
