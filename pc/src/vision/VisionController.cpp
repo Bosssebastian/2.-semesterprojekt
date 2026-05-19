@@ -91,7 +91,7 @@ void VisionController::scanForObject(){
                 // checks if an image was taken if not then returns
                 if (mTempFrame.empty()) {
                     std::cerr << "VisionController: failed to capture image\n";
-                    return;
+                    continue;
                 }
 
                 // then convert the image into grayscale
@@ -104,7 +104,7 @@ void VisionController::scanForObject(){
                     std::cerr << "VisionController: QR decode failed: " << e.what() << "\n";
                     mData.clear();
                     mCorners.release();
-                    return;
+                    continue;
                 }
 
                 // Check if we have exactly 4 corners for solvePnP
@@ -140,7 +140,7 @@ void VisionController::scanForObject(){
                     std::cerr << "VisionController: get value failed: " << e.what() << "\n";
                     mData.clear();
                     mCorners.release();
-                    return;
+                    continue;
                 }
                 }
                 
@@ -197,11 +197,11 @@ void VisionController::setState(bool newState){
 void VisionController::getObjectRot(double& output){
     output = fmod(mRotVec.at<double>(2,0), (M_PI/2.)); //mRotVec.at<double>(2,0);
     std::cout << output << "\n";
-    if (output < -M_PI/4.){
+    if (output < 0){
         output += M_PI/2.;
     }
-    if (output > M_PI/4.){
+    /*if (output > M_PI/2.){
         output -= M_PI/2.;
-    }
+    }*/
     return;
 }
