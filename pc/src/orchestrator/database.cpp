@@ -48,7 +48,7 @@ void DataBase::createTables() {
     
     std::string current_state_vision = 
         "CREATE TABLE IF NOT EXISTS current_state_vision ("
-        "object_id INTEGER PRIMARY KEY, "
+        "object_id INTEGER PRIMARY KEY AUTOINCREMENT, "
         "object TEXT NOT NULL, "
         "size TEXT NOT NULL, "
         "color TEXT NOT NULL"

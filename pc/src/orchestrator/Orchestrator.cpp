@@ -140,21 +140,28 @@ bool Orchestrator::skipRequested() {
 void Orchestrator::handleStarting() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Starting up...");
+        mGripper.resetCommandStates();
+        mStorage.resetCommandStates();
         mGripper.sendCommand(CmdType::RESET);
         mMove.home(); // Move to home pose
         mMove.setTransform(); // Set up transformation matrices
     });
 
-    if ( mGripper.getStatus(CmdType::RESET) == CmdStatus::DONE) {
-        LOG_INFO("Gripper reset completed successfully.");
-        transitionTo(OrchestratorState::Idle);
+    switch (mGripper.getStatus(CmdType::RESET)) {
+        case CmdStatus::DONE:
+            LOG_INFO("Gripper reset completed successfully.");
+            transitionTo(OrchestratorState::Idle);
+            break;
+        case CmdStatus::FAILED:
+            transitionToFault("Gripper failed to reset");
+            break;
+        case CmdStatus::TIMED_OUT:
+            transitionToFault("Gripper reset timed out");
+            break;
+        default:
+            break;
     }
-     else if (mGripper.getStatus(CmdType::RESET) == CmdStatus::FAILED) {
-        transitionToFault("Gripper failed to reset");
-    }
-    else if (mGripper.getStatus(CmdType::RESET) == CmdStatus::TIMED_OUT) {
-        transitionToFault("Gripper reset timed out");
-    }
+    transitionTo(OrchestratorState::Idle);
 }
 
 void Orchestrator::handleIdle() {
@@ -199,7 +206,7 @@ void Orchestrator::handleInStorGetStorageSlot() {
 
 void Orchestrator::handleInStorStorageMoveToSlot() {
     onEnter([this] {
-        LOG_INFO("Orchestrator: Storage move to slot placeholder state.");
+        LOG_INFO("Orchestrator: Storage move to slot "+ std::to_string(mActiveStorageSlot + 1) + " state.");
         mStorage.sendCommand(CmdType::GOTO, std::to_string(mActiveStorageSlot + 1));
     });
     transitionTo(OrchestratorState::InStor_RobotOverInput);
@@ -213,7 +220,7 @@ void Orchestrator::handleInStorRobotOverInput() {
         double acc = 0.2;
         double customZ = 0.18;
         double rotZ = matop.degToRad(22.5) - mRot;
-        mMove.move({inputFromVision[0],inputFromVision[1],{0.24}},speed,acc,customZ,rotZ); // Move to coordinates provided by vision
+        mMove.move({mInputFromVision[0],mInputFromVision[1],{0.24}},speed,acc,customZ,rotZ); // Move to coordinates provided by vision
     });
 
     if (skipRequested()) {
@@ -231,7 +238,6 @@ void Orchestrator::handleInStorRobotToCube() {
         LOG_INFO("Orchestrator: Commanding move to cube...");
         mMove.moveDown("base"); // Moves down
     });
-
 
     if (skipRequested()) {
         transitionTo(OrchestratorState::InStor_GripperClose);
@@ -272,7 +278,7 @@ void Orchestrator::handleInStorGripperClose() {
 
 void Orchestrator::handleInStorRobotOverStorage() {
     onEnter([this] {
-        LOG_INFO("Orchestrator: Robot over storage placeholder state.");
+        LOG_INFO("Orchestrator: Move robot over storage.");
         mMove.moveUp("base"); // part 2 of movement in handleStorageWaitingOnMove()
         //mMove.moveUp("home");
     });
@@ -294,6 +300,7 @@ void Orchestrator::handleStorageWaitingOnMove() {
     });
 
     if (skipRequested()) {
+        mStorage.resetCommandStates();
         transitionTo(OrchestratorState::InStor_RobotDownToSlot);
         return;
     }
@@ -310,10 +317,6 @@ void Orchestrator::handleStorageWaitingOnMove() {
             break;
         default:
             break;
-    }
-
-    if (mMove.isDone()){ // Check if async movement is done
-        transitionTo(OrchestratorState::InStor_RobotDownToSlot);
     }
 }
 
@@ -387,6 +390,8 @@ void Orchestrator::handleInStorComplete() {
 void Orchestrator::handleResetting() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Resetting system...");
+        mGripper.resetCommandStates();
+        mStorage.resetCommandStates();
     });
     mMove.home();
     stopMotion();

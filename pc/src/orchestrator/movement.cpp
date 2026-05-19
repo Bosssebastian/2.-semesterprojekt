@@ -46,7 +46,7 @@ void Movement::moveZ(double diffZ, std::string state, double speed, double acc){
         curPos = lastForwardPosition;
     }
     else if (state == "storage"){
-        curPos = {-0.0842395, -0.340469, 0.337993, -1.93723, -2.473, 0.0};
+        curPos = {-0.0842395, -0.340469, 0.337993, 0.754928, -3.04931, 0.0}; //-1.93723, -2.473, 0.0};
     }
     curPos[2] += diffZ;
     rtde_control.moveL(curPos,speed,acc,asyncOn);
@@ -73,7 +73,7 @@ void Movement::toggleAsync(){
 
 void Movement::moveUp(std::string start, double speed, double acc){ // Needs testing!!!
     std::vector<double> curPos = lastForwardPosition;
-    curPos[1] = 0.45;
+    curPos[1] = -0.45;
     rtde_control.moveL(curPos,speed,acc,asyncOn); // backup solution
     /*std::vector<double> curPos = lastForwardPosition;
     curPos[2] += 100;
