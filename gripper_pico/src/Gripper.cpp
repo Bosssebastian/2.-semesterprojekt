@@ -244,7 +244,9 @@ void Gripper::endMove(GripperMoveResult result, bool keepMotorEnabled) {
     mSilentReset = false;
     mIsBusy = false;
     mLastResult = result;
-    if (completedCommand == CmdType::OPEN || completedCommand == CmdType::CLOSE || completedCommand == CmdType::RESET) {
+    if (completedCommand == CmdType::RESET) {
+        publishMoveEvent(CmdType::RESET, result);
+    } else if (completedCommand == CmdType::OPEN || completedCommand == CmdType::CLOSE) {
         publishMoveEvent(completedMoveCommand, result);
     }
 
