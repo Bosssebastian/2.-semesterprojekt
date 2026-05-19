@@ -75,12 +75,16 @@ void DataBase::createTables() {
     
 }
 
-void DataBase::insertVisionObject(const std::string& object, std::string size, const std::string& color) { 
+int DataBase::insertVisionObject(const std::string& object, std::string size, const std::string& color) { 
     std::cout << "object = " << object << " size = " << size << " color = " << color << std::endl;
     std::string sql = 
-    "INSERT INTO current_state_vision (object, size, color) VALUES ('"+ object +"' , " + size + ", '" + color + "');";
+    "INSERT INTO current_state_vision (object, size, color) VALUES ('"+ object +"' , '" + size + "', '" + color + "');";
 
-    execute(sql);
+    if(execute(sql)) {
+        return sqlite3_last_insert_rowid(db);
+    };
+
+    return -1;
 }
 
 void DataBase::updateStorageSlot(int slotId, int objectId, bool occupied) {
