@@ -1,5 +1,7 @@
 #include "Interface.h"
+#include "logging/Logger.h"
 #include <algorithm>
+#include <numeric>
 #include <ctime>
 #include <cstdlib>
 #include <stdexcept>
@@ -86,7 +88,7 @@ bool Interface::sendCommand(CmdType command, const std::string& argument) {
 CmdStatus Interface::getStatus(CmdType cmd) const {
     const auto it = mCmdStates.find(cmd);
     if (it == mCmdStates.end()) {
-        LOG_ERROR("Queried status for command " + toString(cmd) + " which has no state, returning IDLE");
+        LOG_ERROR(std::string("Queried status for command ") + toString(cmd) + " which has no state, returning IDLE");
         return CmdStatus::IDLE;
     }
     return it->second.status;
@@ -154,6 +156,15 @@ std::vector<std::string> Interface::split(const std::string& str) {
 }
 
 void Interface::handlePackage(const std::vector<std::string>& parts) {
+
+    if (!(parts.size() >= 2 && parts[0] == "EVENT" && parts[1] == "CURRENT")) {
+        LOG_INFO("Received package: " + std::accumulate(parts.begin(), parts.end(), std::string(),
+            [](const std::string& a, const std::string& b) {
+                return a.empty() ? b : a + " " + b;
+            }));
+    }
+
+        
     if (parts.empty()) {
         return;
     }
@@ -187,16 +198,16 @@ void Interface::handleAcknowledgment(const std::vector<std::string>& parts) {
 
     if (parts[0] == "OK") {
         if (commandWaitsForEvent(cmd)) {
-            LOG_INFO("Received ACK for command " + toString(cmd) + ", now waiting for event");
+            LOG_INFO(std::string("Received ACK for command ") + toString(cmd) + ", now waiting for event");
             state.status = CmdStatus::WAITING_FOR_RESULT;
             state.timestamp = std::time(nullptr);
         } else {
-            LOG_INFO("Received ACK for command " + toString(cmd) + ", no event expected, marking as DONE");
+            LOG_INFO(std::string("Received ACK for command ") + toString(cmd) + ", no event expected, marking as DONE");
             state.status = CmdStatus::DONE;
             state.active = false;
         }
     } else {
-        LOG_ERROR("Received ERROR ACK for command " + toString(cmd));
+        LOG_ERROR(std::string("Received ERROR ACK for command ") + toString(cmd));
         state.status = CmdStatus::FAILED;
         state.active = false;
     }
@@ -212,15 +223,15 @@ void Interface::handleEvent(const std::vector<std::string>& parts) {
     CmdState& state = mCmdStates[cmd];
 
     if (!state.active) {
-        LOG_INFO("No active command for received event " + toString(eventType) + " with command " + toString(cmd));
+        LOG_INFO(std::string("No active command for received event ") + toString(eventType) + " with command " + toString(cmd));
         return;
     }
 
     if (eventType == EventType::MOVE_DONE) {
-        LOG_INFO("Received MOVE_DONE event for command " + toString(cmd));
+        LOG_INFO(std::string("Received MOVE_DONE event for command ") + toString(cmd));
         state.status = CmdStatus::DONE;
     } else if (eventType == EventType::ERROR) {
-        LOG_ERROR("Received ERROR event for command " + toString(cmd));
+        LOG_ERROR(std::string("Received ERROR event for command ") + toString(cmd));
         state.status = CmdStatus::FAILED;
     } else {
         return;
@@ -265,7 +276,7 @@ void Interface::handleTimeouts() {
         }
 
         if (std::difftime(currentTime, state.timestamp) > mCommandTimeoutSeconds) {
-            LOG_ERROR("Command " + toString(state.cmd) + " timed out");
+            LOG_ERROR(std::string("Command ") + toString(pair.first) + " timed out");
             state.status = CmdStatus::TIMED_OUT;
             state.active = false;
         }

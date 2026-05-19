@@ -1,0 +1,3 @@
+/home/group4/2.-semesterprojekt/UartTest/build/CMakeFiles/PiUartTest.dir
+/home/group4/2.-semesterprojekt/UartTest/build/CMakeFiles/edit_cache.dir
+/home/group4/2.-semesterprojekt/UartTest/build/CMakeFiles/rebuild_cache.dir
