@@ -15,10 +15,11 @@ public:
     void getInfo(std::string& object, std::string& size, std::string& color);
     bool objectReady();
     void scanForObject();
+    void stopScan();
     
 private:
     void run();
-    VisionController mVision;
+    VisionController mVision;   
     std::thread mWorker;
     std::atomic<bool> mRunning{false};
 };

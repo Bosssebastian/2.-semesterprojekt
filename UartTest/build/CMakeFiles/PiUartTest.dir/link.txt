@@ -1,0 +1,1 @@
+/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/PiUartTest.dir/link.d CMakeFiles/PiUartTest.dir/main.cpp.o -o PiUartTest

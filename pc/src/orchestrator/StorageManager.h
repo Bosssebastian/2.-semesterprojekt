@@ -4,16 +4,15 @@
 
 class StorageManager {
 public:
-    StorageManager(int slotCount = 8);
+    StorageManager(DataBase& db);
 
     bool hasFreeSlot() const;
     int getFreeSlot() const;
-    void occupySlot(int slotIndex);
+    void occupySlot(int slotIndex, int objectId);
     void freeSlot(int slotIndex);
     std::vector<bool> getSlotStates() const;
 
 private:
-    const int slotCount;
-    std::vector<bool> slotStates; // true if occupied, false if free
+    DataBase& mDatabase; 
     
 };

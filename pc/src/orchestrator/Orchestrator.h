@@ -72,16 +72,14 @@ private:
     bool mPendingSkipRequest{false};
     bool mStateJustEntered{true};
 
-    std::vector<std::vector<double>> inputFromVision;
-    double rot;
+    std::vector<std::vector<double>> mInputFromVision;
+    double mRot;
     StorageManager mStorageManager;
     DataBase mDatabase{"storage.db"}; //database file
     int mActiveStorageSlot{-1};
     int mActiveObjectId{-1};
     
-    Movement move("192.168.1.11", 29998);
+    //Movement move("192.168.1.11", 29998);
 
-  std::string object;
-  int size;
-std::string color;
+  std::string mObject, mSize, mColor;
 };

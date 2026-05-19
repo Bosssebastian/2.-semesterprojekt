@@ -2,12 +2,12 @@
 #include "VisionController.h"
 #include <iostream>
 
-void getValue(std::string& value, std::string& object, std::string& color, int& size)
+void getValue(std::string& value, std::string& object, std::string& color, std::string& size)
 /*input string, object type string, color string, size int*/
 {
     object = value.substr(0,3);
     color = value.substr(4,3);
-    size = stoi(value.substr(8,(value.length()-8)));
+    size = value.substr(8,(value.length()-8));
     return;
 }
 
@@ -91,7 +91,7 @@ void VisionController::scanForObject(){
                 // checks if an image was taken if not then returns
                 if (mTempFrame.empty()) {
                     std::cerr << "VisionController: failed to capture image\n";
-                    return;
+                    continue;
                 }
 
                 // then convert the image into grayscale
@@ -104,7 +104,7 @@ void VisionController::scanForObject(){
                     std::cerr << "VisionController: QR decode failed: " << e.what() << "\n";
                     mData.clear();
                     mCorners.release();
-                    return;
+                    continue;
                 }
 
                 // Check if we have exactly 4 corners for solvePnP
@@ -140,7 +140,7 @@ void VisionController::scanForObject(){
                     std::cerr << "VisionController: get value failed: " << e.what() << "\n";
                     mData.clear();
                     mCorners.release();
-                    return;
+                    continue;
                 }
                 }
                 
@@ -190,15 +190,18 @@ void VisionController::getObjectInfo(std::string& object, std::string& size, std
     return;
 }
 
-void VisionController::setStateFalse(){
-    mStatus = false;
+void VisionController::setState(bool newState){
+    mStatus = newState;
 }
 
 void VisionController::getObjectRot(double& output){
-    output = mRotVec.at<double>(2,0); //fmod(mRotVec.at<double>(2,0), (M_PI/2.));
+    output = fmod(mRotVec.at<double>(2,0), (M_PI/2.)); //mRotVec.at<double>(2,0);
     std::cout << output << "\n";
     if (output < -M_PI/4.){
         output += M_PI/2.;
+    }
+    if (output > M_PI/4.){
+        output -= M_PI/2.;
     }
     return;
 }
