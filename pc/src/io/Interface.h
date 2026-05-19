@@ -7,6 +7,7 @@
 #include <mutex>
 #include <string>
 #include <vector>
+#include "Uart.h"
 
 enum class CmdStatus {
     IDLE,
@@ -16,6 +17,25 @@ enum class CmdStatus {
     FAILED,
     TIMED_OUT
 };
+
+inline const char* toString(CmdStatus status) {
+    switch (status) {
+        case CmdStatus::IDLE:
+            return "IDLE";
+        case CmdStatus::WAITING_FOR_ACK:
+            return "WAITING_FOR_ACK";
+        case CmdStatus::WAITING_FOR_RESULT:
+            return "WAITING_FOR_RESULT";
+        case CmdStatus::DONE:
+            return "DONE";
+        case CmdStatus::FAILED:
+            return "FAILED";
+        case CmdStatus::TIMED_OUT:
+            return "TIMED_OUT";
+    }
+
+    return "UNKNOWN";
+}
 
 enum class configType {
     SERIALPORT,
@@ -45,6 +65,7 @@ public:
 
     bool sendCommand(CmdType command, const std::string& argument = "");
     CmdStatus getStatus(CmdType cmd) const;
+    void resetCommandStates();
     std::vector<CurrentSample> getRecentCurrentSamples(uint32_t windowMs) const;
 
 private:

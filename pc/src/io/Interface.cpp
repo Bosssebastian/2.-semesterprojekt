@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <utility>
 #include <vector>
+#include <iostream>
 
 namespace {
 bool commandWaitsForEvent(CmdType command) {
@@ -85,10 +86,14 @@ bool Interface::sendCommand(CmdType command, const std::string& argument) {
 CmdStatus Interface::getStatus(CmdType cmd) const {
     const auto it = mCmdStates.find(cmd);
     if (it == mCmdStates.end()) {
+        LOG_ERROR("Queried status for command " + toString(cmd) + " which has no state, returning IDLE");
         return CmdStatus::IDLE;
     }
-
     return it->second.status;
+}
+
+void Interface::resetCommandStates() {
+    mCmdStates.clear();
 }
 
 std::vector<CurrentSample> Interface::getRecentCurrentSamples(uint32_t windowMs) const {
@@ -182,13 +187,16 @@ void Interface::handleAcknowledgment(const std::vector<std::string>& parts) {
 
     if (parts[0] == "OK") {
         if (commandWaitsForEvent(cmd)) {
+            LOG_INFO("Received ACK for command " + toString(cmd) + ", now waiting for event");
             state.status = CmdStatus::WAITING_FOR_RESULT;
             state.timestamp = std::time(nullptr);
         } else {
+            LOG_INFO("Received ACK for command " + toString(cmd) + ", no event expected, marking as DONE");
             state.status = CmdStatus::DONE;
             state.active = false;
         }
     } else {
+        LOG_ERROR("Received ERROR ACK for command " + toString(cmd));
         state.status = CmdStatus::FAILED;
         state.active = false;
     }
@@ -204,12 +212,15 @@ void Interface::handleEvent(const std::vector<std::string>& parts) {
     CmdState& state = mCmdStates[cmd];
 
     if (!state.active) {
+        LOG_INFO("No active command for received event " + toString(eventType) + " with command " + toString(cmd));
         return;
     }
 
     if (eventType == EventType::MOVE_DONE) {
+        LOG_INFO("Received MOVE_DONE event for command " + toString(cmd));
         state.status = CmdStatus::DONE;
     } else if (eventType == EventType::ERROR) {
+        LOG_ERROR("Received ERROR event for command " + toString(cmd));
         state.status = CmdStatus::FAILED;
     } else {
         return;
@@ -254,6 +265,7 @@ void Interface::handleTimeouts() {
         }
 
         if (std::difftime(currentTime, state.timestamp) > mCommandTimeoutSeconds) {
+            LOG_ERROR("Command " + toString(state.cmd) + " timed out");
             state.status = CmdStatus::TIMED_OUT;
             state.active = false;
         }

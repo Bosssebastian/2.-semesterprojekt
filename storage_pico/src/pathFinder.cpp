@@ -5,27 +5,27 @@
 #include "pathFinder.h"
 
 pathFinder::pathFinder(int target, int currentPosition, int maxPosition) {
-	this->target = target;
-	this->currentPosition = currentPosition;
-	this->maxPosition = maxPosition;
+	this->mTarget = target;
+	this->mCurrentPosition = currentPosition;
+	this->mMaxPosition = maxPosition;
 }
 
 void pathFinder::setCurrentPosition(int pos) {
-	currentPosition = pos;
+	mCurrentPosition = pos;
 }
 void pathFinder::setTarget(int t) {
-	target = t;
+	mTarget = t;
 }
 
 int pathFinder::getCircularPosition(int input) const {
-	return (input + (maxPosition - 1)) % (maxPosition)+1;
+	return (input + (mMaxPosition - 1)) % (mMaxPosition)+1;
 }
 
 float pathFinder::getClosestPosition() const {
 	//return getCircularPosition(target) - getCircularPosition(currentPosition);
 	//return 8 - (abs(getCircularPosition(target) - (getCircularPosition(currentPosition))));
 	
-	if (getCircularPosition(target) == getCircularPosition(currentPosition)) 
+	if (getCircularPosition(mTarget) == getCircularPosition(mCurrentPosition)) 
 	{
 		return 0;
 		//ALDREADY AT TARGET!
@@ -33,33 +33,33 @@ float pathFinder::getClosestPosition() const {
 
 	float delta;
 
-	if (abs(getCircularPosition(target) - (getCircularPosition(currentPosition))) < maxPosition - (abs(getCircularPosition(target) - (getCircularPosition(currentPosition)))))
+	if (abs(getCircularPosition(mTarget) - (getCircularPosition(mCurrentPosition))) < mMaxPosition - (abs(getCircularPosition(mTarget) - (getCircularPosition(mCurrentPosition)))))
 	{
 		
-		delta = abs(getCircularPosition(target) - getCircularPosition(currentPosition));
+		delta = abs(getCircularPosition(mTarget) - getCircularPosition(mCurrentPosition));
 		//DIRECT
 
 		//RIGHT DIRECTION (+/-)
-		if (getCircularPosition(target) < getCircularPosition(currentPosition))
+		if (getCircularPosition(mTarget) < getCircularPosition(mCurrentPosition))
 		{
 			delta *= -1;
 		}
 	}
-	else if (abs(getCircularPosition(target) - (getCircularPosition(currentPosition))) > maxPosition - (abs(getCircularPosition(target) - (getCircularPosition(currentPosition)))))
+	else if (abs(getCircularPosition(mTarget) - (getCircularPosition(mCurrentPosition))) > mMaxPosition - (abs(getCircularPosition(mTarget) - (getCircularPosition(mCurrentPosition)))))
 	{
 		
-		delta = maxPosition - (abs(getCircularPosition(target) - (getCircularPosition(currentPosition))));
+		delta = mMaxPosition - (abs(getCircularPosition(mTarget) - (getCircularPosition(mCurrentPosition))));
 		//OVERFLOW
 
 		//RIGHT DIRECTION (+/-)
-		if (getCircularPosition(target) > getCircularPosition(currentPosition))
+		if (getCircularPosition(mTarget) > getCircularPosition(mCurrentPosition))
 		{
 			delta *= -1;
 		}
 	}
 	else
 	{
-		delta = maxPosition / 2;
+		delta = mMaxPosition / 2;
 		//Distances are equal, both directions give same distance
 	}
 

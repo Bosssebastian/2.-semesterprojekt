@@ -31,13 +31,44 @@ void UartClass::setup()
     }
 
     uart_init(uart, baud);
+
+    gpio_set_function(pin_tx, GPIO_FUNC_UART);
+    gpio_set_function(pin_rx, GPIO_FUNC_UART);
+
+    gpio_pull_up(pin_rx);
+
+    uart_set_format(uart, 8, 1, UART_PARITY_NONE);
+    uart_set_fifo_enabled(uart, true);
+
+    clearRXQue();
+
+    printf("Pico UART setup complete: uart_id=%d TX=GP%d RX=GP%d baud=%d\n",
+           uart_id, pin_tx, pin_rx, baud);
+}
+/*
+void UartClass::setup()
+{
+    uart = getUartFromId(uart_id);
+
+    if (uart == nullptr) {
+        printf("INVALID UART ID\n");
+        return;
+    }
+
+    uart_init(uart, baud);
     gpio_set_function(pin_tx, GPIO_FUNC_UART);
     gpio_set_function(pin_rx, GPIO_FUNC_UART);
 
     uart_set_format(uart, 8, 1, UART_PARITY_NONE);
     uart_set_fifo_enabled(uart, true);
-}
 
+    clearRXQue();
+
+    printf("Pico UART setup complete: uart_id=%d TX=GP%d RX=GP%d baud=%d\n",
+           uart_id, pin_tx, pin_rx, baud);
+
+}
+*/
 
 void UartClass::sendLine(std::string line)
 {
@@ -73,7 +104,12 @@ bool UartClass::hasLine()
     }
 
     while (uart_is_readable(uart)) {
-        char c = static_cast<char>(uart_getc(uart));
+        uint8_t b = uart_getc(uart);
+        char c = static_cast<char>(b);
+
+        if (b == 0) {
+            continue;
+        }
 
         if (c == '\r') {
             continue;
@@ -89,6 +125,44 @@ bool UartClass::hasLine()
 
     return false;
 }
+
+/*
+
+bool UartClass::hasLine()
+{
+    if (mLineReady) {
+        return true;
+    }
+
+    if (uart == nullptr)
+    {
+        return false;
+    }
+
+    while (uart_is_readable(uart)) {
+        uint8_t b = uart_getc(uart);
+        char c = static_cast<char>(uart_getc(uart));
+
+        if (b == 0) {
+            continue;
+        }
+
+        if (c == '\r') {
+            continue;
+        }
+
+        if (c == '\n') {
+            mLineReady = true;
+            return true;
+        }
+
+        rxBuffer += c;
+    }
+
+    return false;
+}
+
+*/
 
 std::vector<std::string> UartClass::split(const std::string& line) const
 {
