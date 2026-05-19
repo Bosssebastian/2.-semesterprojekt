@@ -25,6 +25,7 @@ private:
     void update();
     void handleWebCommand(const WebCommand& command);
     bool skipRequested();
+    bool gripperReadyForIdle();
 
     void transitionTo(OrchestratorState newState);
     void transitionToFault(const std::string& reason);

@@ -165,6 +165,32 @@ bool Orchestrator::skipRequested() {
     return false;
 }
 
+bool Orchestrator::gripperReadyForIdle() {
+    switch (mGripper.getStatus(CmdType::STATUS)) {
+        case CmdStatus::DONE:
+            if (!mGripper.isDeviceBusy()) {
+                LOG_INFO("Gripper reports idle; cycle can return to idle.");
+                return true;
+            }
+            mGripper.sendCommand(CmdType::STATUS);
+            return false;
+        case CmdStatus::FAILED:
+            transitionToFault("Gripper status query failed");
+            return false;
+        case CmdStatus::TIMED_OUT:
+            transitionToFault("Gripper status query timed out");
+            return false;
+        case CmdStatus::WAITING_FOR_ACK:
+        case CmdStatus::WAITING_FOR_RESULT:
+            return false;
+        case CmdStatus::IDLE:
+            mGripper.sendCommand(CmdType::STATUS);
+            return false;
+    }
+
+    return false;
+}
+
 void Orchestrator::handleStarting() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Starting up...");
@@ -411,8 +437,11 @@ void Orchestrator::handleInStorRobotUpFromSlot() {
 void Orchestrator::handleInStorComplete() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Input-to-storage cycle complete.");
+        mGripper.sendCommand(CmdType::STATUS);
     });
-    transitionTo(OrchestratorState::Idle);
+    if (gripperReadyForIdle()) {
+        transitionTo(OrchestratorState::Idle);
+    }
 }
 
 void Orchestrator::handleOutStorStorageMoveToSlot() {
@@ -572,8 +601,12 @@ void Orchestrator::handleOutStorComplete() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Storage-to-output cycle complete.");
         mStorageManager.freeSlot(mActiveStorageSlot);
+        mGripper.sendCommand(CmdType::STATUS);
+        mMove.moveUp("output");
     });
-    transitionTo(OrchestratorState::Idle);
+    if (gripperReadyForIdle() && mMove.isDone()) {
+        transitionTo(OrchestratorState::Idle);
+    }
 }
 
 void Orchestrator::handleResetting() {
