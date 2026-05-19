@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <utility>
 #include <vector>
+#include <iostream>
 
 namespace {
 bool commandWaitsForEvent(CmdType command) {
@@ -87,8 +88,11 @@ CmdStatus Interface::getStatus(CmdType cmd) const {
     if (it == mCmdStates.end()) {
         return CmdStatus::IDLE;
     }
-
     return it->second.status;
+}
+
+void Interface::resetCommandStates() {
+    mCmdStates.clear();
 }
 
 std::vector<CurrentSample> Interface::getRecentCurrentSamples(uint32_t windowMs) const {
@@ -203,7 +207,10 @@ void Interface::handleEvent(const std::vector<std::string>& parts) {
     CmdType cmd = toCmdType(parts[2]);
     CmdState& state = mCmdStates[cmd];
 
+    std::cout << "Event: " << toString(eventType) << " for command " << toString(cmd) << std::endl;
+
     if (!state.active) {
+        std::cout << "No active command for event, ignoring." << std::endl;
         return;
     }
 

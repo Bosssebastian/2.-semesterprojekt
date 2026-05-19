@@ -140,9 +140,23 @@ bool Orchestrator::skipRequested() {
 void Orchestrator::handleStarting() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Starting up...");
+        mGripper.resetCommandStates();
+        mStorage.resetCommandStates();
+        mGripper.sendCommand(CmdType::RESET);
         mMove.home(); // Move to home pose
         mMove.setTransform(); // Set up transformation matrices
     });
+
+    if ( mGripper.getStatus(CmdType::RESET) == CmdStatus::DONE) {
+        LOG_INFO("Gripper reset completed successfully.");
+        transitionTo(OrchestratorState::Idle);
+    }
+     else if (mGripper.getStatus(CmdType::RESET) == CmdStatus::FAILED) {
+        transitionToFault("Gripper failed to reset");
+    }
+    else if (mGripper.getStatus(CmdType::RESET) == CmdStatus::TIMED_OUT) {
+        transitionToFault("Gripper reset timed out");
+    }
     transitionTo(OrchestratorState::Idle);
 }
 
@@ -187,10 +201,17 @@ void Orchestrator::handleInStorGetStorageSlot() {
 }
 
 void Orchestrator::handleInStorStorageMoveToSlot() {
-    onEnter([this] {
+    bool commandAccepted = true;
+    onEnter([this, &commandAccepted] {
         LOG_INFO("Orchestrator: Storage move to slot placeholder state.");
-        mStorage.sendCommand(CmdType::GOTO, std::to_string(mActiveStorageSlot + 1));
+        if (!mStorage.sendCommand(CmdType::GOTO, std::to_string(mActiveStorageSlot + 1))) {
+            transitionToFault("Storage System rejected GOTO command because a previous command is still active");
+            commandAccepted = false;
+        }
     });
+    if (!commandAccepted) {
+        return;
+    }
     transitionTo(OrchestratorState::InStor_RobotOverInput);
 }
 
@@ -202,7 +223,7 @@ void Orchestrator::handleInStorRobotOverInput() {
         double acc = 0.2;
         double customZ = 0.18;
         double rotZ = matop.degToRad(22.5) - mRot;
-        mMove.move({inputFromVision[0],inputFromVision[1],{0.24}},speed,acc,customZ,rotZ); // Move to coordinates provided by vision
+        mMove.move({mInputFromVision[0],mInputFromVision[1],{0.24}},speed,acc,customZ,rotZ); // Move to coordinates provided by vision
     });
 
     if (skipRequested()) {
@@ -300,10 +321,6 @@ void Orchestrator::handleStorageWaitingOnMove() {
         default:
             break;
     }
-
-    if (mMove.isDone()){ // Check if async movement is done
-        transitionTo(OrchestratorState::InStor_RobotDownToSlot);
-    }
 }
 
 void Orchestrator::handleInStorRobotDownToSlot() {
@@ -376,6 +393,8 @@ void Orchestrator::handleInStorComplete() {
 void Orchestrator::handleResetting() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Resetting system...");
+        mGripper.resetCommandStates();
+        mStorage.resetCommandStates();
     });
     mMove.home();
     stopMotion();
