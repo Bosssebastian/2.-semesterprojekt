@@ -155,7 +155,7 @@ void VisionController::scanForObject(){
                 OldTransVec = mTransVec;
             }
             std::cout << "An object was found\n";
-            std::vector<std::vector<double>> outputPos;
+            std::cout << mTransVec;
             mStatus = true;
         }
     }
