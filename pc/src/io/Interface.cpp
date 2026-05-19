@@ -5,32 +5,53 @@
 #include <stdexcept>
 #include <utility>
 #include <vector>
+#include <iostream>
 
 namespace {
-constexpr double kCommandTimeoutSeconds = 20.0;
-
 bool commandWaitsForEvent(CmdType command) {
     return command == CmdType::OPEN || command == CmdType::CLOSE || command == CmdType::GOTO || command == CmdType::RESET;
 }
 }
 
-Interface::Interface(std::string devicePath, std::string portLabel, int baud)
-    : mSerialPort(std::move(devicePath), baud, std::move(portLabel)) {
+Interface::Interface(std::string devicePath, std::string portLabel, double commandTimeoutSeconds, int baud)
+    : Interface(std::move(devicePath), configType::SERIALPORT, std::move(portLabel), commandTimeoutSeconds, baud) {
+}
+
+Interface::Interface(std::string devicePath, configType configuration, std::string portLabel, double commandTimeoutSeconds, int baud)
+    : mConfiguration(configuration),
+      mSerialPort(std::move(devicePath), baud, std::move(portLabel)),
+      mUart(0, 0, baud),
+      mCommandTimeoutSeconds(commandTimeoutSeconds) {
     mCurrentSamples.resize(CurrentSampleCapacity);
 }
 
 void Interface::setDevicePath(std::string devicePath) {
-    mSerialPort.setDevicePath(std::move(devicePath));
+    if (mConfiguration == configType::SERIALPORT)
+    {
+        mSerialPort.setDevicePath(std::move(devicePath));
+    }
 }
 
 void Interface::setup() {
-    mSerialPort.setup();
+    if (mConfiguration == configType::SERIALPORT) {
+        mSerialPort.setup();
+    } else {
+        mUart.setup();
+    }
 }
 
 void Interface::update() {
-    while (mSerialPort.hasPackage()) {
-        std::string message = mSerialPort.readPackage();
-        handlePackage(split(message));
+
+    if (mConfiguration == configType::SERIALPORT) {
+        while (mSerialPort.hasPackage()) {
+            std::string message = mSerialPort.readPackage();
+            handlePackage(split(message));
+        }
+    } else {
+        while (mUart.hasLine()) {
+            std::string message = mUart.getLine();
+            handlePackage(split(message));
+        }
     }
 
     handleTimeouts();
@@ -53,18 +74,26 @@ bool Interface::sendCommand(CmdType command, const std::string& argument) {
         package += " " + argument;
     }
     package += "\n";
+    if (mConfiguration == configType::SERIALPORT) {
+        mSerialPort.writePackage(package);
+    } else {
+        mUart.sendLine(package);
+    }
 
-    mSerialPort.writePackage(package);
     return true;
 }
 
 CmdStatus Interface::getStatus(CmdType cmd) const {
     const auto it = mCmdStates.find(cmd);
     if (it == mCmdStates.end()) {
+        LOG_ERROR("Queried status for command " + toString(cmd) + " which has no state, returning IDLE");
         return CmdStatus::IDLE;
     }
-
     return it->second.status;
+}
+
+void Interface::resetCommandStates() {
+    mCmdStates.clear();
 }
 
 std::vector<CurrentSample> Interface::getRecentCurrentSamples(uint32_t windowMs) const {
@@ -158,13 +187,16 @@ void Interface::handleAcknowledgment(const std::vector<std::string>& parts) {
 
     if (parts[0] == "OK") {
         if (commandWaitsForEvent(cmd)) {
+            LOG_INFO("Received ACK for command " + toString(cmd) + ", now waiting for event");
             state.status = CmdStatus::WAITING_FOR_RESULT;
             state.timestamp = std::time(nullptr);
         } else {
+            LOG_INFO("Received ACK for command " + toString(cmd) + ", no event expected, marking as DONE");
             state.status = CmdStatus::DONE;
             state.active = false;
         }
     } else {
+        LOG_ERROR("Received ERROR ACK for command " + toString(cmd));
         state.status = CmdStatus::FAILED;
         state.active = false;
     }
@@ -179,10 +211,19 @@ void Interface::handleEvent(const std::vector<std::string>& parts) {
     CmdType cmd = toCmdType(parts[2]);
     CmdState& state = mCmdStates[cmd];
 
+    if (!state.active) {
+        LOG_INFO("No active command for received event " + toString(eventType) + " with command " + toString(cmd));
+        return;
+    }
+
     if (eventType == EventType::MOVE_DONE) {
+        LOG_INFO("Received MOVE_DONE event for command " + toString(cmd));
         state.status = CmdStatus::DONE;
-    } else {
+    } else if (eventType == EventType::ERROR) {
+        LOG_ERROR("Received ERROR event for command " + toString(cmd));
         state.status = CmdStatus::FAILED;
+    } else {
+        return;
     }
 
     state.active = false;
@@ -223,7 +264,8 @@ void Interface::handleTimeouts() {
             continue;
         }
 
-        if (std::difftime(currentTime, state.timestamp) > kCommandTimeoutSeconds) {
+        if (std::difftime(currentTime, state.timestamp) > mCommandTimeoutSeconds) {
+            LOG_ERROR("Command " + toString(state.cmd) + " timed out");
             state.status = CmdStatus::TIMED_OUT;
             state.active = false;
         }

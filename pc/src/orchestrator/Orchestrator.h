@@ -1,8 +1,10 @@
 #pragma once
 #include "OrchestratorState.h"
+#include "StorageManager.h"
 #include "io/Interface.h"
 #include <string>
 #include "movement.h"
+#include "database.h"
 
 class IoRunner;
 class VisionRunner;
@@ -39,12 +41,14 @@ private:
 
     void handleStarting();
     void handleIdle();
+
+    void handleInStorGetStorageSlot();
     void handleInStorStorageMoveToSlot();
     void handleInStorRobotOverInput();
     void handleInStorRobotToCube();
     void handleInStorGripperClose();
     void handleInStorRobotOverStorage();
-    void handleInStorStorageMoveToPos();
+    void handleStorageWaitingOnMove();
     void handleInStorRobotDownToSlot();
     void handleInStorGripperOpen();
     void handleInStorRobotUpFromSlot();
@@ -67,5 +71,15 @@ private:
     bool mStopRequested{false};
     bool mPendingSkipRequest{false};
     bool mStateJustEntered{true};
+
+    std::vector<std::vector<double>> mInputFromVision;
+    double mRot;
+    StorageManager mStorageManager;
+    DataBase mDatabase{"storage.db"}; //database file
+    int mActiveStorageSlot{-1};
+    int mActiveObjectId{-1};
     
+    //Movement move("192.168.1.11", 29998);
+
+  std::string mObject, mSize, mColor;
 };

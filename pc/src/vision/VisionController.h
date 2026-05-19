@@ -1,9 +1,8 @@
 #pragma once
-#ifdef PC_ENABLE_OPENCV
 #include <opencv2/opencv.hpp>
-#endif
 #include <string>
 #include <vector>
+#include <math.h>
 
 class VisionController
 {
@@ -14,25 +13,40 @@ public:
     void scanForObject();
 
     bool objectReady();
-    void getObjectPosition(std::vector<std::vector<double>> outputPos);
-    void getObjectInfo(std::string&, std::string&, std::string&);
+    void getObjectPosition(std::vector<std::vector<double>>& outputPos);
+    void getObjectInfo(std::string& object, std::string& size, std::string& color);
+    void getObjectRot(double&);
+    void setState(bool newState);
 
 private:
-#ifdef PC_ENABLE_OPENCV
+
     cv::VideoCapture* mCam;
     cv::QRCodeDetector mQR;
-    cv::Mat mTempFrame, mFrame, mCorners;
-#endif
+    cv::Mat mTempFrame, mFrame, mCorners, mRotVec, mTransVec, mOldTransVec;
+    std::vector<cv::Point3f> mObjectPoints;
 
-    bool mStatus = false;    
+    bool mStatus = true;    
     
     std::string mData;
     std::string mObject, mColor;
-    int mSize = 0;
-    
-#ifdef PC_ENABLE_OPENCV
-    cv::Point2d mPos;
-#endif
-    double mX, mY;
+    int mSize;
+
+    int sameSpot = 0;
+
+    double mMaxOff = 0.0075;
+
+    double fx = 1920.0; 
+    double fy = 1920.0;
+    double cx = 1920.0 / 2.0;
+    double cy = 1080.0 / 2.0;
+
+    cv::Mat mCameraMatrix = (cv::Mat_<double>(3,3) << 
+        fx,  0, cx,
+        0, fy, cy,
+        0,  0,  1);
+
+    cv::Mat mDistCoeffs = cv::Mat::zeros(5, 1, CV_64F);
+
+    int test = 0;
 
 };

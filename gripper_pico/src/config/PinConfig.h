@@ -29,7 +29,7 @@ constexpr uint EN_PIN = 19;
 constexpr uint DIAG_PIN = 18;
 
 // Stall detection configuration
-enum class StallDetectionMode : uint8_t { None, Uart, DiagInterrupt };
+enum class StallDetectionMode : uint8_t { None, Uart, DiagInterrupt, Current };
 
 inline const char* toString(StallDetectionMode mode) {
     switch (mode) {
@@ -39,6 +39,8 @@ inline const char* toString(StallDetectionMode mode) {
             return "Uart";
         case StallDetectionMode::DiagInterrupt:
             return "DiagInterrupt";
+        case StallDetectionMode::Current:
+            return "Current";
     }
 
     return "Unknown";

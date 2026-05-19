@@ -4,6 +4,7 @@
 #include "pico/time.h"
 #include "stepper/PwmOutput.h"
 #include "pico/types.h"
+#include "CurrentSensor.h"
 #include "stepper/TMC2209Driver.h"
 
 enum class AxisMoveResult : uint8_t {
@@ -30,13 +31,15 @@ inline const char* toString(AxisMoveResult result) {
 
 class StepperAxis {
 public:
-    explicit StepperAxis(TMC2209Driver& driver);
+    StepperAxis(TMC2209Driver& driver, CurrentSensor& currentSensor);
     void setup();
     void update();
 
     bool move(int32_t steps, bool stopOnStall);
     void stop();
     void setEnabled(bool enabled);
+    void setStallValueEventsEnabled(bool enabled);
+    bool stallValueEventsEnabled() const;
 
     bool isBusy() const;
     AxisMoveResult getLastMoveResult() const;
@@ -44,10 +47,12 @@ public:
 private:
     PwmOutput mPWM;
     TMC2209Driver& mDriver;
+    CurrentSensor& mCurrentSensor;
 
     volatile bool mIsBusy = false;
     bool mStopOnStall = false;
     bool mStallInterruptConfigured = false;
+    bool mStallValueEventsEnabled = false;
 
     volatile bool mDiagStallLatched = false;
     volatile int32_t mRemainingSteps = 0;
@@ -55,6 +60,8 @@ private:
     absolute_time_t mStallDetectionArmedAt = {};
     absolute_time_t mNextUartStallPollAt = {};
     uint8_t mConsecutiveUartStallSamples = 0;
+    uint8_t mConsecutiveCurrentStallSamples = 0;
+    uint32_t mLastCurrentStallSampleSequence = 0;
     uint16_t mPeakStallGuardResult = 0;
     bool mStallGuardPrimed = false;
     uint16_t mFilteredStallGuardResult = 0;
@@ -69,8 +76,12 @@ private:
     void endMove(AxisMoveResult result);
     bool isBasicStallWindowActive() const;
     bool isInBrakingZone() const;
+    bool isRampingUp() const;
     void updateStallGuardPriming(uint16_t sgResult, uint16_t compareValue);
     bool isStallDetectionActive() const;
+    bool isCurrentStallDetectionActive() const;
+    void sendStallValueEvent(const char* mode, float value) const;
+    void sendStallValueEvent(const char* mode, uint16_t value) const;
     void updateMotionSpeed();
     static void stallIrqRouter(uint gpio, uint32_t events);
     void handleStallInterrupt(uint gpio, uint32_t events);
