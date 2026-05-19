@@ -18,7 +18,7 @@ public:
     bool isDone();
     void toggleAsync();
     void stop();
-    void testScript(double speed = 0.5, double acc = 0.2);
+    void testScript(int maxIterations = 4, double speed = 0.5, double acc = 0.2);
     ~Movement(){};
 private:
     ur_rtde::RTDEControlInterface rtde_control;

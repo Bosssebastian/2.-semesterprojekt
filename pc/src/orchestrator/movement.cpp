@@ -155,16 +155,16 @@ void Movement::stop(){
     rtde_control.stopScript(); // stops script on robot
 }
 
-void Movement::testScript(double speed, double acc){
+void Movement::testScript(int maxIterations, double speed, double acc){
     Transformations testTransform(14.*5.);
     std::vector<double> point11 = testTransform.getMovementVec({{(0.05*3.)},{-(0.05*10.)},{0.25}},matop.degToRad(22.5),true);
     std::vector<double> point21 = testTransform.getMovementVec({{(0.05*4.)},{-(0.05*14.)},{0.25}},matop.degToRad(22.5),true);
     std::vector<double> point12 = point11;
-    point12[2] = 0.15;
+    point12[2] = 0.12;
     std::vector<double> point22 = point21;
-    point12[2] = 0.15;
+    point12[2] = 0.12;
     std::vector<std::vector<double>> waypoints = {point11, point12, point21, point22};
-    for (size_t i = 0; i < (waypoints.size() * 4); ++i){
+    for (size_t i = 0; i < (waypoints.size() * maxIterations); ++i){
         rtde_control.moveL(waypoints[(i % waypoints.size())],speed,acc);
     }
 }
