@@ -8,6 +8,7 @@ public:
 
     bool hasFreeSlot() const;
     int getFreeSlot() const;
+    bool isOccupied(int slotIndex) const;
     void occupySlot(int slotIndex);
     void freeSlot(int slotIndex);
     std::vector<bool> getSlotStates() const;

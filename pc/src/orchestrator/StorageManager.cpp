@@ -22,6 +22,10 @@ int StorageManager::getFreeSlot() const {
     return -1;
 }
 
+bool StorageManager::isOccupied(int slotIndex) const {
+    return slotIndex >= 0 && slotIndex < slotCount && slotStates[slotIndex];
+}
+
 void StorageManager::occupySlot(int slotIndex) {
     if (slotIndex >= 0 && slotIndex < slotCount) {
         slotStates[slotIndex] = true;

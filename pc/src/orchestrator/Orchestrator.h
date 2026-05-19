@@ -28,6 +28,7 @@ private:
 
     void transitionTo(OrchestratorState newState);
     void transitionToFault(const std::string& reason);
+    void publishStorageSlotStates();
 
     template <typename Func>
     void onEnter(Func&& func) {
@@ -54,6 +55,15 @@ private:
     void handleInStorRobotUpFromSlot();
 
     void handleInStorComplete();
+    void handleOutStorStorageMoveToSlot();
+    void handleOutStorRobotOverStorage();
+    void handleOutStorStorageWaitingOnMove();
+    void handleOutStorRobotDownToSlot();
+    void handleOutStorGripperClose();
+    void handleOutStorRobotUpFromSlot();
+    void handleOutStorRobotOverOutput();
+    void handleOutStorGripperOpen();
+    void handleOutStorComplete();
     void handleResetting();
     void handleStopping();
     void stopMotion();

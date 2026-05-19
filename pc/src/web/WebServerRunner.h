@@ -20,11 +20,13 @@ enum class WebCommandType {
     Start,
     Stop,
     Reset,
-    SkipReq
+    SkipReq,
+    StorageSlotGoto
 };
 
 struct WebCommand {
     WebCommandType type{WebCommandType::Start};
+    int slotIndex{-1};
 };
 
 class WebServerRunner {
@@ -57,6 +59,7 @@ private:
     void handleStop(const httplib::Request& request, httplib::Response& response);
     void handleReset(const httplib::Request& request, httplib::Response& response);
     void handleSkipReq(const httplib::Request& request, httplib::Response& response);
+    void handleStorageSlotGoto(const httplib::Request& request, httplib::Response& response);
 
     std::thread mWorker;
     std::atomic<bool> mRunning{false};

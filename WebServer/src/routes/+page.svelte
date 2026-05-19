@@ -45,6 +45,7 @@
 	let currentInterval: number | null = null;
 	let storageSlots = $state<StorageSlot[]>([]);
 	let storageError = $state<string | null>(null);
+	let pendingStorageSlot = $state<number | null>(null);
 
 	$effect(() => {
 		controllerOnline = data.initialStatus.online;
@@ -58,6 +59,10 @@
 
 	function canSkipState(state: string) {
 		return !["Stopped", "Starting up", "Resetting system", "Stopping system", "Fault", "Unavailable"].includes(state);
+	}
+
+	function canCommandStorageSlot(state: string) {
+		return ["idle", "waiting for input"].includes(normalizeState(state));
 	}
 
 	function normalizeState(state: string) {
@@ -83,6 +88,9 @@
 	});
 
 	const skipEnabled = $derived.by(() => controllerOnline && canSkipState(controllerState));
+	const storageSlotCommandEnabled = $derived.by(
+		() => controllerOnline && canCommandStorageSlot(controllerState) && pendingStorageSlot === null
+	);
 	const faulted = $derived.by(() => controllerOnline && controllerState === "Fault");
 	const currentChartConfig = {
 		amps: {
@@ -296,6 +304,41 @@
 			await refreshControllerStatus();
 		} catch {
 			await refreshControllerStatus();
+		}
+	}
+
+	async function sendStorageSlotCommand(slotIndex: number) {
+		const slot = storageSlots.find((storageSlot) => storageSlot.index === slotIndex);
+		if (
+			!controllerOnline ||
+			!canCommandStorageSlot(controllerState) ||
+			pendingStorageSlot !== null ||
+			slot?.occupied !== true
+		) {
+			return;
+		}
+
+		pendingStorageSlot = slotIndex;
+		storageError = null;
+
+		try {
+			const response = await fetch(`/api/controller/storage/${slotIndex}/goto`, {
+				method: "POST"
+			});
+
+			if (!response.ok) {
+				const payload = await response.json().catch(() => null);
+				throw new Error(
+					typeof payload?.error === "string" ? payload.error : "Failed to send storage slot command"
+				);
+			}
+
+			await refreshControllerStatus();
+			await refreshStorageSlots();
+		} catch (error) {
+			storageError = error instanceof Error ? error.message : "Failed to send storage slot command";
+		} finally {
+			pendingStorageSlot = null;
 		}
 	}
 
@@ -569,11 +612,19 @@
 										{#if storageSlots.length > 0}
 											<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
 												{#each storageSlots as slot}
-													<div
-														class={`flex min-h-28 flex-col justify-between rounded-[0.5rem] border p-4 ${
+													<button
+														type="button"
+														disabled={!storageSlotCommandEnabled || !slot.occupied}
+														aria-label={`Move object from storage slot ${slot.index + 1}`}
+														onclick={() => sendStorageSlotCommand(slot.index)}
+														class={`flex min-h-28 flex-col justify-between rounded-[0.5rem] border p-4 text-left transition ${
 															slot.occupied
 																? "border-emerald-700/25 bg-emerald-700/10 text-emerald-900"
 																: "border-slate-300 bg-slate-50 text-slate-700"
+														} ${
+															storageSlotCommandEnabled && slot.occupied
+																? "cursor-pointer hover:border-emerald-700/45 hover:bg-emerald-700/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+																: "cursor-not-allowed opacity-65"
 														}`}
 													>
 														<span class="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
@@ -582,12 +633,19 @@
 														<div class="flex flex-col gap-1">
 															<span class="text-3xl font-semibold">{slot.index + 1}</span>
 															<span class="text-sm font-semibold uppercase tracking-[0.12em]">
-																{slot.occupied ? "Occupied" : "Free"}
+																{pendingStorageSlot === slot.index
+																	? "Sending"
+																	: slot.occupied
+																		? "Occupied"
+																		: "Free"}
 															</span>
 														</div>
-													</div>
+													</button>
 												{/each}
 											</div>
+											{#if storageError}
+												<p class="text-sm font-medium text-destructive">{storageError}</p>
+											{/if}
 										{:else}
 											<div class="flex flex-1 items-center justify-center text-sm text-muted-foreground">
 												{storageError ?? "Waiting for storage slots"}

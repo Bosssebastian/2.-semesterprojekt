@@ -160,6 +160,20 @@ export async function fetchStorageSlots(fetchImpl: typeof fetch): Promise<Storag
 	return payload.slots;
 }
 
+export async function sendStorageSlotGoto(fetchImpl: typeof fetch, slotIndex: number) {
+	const response = await fetchImpl(`${getControllerBaseUrl()}/storage/slots/${slotIndex}/goto`, {
+		method: 'POST'
+	});
+
+	if (!response.ok) {
+		throw new Error(
+			response.status === 409
+				? 'Storage slot command is only available while idle'
+				: 'Failed to send storage slot command'
+		);
+	}
+}
+
 export async function sendControllerCommand(
 	fetchImpl: typeof fetch,
 	command: 'start' | 'stop' | 'skip' | 'reset'

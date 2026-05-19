@@ -16,6 +16,17 @@ enum class OrchestratorState {
     InStor_RobotUpFromSlot,
 
     InStor_Complete,
+
+    OutStor_StorageMoveToSlot,
+    OutStor_RobotOverStorage,
+    OutStor_StorageWaitingOnMove,
+    OutStor_RobotDownToSlot,
+    OutStor_GripperClose,
+    OutStor_RobotUpFromSlot,
+    OutStor_RobotOverOutput,
+    OutStor_GripperOpen,
+    OutStor_Complete,
+
     Resetting,
     Stopping,
     Stopped,
@@ -50,6 +61,24 @@ inline const char* toString(OrchestratorState state) {
             return "InStor_RobotUpFromSlot";
         case OrchestratorState::InStor_Complete:
             return "InStor_Complete";
+        case OrchestratorState::OutStor_StorageMoveToSlot:
+            return "OutStor_StorageMoveToSlot";
+        case OrchestratorState::OutStor_RobotOverStorage:
+            return "OutStor_RobotOverStorage";
+        case OrchestratorState::OutStor_StorageWaitingOnMove:
+            return "OutStor_StorageWaitingOnMove";
+        case OrchestratorState::OutStor_RobotDownToSlot:
+            return "OutStor_RobotDownToSlot";
+        case OrchestratorState::OutStor_GripperClose:
+            return "OutStor_GripperClose";
+        case OrchestratorState::OutStor_RobotUpFromSlot:
+            return "OutStor_RobotUpFromSlot";
+        case OrchestratorState::OutStor_RobotOverOutput:
+            return "OutStor_RobotOverOutput";
+        case OrchestratorState::OutStor_GripperOpen:
+            return "OutStor_GripperOpen";
+        case OrchestratorState::OutStor_Complete:
+            return "OutStor_Complete";
         case OrchestratorState::Resetting:
             return "Resetting";
         case OrchestratorState::Stopping:
@@ -91,6 +120,24 @@ inline const char* toUiString(OrchestratorState state) {
             return "Robot up from slot";
         case OrchestratorState::InStor_Complete:
             return "Input-to-storage complete";
+        case OrchestratorState::OutStor_StorageMoveToSlot:
+            return "Storage move to selected slot";
+        case OrchestratorState::OutStor_RobotOverStorage:
+            return "Moving robot over storage";
+        case OrchestratorState::OutStor_StorageWaitingOnMove:
+            return "Waiting on storage to move to selected slot";
+        case OrchestratorState::OutStor_RobotDownToSlot:
+            return "Robot down to selected slot";
+        case OrchestratorState::OutStor_GripperClose:
+            return "Closing gripper";
+        case OrchestratorState::OutStor_RobotUpFromSlot:
+            return "Robot up from selected slot";
+        case OrchestratorState::OutStor_RobotOverOutput:
+            return "Moving robot to output";
+        case OrchestratorState::OutStor_GripperOpen:
+            return "Opening gripper";
+        case OrchestratorState::OutStor_Complete:
+            return "Storage-to-output complete";
         case OrchestratorState::Resetting:
             return "Resetting system";
         case OrchestratorState::Stopping:
