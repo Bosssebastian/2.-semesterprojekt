@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include "database.h"
 
 
 class StorageManager {

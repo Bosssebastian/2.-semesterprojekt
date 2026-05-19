@@ -25,6 +25,8 @@ public:
 
     double time();
 
+    sqlite3* getHandle() const { return db; }
+
     
 };
 
