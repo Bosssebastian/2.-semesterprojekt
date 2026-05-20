@@ -168,7 +168,7 @@ void Movement::testScript(int maxIterations, double speed, double acc){
     std::vector<double> point12 = point11;
     point12[2] = 0.12;
     std::vector<double> point22 = point21;
-    point12[2] = 0.12;
+    point22[2] = 0.12;
     std::vector<std::vector<double>> waypoints = {point11, point12, point21, point22};
     for (size_t i = 0; i < (waypoints.size() * maxIterations); ++i){
         rtde_control.moveL(waypoints[(i % waypoints.size())],speed,acc);
