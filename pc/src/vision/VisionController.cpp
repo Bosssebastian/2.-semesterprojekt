@@ -83,7 +83,7 @@ void VisionController::scanForObject(){
     while(true){
         if(!mStatus){
             sameSpot = 0;
-            while(sameSpot < 5 || mData.empty()){
+            while((sameSpot < 5 || mData.empty()) && !mStatus){
                 // take an image and save it as mTempFrame
                 mCam->grab();
                 mCam->retrieve(mTempFrame);
