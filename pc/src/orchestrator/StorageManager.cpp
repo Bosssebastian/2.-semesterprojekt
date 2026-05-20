@@ -1,6 +1,8 @@
 #include "StorageManager.h"
 #include "database.h"
-StorageManager::StorageManager(DataBase& db) : mDatabase(db) {
+#include <iostream>
+
+StorageManager::StorageManager(DataBase& db) : mDatabase(db), slotStates(8, false) {
     sqlite3_exec(mDatabase.getHandle(), "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);//enable foreing keys
 }
 
@@ -51,4 +53,24 @@ std::string sql =
         "object_id = NULL WHERE slot_id = " + std::to_string(slotIndex) + ";";
     
     mDatabase.execute(sql);
+}
+
+std::vector<bool> StorageManager::getSlotStates(){
+    //for(int i = 0; i < 8; i++){
+    std::string sql = 
+        "SELECT FROM current_state_storage * occupied; ";
+
+    sqlite3_stmt* stmt; 
+    sqlite3_prepare_v2(mDatabase.getHandle(), sql.c_str(), -1, &stmt, nullptr);
+    
+    if(sqlite3_step(stmt) == SQLITE_ROW) {
+        std::cout << sqlite3_column_int(stmt,0) << "\n";
+    }
+
+    sqlite3_finalize(stmt);
+    //}
+    return slotStates;
+}
+bool StorageManager::isOccupied(int slotIndex){
+    return true;
 }

@@ -412,7 +412,7 @@ void Orchestrator::handleInStorGripperOpen() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Commanding gripper open...");
         mGripper.sendCommand(CmdType::OPEN);
-        mStorageManager.occupySlot(mActiveStorageSlot);
+        mStorageManager.occupySlot(mActiveStorageSlot, mActiveObjectId);
     });
 
     if (skipRequested()) {
