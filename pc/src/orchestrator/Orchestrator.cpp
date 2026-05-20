@@ -578,7 +578,10 @@ void Orchestrator::handleOutStorRobotUpFromSlot() {
 void Orchestrator::handleOutStorRobotOverOutput() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Storage-to-output moving robot to output placeholder.");
-        mMove.toOutput();
+        double acc = 0.2;
+        double speed = 0.5;
+        bool test = true;
+        mMove.toOutput(speed,acc,test);
     });
 
     if (skipRequested()) {

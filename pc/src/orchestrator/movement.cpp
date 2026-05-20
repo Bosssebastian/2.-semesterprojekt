@@ -177,7 +177,7 @@ void Movement::testScript(int maxIterations, double speed, double acc){
 
 void Movement::toOutput(double speed, double acc, bool test){
     if (test){
-        std::vector<double> outputZone = transform.getMovementVec({{-0.05*3+0.005},{-0.05*15-0.005},{0.325-0.01}},matop.degToRad(22.5-90),true);
+        std::vector<double> outputZone = transform.getMovementVec({{-0.05*2+0.005},{-0.05*15-0.005},{0.325-0.01}},matop.degToRad(22.5-90),true);
         lastForwardPosition = outputZone;
         outputZone[2] = 0.1;
         rtde_control.moveL(outputZone,speed,acc,asyncOn);;
