@@ -254,7 +254,7 @@ void Orchestrator::handleInStorGetStorageSlot() {
     }
 
     mActiveStorageSlot = mStorageManager.getFreeSlot();
-    mStorageManager.occupySlot(mActiveStorageSlot, mActiveObjectId);
+    //mStorageManager.occupySlot(mActiveStorageSlot, mActiveObjectId);
     mDatabase.updateStorageSlot(mActiveStorageSlot, mActiveObjectId, true); //(int slotId, int objectId, bool occupied) 0 empty 1 occupied
     mDatabase.insertHistory(mActiveObjectId, mActiveStorageSlot, mDatabase.time()); // (int objectId, int slot, double timestamp)
     LOG_INFO("Storage: Using storage slot " + std::to_string(mActiveStorageSlot + 1)); // 0-7 incorrect logic, 1-8
@@ -337,6 +337,7 @@ void Orchestrator::handleInStorGripperClose() {
 void Orchestrator::handleInStorRobotOverStorage() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Move robot over storage.");
+        mStorageManager.occupySlot(mActiveStorageSlot, mActiveObjectId);
         mMove.moveUp("base"); // part 2 of movement in handleInStorRobotOverStorage2()
         //mMove.moveUp("home");
     });
@@ -649,6 +650,7 @@ void Orchestrator::handleResetting() {
 void Orchestrator::handleStopping() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Stopping system...");
+        mVision.stopScan();
     });
     stopMotion();
     transitionTo(OrchestratorState::Stopped);
