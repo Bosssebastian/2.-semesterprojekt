@@ -222,11 +222,20 @@ void Orchestrator::handleStarting() {
 void Orchestrator::handleIdle() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Idle. Waiting for input...");
+        std::cout << "count = " << count << "\n";
         double speed = 0.2;
         double acc = 0.1;
         mMove.home(speed,acc);
         mVision.scanForObject();
     });
+    if((count % 2) && test){
+        auto current_time = std::chrono::high_resolution_clock::now();
+        auto seed_value = current_time.time_since_epoch().count();
+        mActiveStorageSlot = (seed_value % 8);
+        mActiveObjectId = (seed_value % 8);
+        count ++;
+        transitionTo(OrchestratorState::OutStor_StorageMoveToSlot);
+    }
 
     if (mVision.objectReady()){
         LOG_INFO("Orchestrator: Object found");
@@ -234,6 +243,7 @@ void Orchestrator::handleIdle() {
         mVision.getInfo(mObject, mSize, mColor);
         mActiveObjectId = mDatabase.insertVisionObject(mObject, mSize, mColor);// data input form vision (object type, size, color) 
         transitionTo(OrchestratorState::InStor_GetStorageSlot);
+        count ++;
     }
 
     if (skipRequested()) {
@@ -584,7 +594,6 @@ void Orchestrator::handleOutStorRobotOverOutput() {
         LOG_INFO("Orchestrator: Storage-to-output moving robot to output placeholder.");
         double acc = 0.2;
         double speed = 0.5;
-        bool test = true;
         mMove.toOutput(speed,acc,test);
     });
 
