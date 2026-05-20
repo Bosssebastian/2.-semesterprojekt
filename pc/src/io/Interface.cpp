@@ -94,8 +94,13 @@ CmdStatus Interface::getStatus(CmdType cmd) const {
     return it->second.status;
 }
 
+bool Interface::isDeviceBusy() const {
+    return mDeviceBusy;
+}
+
 void Interface::resetCommandStates() {
     mCmdStates.clear();
+    mDeviceBusy = false;
 }
 
 std::vector<CurrentSample> Interface::getRecentCurrentSamples(uint32_t windowMs) const {
@@ -197,6 +202,10 @@ void Interface::handleAcknowledgment(const std::vector<std::string>& parts) {
     CmdState& state = mCmdStates[cmd];
 
     if (parts[0] == "OK") {
+        if (cmd == CmdType::STATUS && parts.size() >= 3) {
+            mDeviceBusy = parts[2] == "BUSY";
+        }
+
         if (commandWaitsForEvent(cmd)) {
             LOG_INFO(std::string("Received ACK for command ") + toString(cmd) + ", now waiting for event");
             state.status = CmdStatus::WAITING_FOR_RESULT;

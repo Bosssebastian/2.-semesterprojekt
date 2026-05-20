@@ -65,6 +65,7 @@ public:
 
     bool sendCommand(CmdType command, const std::string& argument = "");
     CmdStatus getStatus(CmdType cmd) const;
+    bool isDeviceBusy() const;
     void resetCommandStates();
     std::vector<CurrentSample> getRecentCurrentSamples(uint32_t windowMs) const;
 
@@ -79,6 +80,7 @@ private:
     std::vector<CurrentSample> mCurrentSamples;
     std::size_t mCurrentWriteIndex = 0;
     bool mCurrentBufferWrapped = false;
+    bool mDeviceBusy = false;
     mutable std::mutex mCurrentMutex;
 
     void handlePackage(const std::vector<std::string>& parts);

@@ -25,9 +25,11 @@ private:
     void update();
     void handleWebCommand(const WebCommand& command);
     bool skipRequested();
+    bool gripperReadyForIdle();
 
     void transitionTo(OrchestratorState newState);
     void transitionToFault(const std::string& reason);
+    void publishStorageSlotStates();
 
     template <typename Func>
     void onEnter(Func&& func) {
@@ -48,12 +50,22 @@ private:
     void handleInStorRobotToCube();
     void handleInStorGripperClose();
     void handleInStorRobotOverStorage();
+    void handleInStorRobotOverStorage2();
     void handleStorageWaitingOnMove();
     void handleInStorRobotDownToSlot();
     void handleInStorGripperOpen();
     void handleInStorRobotUpFromSlot();
 
     void handleInStorComplete();
+    void handleOutStorStorageMoveToSlot();
+    void handleOutStorRobotOverStorage();
+    void handleOutStorStorageWaitingOnMove();
+    void handleOutStorRobotDownToSlot();
+    void handleOutStorGripperClose();
+    void handleOutStorRobotUpFromSlot();
+    void handleOutStorRobotOverOutput();
+    void handleOutStorGripperOpen();
+    void handleOutStorComplete();
     void handleResetting();
     void handleStopping();
     void stopMotion();

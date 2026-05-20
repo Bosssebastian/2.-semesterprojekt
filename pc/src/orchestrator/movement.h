@@ -11,13 +11,15 @@ public:
     void setTransform(double upZ = 14,bool isInwards = false, double rotZ = 22.5){transform = Transformations(upZ, isInwards, rotZ);}
     void move(std::vector<std::vector<double>>, double speed = 0.5, double acc = 0.2, double customZ = 0.0, double rotZ = 0.39269908169872415480783042290994, bool isWorldFrame = false); 
     void moveJStock(std::string, double speed = 0.5, double acc = 0.2);
-    void home(); // Shortcut for moveJStock("home")
+    void home(double speed = 0.5, double acc = 0.2); // Shortcut for moveJStock("home")
     void moveZ(double, std::string, double speed = 0.5, double acc = 0.2); // + goes up, - goes down
     void moveUp(std::string, double speed = 0.5, double acc = 0.2); // Could not get async to work with path planning. Timing issue, which requires us to stall the program while it gets ready
     void moveDown(std::string, double speed = 0.5, double acc = 0.2);
     bool isDone();
     void toggleAsync();
     void stop();
+    void testScript(int maxIterations = 4, double speed = 0.5, double acc = 0.2);
+    void toOutput(double speed = 0.5, double acc = 0.2);
     ~Movement(){};
 private:
     ur_rtde::RTDEControlInterface rtde_control;

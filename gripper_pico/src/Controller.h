@@ -19,6 +19,7 @@ private:
     void openCommand();
     void closeCommand();
     void resetCommand();
+    void statusCommand();
     void setCurrentEvents(bool enabled);
     void setStallValues(bool enabled);
     void sendMoveCompletionEvent(const GripperMoveEvent& moveEvent);
