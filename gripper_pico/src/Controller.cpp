@@ -24,7 +24,7 @@ void Controller::update() {
                 resetCommand();
                 break;
             case CmdType::STATUS:
-                // ToDo
+                statusCommand();
                 break;
             case CmdType::STATISTICS:
                 // ToDo
@@ -74,6 +74,10 @@ void Controller::resetCommand() {
     } else {
         mInterface.sendResponse(CmdType::RESET, ResponseType::ERROR, "BUSY");
     }
+}
+
+void Controller::statusCommand() {
+    mInterface.sendResponse(CmdType::STATUS, ResponseType::OK, mGripper.isBusy() ? "BUSY" : "IDLE");
 }
 
 void Controller::setCurrentEvents(bool enabled) {

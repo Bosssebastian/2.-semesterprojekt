@@ -51,8 +51,8 @@ VisionController::VisionController()
     fs["distortion_coefficients"] >> mDistCoeffs;
     fs.release();
 
-
-    float S = 0.041 / 2.0; // Half-size of the QR code (meters)
+    // the length from the qr corners 
+    float S = 0.041 / 2.0; // Half-size of the QR code (meters) 5x5
     // the connors have to be giving the the way a cameras coordinate system is unlike a normal coordinate system.
     mObjectPoints.clear();
     mObjectPoints.push_back(cv::Point3f(-S, -S, 0));  // 0: Top-Left  (Negative X, Negative Y)
@@ -146,7 +146,7 @@ void VisionController::scanForObject(){
                 
                 transDiff = OldTransVec - mTransVec;
 
-                if (transDiff.at<double>(0,0) > -mMaxOff && transDiff.at<double>(0,0) < mMaxOff && transDiff.at<double>(1,0) > -mMaxOff && transDiff.at<double>(1,0) < mMaxOff && !mTransVec.empty() && !mData.empty()){
+                if (inBound() && transDiff.at<double>(0,0) > -mMaxOff && transDiff.at<double>(0,0) < mMaxOff && transDiff.at<double>(1,0) > -mMaxOff && transDiff.at<double>(1,0) < mMaxOff && !mTransVec.empty() && !mData.empty()){
                     sameSpot++;
                 }
                 else{
@@ -155,7 +155,7 @@ void VisionController::scanForObject(){
                 OldTransVec = mTransVec;
             }
             std::cout << "An object was found\n";
-            std::vector<std::vector<double>> outputPos;
+            std::cout << mTransVec;
             mStatus = true;
         }
     }
@@ -204,4 +204,16 @@ void VisionController::getObjectRot(double& output){
         output -= M_PI/2.;
     }
     return;
+}
+
+bool VisionController::inBound(){
+    double x = mTransVec.at<double>(0,0);
+    double y = mTransVec.at<double>(1,0); 
+
+    if (x > -0.24 && x < 0.10){
+        if (y > -0.06 && y < 0.1){
+            return true;
+        }
+    }
+    return false;
 }

@@ -30,6 +30,7 @@ namespace {
 Orchestrator::Orchestrator(IoRunner& io, VisionRunner& vision, WebServerRunner& web)
     : mIo(io), mVision(vision), mWeb(web), mGripper(io.gripper()), mStorage(io.storage()), mDatabase("storage.db"), mStorageManager(mDatabase), mMove() {
     mWeb.setState(mState);
+    publishStorageSlotStates();
 }
 
 void Orchestrator::run() {
@@ -52,6 +53,8 @@ void Orchestrator::start() {
 
 
 void Orchestrator::update() {
+    publishStorageSlotStates();
+
     if (mWeb.hasCommand()) {
         handleWebCommand(mWeb.getCommand());
     }
@@ -73,12 +76,22 @@ void Orchestrator::update() {
         case OrchestratorState::InStor_RobotToCube: handleInStorRobotToCube(); break;
         case OrchestratorState::InStor_GripperClose: handleInStorGripperClose(); break;
         case OrchestratorState::InStor_RobotOverStorage: handleInStorRobotOverStorage(); break;
+        case OrchestratorState::InStor_RobotOverStorage2: handleInStorRobotOverStorage2(); break;
         case OrchestratorState::InStor_StorageWaitingOnMove: handleStorageWaitingOnMove(); break;
         case OrchestratorState::InStor_RobotDownToSlot: handleInStorRobotDownToSlot(); break;
         case OrchestratorState::InStor_GripperOpen: handleInStorGripperOpen(); break;
         case OrchestratorState::InStor_RobotUpFromSlot: handleInStorRobotUpFromSlot(); break;
-
         case OrchestratorState::InStor_Complete: handleInStorComplete(); break;
+
+        case OrchestratorState::OutStor_StorageMoveToSlot: handleOutStorStorageMoveToSlot(); break;
+        case OrchestratorState::OutStor_RobotOverStorage: handleOutStorRobotOverStorage(); break;
+        case OrchestratorState::OutStor_StorageWaitingOnMove: handleOutStorStorageWaitingOnMove(); break;
+        case OrchestratorState::OutStor_RobotDownToSlot: handleOutStorRobotDownToSlot(); break;
+        case OrchestratorState::OutStor_GripperClose: handleOutStorGripperClose(); break;
+        case OrchestratorState::OutStor_RobotUpFromSlot: handleOutStorRobotUpFromSlot(); break;
+        case OrchestratorState::OutStor_RobotOverOutput: handleOutStorRobotOverOutput(); break;
+        case OrchestratorState::OutStor_GripperOpen: handleOutStorGripperOpen(); break;
+        case OrchestratorState::OutStor_Complete: handleOutStorComplete(); break;
     }
 }
 
@@ -101,6 +114,10 @@ void Orchestrator::transitionToFault(const std::string& reason) {
     mFaultReason = reason;
     stopMotion();
     transitionTo(OrchestratorState::Faulted);
+}
+
+void Orchestrator::publishStorageSlotStates() {
+    mWeb.setStorageSlotStates(mStorageManager.getSlotStates());
 }
 
 void Orchestrator::handleWebCommand(const WebCommand& command) {
@@ -126,6 +143,18 @@ void Orchestrator::handleWebCommand(const WebCommand& command) {
         case WebCommandType::SkipReq:
             mPendingSkipRequest = true;
             break;
+        case WebCommandType::StorageSlotGoto:
+            if (mState == OrchestratorState::Idle && command.slotIndex >= 0 && command.slotIndex < 8) {
+                if (!mStorageManager.isOccupied(command.slotIndex)) {
+                    LOG_WARN("Storage-to-output command ignored because slot " + std::to_string(command.slotIndex + 1) + " is free");
+                    break;
+                }
+                mVision.stopScan();
+                mActiveStorageSlot = command.slotIndex;
+                LOG_INFO("Storage-to-output command received: slot " + std::to_string(mActiveStorageSlot + 1));
+                transitionTo(OrchestratorState::OutStor_StorageMoveToSlot);
+            }
+            break;
     }
 }
 
@@ -134,6 +163,32 @@ bool Orchestrator::skipRequested() {
         mPendingSkipRequest = false;
         return true;
     }
+    return false;
+}
+
+bool Orchestrator::gripperReadyForIdle() {
+    switch (mGripper.getStatus(CmdType::STATUS)) {
+        case CmdStatus::DONE:
+            if (!mGripper.isDeviceBusy()) {
+                LOG_INFO("Gripper reports idle; cycle can return to idle.");
+                return true;
+            }
+            mGripper.sendCommand(CmdType::STATUS);
+            return false;
+        case CmdStatus::FAILED:
+            transitionToFault("Gripper status query failed");
+            return false;
+        case CmdStatus::TIMED_OUT:
+            transitionToFault("Gripper status query timed out");
+            return false;
+        case CmdStatus::WAITING_FOR_ACK:
+        case CmdStatus::WAITING_FOR_RESULT:
+            return false;
+        case CmdStatus::IDLE:
+            mGripper.sendCommand(CmdType::STATUS);
+            return false;
+    }
+
     return false;
 }
 
@@ -161,13 +216,15 @@ void Orchestrator::handleStarting() {
         default:
             break;
     }
-    transitionTo(OrchestratorState::Idle);
+    //transitionTo(OrchestratorState::Idle);
 }
 
 void Orchestrator::handleIdle() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Idle. Waiting for input...");
-        mMove.home();
+        double speed = 0.2;
+        double acc = 0.1;
+        mMove.home(speed,acc);
         mVision.scanForObject();
     });
 
@@ -220,6 +277,7 @@ void Orchestrator::handleInStorRobotOverInput() {
         double acc = 0.2;
         double customZ = 0.18;
         double rotZ = matop.degToRad(22.5) - mRot;
+        mMove.stop();
         mMove.move({mInputFromVision[0],mInputFromVision[1],{0.24}},speed,acc,customZ,rotZ); // Move to coordinates provided by vision
     });
 
@@ -279,15 +337,30 @@ void Orchestrator::handleInStorGripperClose() {
 void Orchestrator::handleInStorRobotOverStorage() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Move robot over storage.");
-        mMove.moveUp("base"); // part 2 of movement in handleStorageWaitingOnMove()
+        mMove.moveUp("base"); // part 2 of movement in handleInStorRobotOverStorage2()
         //mMove.moveUp("home");
+    });
+
+    if (skipRequested()) {
+        transitionTo(OrchestratorState::InStor_RobotOverStorage2);
+        return;
+    }
+
+    if (mMove.isDone()){ // Check if async movement is done
+        transitionTo(OrchestratorState::InStor_RobotOverStorage2);
+    }
+}
+
+void Orchestrator::handleInStorRobotOverStorage2() {
+    onEnter([this] {
+        LOG_INFO("Orchestrator: Storage move to position placeholder state.");
+        mMove.moveJStock("storage"); // part 1 of movement in handleInStorRobotOverStorage()
     });
 
     if (skipRequested()) {
         transitionTo(OrchestratorState::InStor_StorageWaitingOnMove);
         return;
     }
-
     if (mMove.isDone()){ // Check if async movement is done
         transitionTo(OrchestratorState::InStor_StorageWaitingOnMove);
     }
@@ -296,7 +369,6 @@ void Orchestrator::handleInStorRobotOverStorage() {
 void Orchestrator::handleStorageWaitingOnMove() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Storage move to position placeholder state.");
-        mMove.moveJStock("storage"); // part 1 of movement in handleInStorRobotOverStorage()
     });
 
     if (skipRequested()) {
@@ -340,6 +412,7 @@ void Orchestrator::handleInStorGripperOpen() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Commanding gripper open...");
         mGripper.sendCommand(CmdType::OPEN);
+        mStorageManager.occupySlot(mActiveStorageSlot);
     });
 
     if (skipRequested()) {
@@ -383,8 +456,178 @@ void Orchestrator::handleInStorRobotUpFromSlot() {
 void Orchestrator::handleInStorComplete() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Input-to-storage cycle complete.");
+        mGripper.sendCommand(CmdType::STATUS);
     });
-    transitionTo(OrchestratorState::Idle);
+    if (gripperReadyForIdle()) {
+        transitionTo(OrchestratorState::Idle);
+    }
+}
+
+void Orchestrator::handleOutStorStorageMoveToSlot() {
+    onEnter([this] {
+        LOG_INFO("Orchestrator: Storage-to-output move storage to slot " + std::to_string(mActiveStorageSlot + 1));
+        mStorage.sendCommand(CmdType::GOTO, std::to_string(mActiveStorageSlot + 1));
+    });
+    transitionTo(OrchestratorState::OutStor_RobotOverStorage);
+}
+
+void Orchestrator::handleOutStorRobotOverStorage() {
+    onEnter([this] {
+        LOG_INFO("Orchestrator: Storage-to-output move robot over storage.");
+        mMove.moveJStock("storage");
+    });
+
+    if (skipRequested()) {
+        transitionTo(OrchestratorState::OutStor_StorageWaitingOnMove);
+        return;
+    }
+
+    if (mMove.isDone()){ // Check if async movement is done
+        transitionTo(OrchestratorState::OutStor_StorageWaitingOnMove);
+    }
+
+}
+
+void Orchestrator::handleOutStorStorageWaitingOnMove() {
+    onEnter([this] {
+        LOG_INFO("Orchestrator: Waiting on storage to reach selected slot.");
+    });
+
+    if (skipRequested()) {
+        mStorage.resetCommandStates();
+        transitionTo(OrchestratorState::OutStor_RobotDownToSlot);
+        return;
+    }
+
+    switch (mStorage.getStatus(CmdType::GOTO)) {
+        case CmdStatus::DONE:
+            LOG_INFO("Storage System move completed successfully.");
+            transitionTo(OrchestratorState::OutStor_RobotDownToSlot);
+            break;
+        case CmdStatus::FAILED:
+            transitionToFault("Storage System failed to move");
+            break;
+        case CmdStatus::TIMED_OUT:
+            transitionToFault("Storage System move timed out");
+            break;
+        default:
+            break;
+    }
+}
+
+void Orchestrator::handleOutStorRobotDownToSlot() {
+    onEnter([this] {
+        LOG_INFO("Orchestrator: Storage-to-output robot down to selected slot.");
+        mMove.moveDown("storage");
+    });
+
+    if (skipRequested()) {
+        transitionTo(OrchestratorState::OutStor_GripperClose);
+        return;
+    }
+
+    if (mMove.isDone()) {
+        transitionTo(OrchestratorState::OutStor_GripperClose);
+    }
+}
+
+void Orchestrator::handleOutStorGripperClose() {
+    onEnter([this] {
+        LOG_INFO("Orchestrator: Storage-to-output closing gripper.");
+        mGripper.sendCommand(CmdType::CLOSE);
+    });
+
+    if (skipRequested()) {
+        transitionTo(OrchestratorState::OutStor_RobotUpFromSlot);
+        return;
+    }
+
+    switch (mGripper.getStatus(CmdType::CLOSE)) {
+        case CmdStatus::DONE:
+            LOG_INFO("Gripper close completed successfully.");
+            transitionTo(OrchestratorState::OutStor_RobotUpFromSlot);
+            break;
+        case CmdStatus::FAILED:
+            transitionToFault("Gripper failed to close");
+            break;
+        case CmdStatus::TIMED_OUT:
+            transitionToFault("Gripper close timed out");
+            break;
+        default:
+            break;
+    }
+}
+
+void Orchestrator::handleOutStorRobotUpFromSlot() {
+    onEnter([this] {
+        LOG_INFO("Orchestrator: Storage-to-output robot up from selected slot.");
+        mMove.moveJStock("storage");
+        mStorageManager.freeSlot(mActiveStorageSlot);
+    });
+
+    if (skipRequested()) {
+        transitionTo(OrchestratorState::OutStor_RobotOverOutput);
+        return;
+    }
+
+    if (mMove.isDone()) {
+        transitionTo(OrchestratorState::OutStor_RobotOverOutput);
+    }
+}
+
+void Orchestrator::handleOutStorRobotOverOutput() {
+    onEnter([this] {
+        LOG_INFO("Orchestrator: Storage-to-output moving robot to output placeholder.");
+        mMove.toOutput();
+    });
+
+    if (skipRequested()) {
+        transitionTo(OrchestratorState::OutStor_GripperOpen);
+        return;
+    }
+
+    if (mMove.isDone()) {
+        transitionTo(OrchestratorState::OutStor_GripperOpen);
+    }
+}
+
+void Orchestrator::handleOutStorGripperOpen() {
+    onEnter([this] {
+        LOG_INFO("Orchestrator: Storage-to-output opening gripper.");
+        mGripper.sendCommand(CmdType::OPEN);
+    });
+
+    if (skipRequested()) {
+        transitionTo(OrchestratorState::OutStor_Complete);
+        return;
+    }
+
+    switch (mGripper.getStatus(CmdType::OPEN)) {
+        case CmdStatus::DONE:
+            LOG_INFO("Gripper open completed successfully.");
+            transitionTo(OrchestratorState::OutStor_Complete);
+            break;
+        case CmdStatus::FAILED:
+            transitionToFault("Gripper failed to open");
+            break;
+        case CmdStatus::TIMED_OUT:
+            transitionToFault("Gripper open timed out");
+            break;
+        default:
+            break;
+    }
+}
+
+void Orchestrator::handleOutStorComplete() {
+    onEnter([this] {
+        LOG_INFO("Orchestrator: Storage-to-output cycle complete.");
+        //mStorageManager.freeSlot(mActiveStorageSlot);
+        mGripper.sendCommand(CmdType::STATUS);
+        mMove.moveUp("output");
+    });
+    if (gripperReadyForIdle() && mMove.isDone()) {
+        transitionTo(OrchestratorState::Idle);
+    }
 }
 
 void Orchestrator::handleResetting() {

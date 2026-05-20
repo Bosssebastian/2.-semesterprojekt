@@ -95,6 +95,23 @@ std::string buildStateJsonBody(OrchestratorState state) {
     return stream.str();
 }
 
+std::string buildStorageSlotsJsonBody(const std::vector<bool>& slotStates) {
+    std::ostringstream stream;
+    stream << "{\"slots\":[";
+
+    for (std::size_t index = 0; index < slotStates.size(); ++index) {
+        if (index > 0) {
+            stream << ',';
+        }
+
+        stream << "{\"index\":" << index
+               << ",\"occupied\":" << (slotStates[index] ? "true" : "false") << "}";
+    }
+
+    stream << "]}";
+    return stream.str();
+}
+
 std::string buildCurrentJsonBody(const std::vector<CurrentSample>& samples) {
     std::ostringstream stream;
     stream << "{\"samples\":[";
@@ -191,6 +208,16 @@ OrchestratorState WebServerRunner::getState() const {
     return mState;
 }
 
+void WebServerRunner::setStorageSlotStates(const std::vector<bool>& slotStates) {
+    std::lock_guard<std::mutex> lock(mStorageSlotMutex);
+    mStorageSlotStates = slotStates;
+}
+
+std::vector<bool> WebServerRunner::getStorageSlotStates() const {
+    std::lock_guard<std::mutex> lock(mStorageSlotMutex);
+    return mStorageSlotStates;
+}
+
 bool WebServerRunner::tryStoreCommand(const WebCommand& command) {
     std::lock_guard<std::mutex> lock(mCommandMutex);
     if (mPendingCommand.has_value()) {
@@ -205,8 +232,17 @@ bool WebServerRunner::queueCommand(WebCommandType type) {
     return tryStoreCommand(WebCommand{type});
 }
 
+bool isValidSlotIndex(int slotIndex) {
+    return slotIndex >= 0 && slotIndex < 8;
+}
+
 void WebServerRunner::handleGetState(const httplib::Request&, httplib::Response& response) const {
     response.set_content(buildStateJsonBody(getState()), "application/json");
+    response.set_header("Access-Control-Allow-Origin", "*");
+}
+
+void WebServerRunner::handleGetStorageSlots(const httplib::Request&, httplib::Response& response) const {
+    response.set_content(buildStorageSlotsJsonBody(getStorageSlotStates()), "application/json");
     response.set_header("Access-Control-Allow-Origin", "*");
 }
 
@@ -257,6 +293,39 @@ void WebServerRunner::handleSkipReq(const httplib::Request&, httplib::Response& 
     response.status = 204;
 }
 
+void WebServerRunner::handleStorageSlotGoto(const httplib::Request& request, httplib::Response& response) {
+    const auto slotParam = request.path_params.find("slot");
+    if (slotParam == request.path_params.end()) {
+        response.status = 400;
+        return;
+    }
+
+    int slotIndex = -1;
+    try {
+        slotIndex = std::stoi(slotParam->second);
+    } catch (const std::exception&) {
+        response.status = 400;
+        return;
+    }
+
+    if (!isValidSlotIndex(slotIndex)) {
+        response.status = 400;
+        return;
+    }
+
+    if (getState() != OrchestratorState::Idle) {
+        response.status = 409;
+        return;
+    }
+
+    if (!tryStoreCommand(WebCommand{WebCommandType::StorageSlotGoto, slotIndex})) {
+        response.status = 409;
+        return;
+    }
+
+    response.status = 204;
+}
+
 void WebServerRunner::run() {
 #ifdef _WIN32
     LOG_WARN("WebServerRunner Windows support is unverified with cpp-httplib");
@@ -265,6 +334,9 @@ void WebServerRunner::run() {
     auto server = std::make_unique<httplib::Server>();
     server->Get("/getstate", [this](const httplib::Request& request, httplib::Response& response) {
         handleGetState(request, response);
+    });
+    server->Get("/storage/slots", [this](const httplib::Request& request, httplib::Response& response) {
+        handleGetStorageSlots(request, response);
     });
     server->Get("/logs", [this](const httplib::Request& request, httplib::Response& response) {
         handleGetLogs(request, response);
@@ -283,6 +355,9 @@ void WebServerRunner::run() {
     });
     server->Post("/cmdSkipReq", [this](const httplib::Request& request, httplib::Response& response) {
         handleSkipReq(request, response);
+    });
+    server->Post("/storage/slots/:slot/goto", [this](const httplib::Request& request, httplib::Response& response) {
+        handleStorageSlotGoto(request, response);
     });
 
     {
