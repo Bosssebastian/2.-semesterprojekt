@@ -20,6 +20,7 @@ public:
 
 private:
 
+    bool inBound();
     cv::VideoCapture* mCam;
     cv::QRCodeDetector mQR;
     cv::Mat mTempFrame, mFrame, mCorners, mRotVec, mTransVec, mOldTransVec;
