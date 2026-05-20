@@ -146,7 +146,7 @@ void VisionController::scanForObject(){
                 
                 transDiff = OldTransVec - mTransVec;
 
-                if (transDiff.at<double>(0,0) > -mMaxOff && transDiff.at<double>(0,0) < mMaxOff && transDiff.at<double>(1,0) > -mMaxOff && transDiff.at<double>(1,0) < mMaxOff && !mTransVec.empty() && !mData.empty()){
+                if (inBound() && transDiff.at<double>(0,0) > -mMaxOff && transDiff.at<double>(0,0) < mMaxOff && transDiff.at<double>(1,0) > -mMaxOff && transDiff.at<double>(1,0) < mMaxOff && !mTransVec.empty() && !mData.empty()){
                     sameSpot++;
                 }
                 else{
@@ -204,4 +204,16 @@ void VisionController::getObjectRot(double& output){
         output -= M_PI/2.;
     }
     return;
+}
+
+bool VisionController::inBound(){
+    double x = mTransVec.at<double>(0,0);
+    double y = mTransVec.at<double>(1,0); 
+
+    if (x > -0.24 && x < 0.10){
+        if (y > -0.06 && y < 0.1){
+            return true;
+        }
+    }
+    return false;
 }
