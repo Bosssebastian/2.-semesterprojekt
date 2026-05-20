@@ -207,8 +207,10 @@ void VisionController::getObjectRot(double& output){
 }
 
 bool VisionController::inBound(){
+    std::cout << "inbound check\n";
     double x = mTransVec.at<double>(0,0);
-    double y = mTransVec.at<double>(1,0); 
+    double y = mTransVec.at<double>(1,0);
+    std::cout << "x = " << x << " y = " << y << "\n";
 
     if (x > -0.24 && x < 0.10){
         if (y > -0.06 && y < 0.1){
