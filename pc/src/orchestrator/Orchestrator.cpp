@@ -255,7 +255,7 @@ void Orchestrator::handleInStorGetStorageSlot() {
 
     mActiveStorageSlot = mStorageManager.getFreeSlot();
     //mStorageManager.occupySlot(mActiveStorageSlot, mActiveObjectId);
-    mDatabase.updateStorageSlot(mActiveStorageSlot, mActiveObjectId, true); //(int slotId, int objectId, bool occupied) 0 empty 1 occupied
+    //mDatabase.updateStorageSlot(mActiveStorageSlot, mActiveObjectId, true); //(int slotId, int objectId, bool occupied) 0 empty 1 occupied
     mDatabase.insertHistory(mActiveObjectId, mActiveStorageSlot, mDatabase.time()); // (int objectId, int slot, double timestamp)
     LOG_INFO("Storage: Using storage slot " + std::to_string(mActiveStorageSlot + 1)); // 0-7 incorrect logic, 1-8
     transitionTo(OrchestratorState::InStor_StorageMoveToSlot);
@@ -337,7 +337,7 @@ void Orchestrator::handleInStorGripperClose() {
 void Orchestrator::handleInStorRobotOverStorage() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Move robot over storage.");
-        mStorageManager.occupySlot(mActiveStorageSlot, mActiveObjectId);
+        //mStorageManager.occupySlot(mActiveStorageSlot, mActiveObjectId);
         mMove.moveUp("base"); // part 2 of movement in handleInStorRobotOverStorage2()
         //mMove.moveUp("home");
     });
@@ -413,6 +413,7 @@ void Orchestrator::handleInStorGripperOpen() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Commanding gripper open...");
         mGripper.sendCommand(CmdType::OPEN);
+        mDatabase.updateStorageSlot(mActiveStorageSlot, mActiveObjectId, true); //(int slotId, int objectId, bool occupied) 0 empty 1 occupied
         mStorageManager.occupySlot(mActiveStorageSlot, mActiveObjectId);
     });
 
@@ -468,6 +469,7 @@ void Orchestrator::handleOutStorStorageMoveToSlot() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Storage-to-output move storage to slot " + std::to_string(mActiveStorageSlot + 1));
         mStorage.sendCommand(CmdType::GOTO, std::to_string(mActiveStorageSlot + 1));
+        mVision.stopScan();
     });
     transitionTo(OrchestratorState::OutStor_RobotOverStorage);
 }
@@ -650,8 +652,8 @@ void Orchestrator::handleResetting() {
 void Orchestrator::handleStopping() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Stopping system...");
-        mVision.stopScan();
     });
+    mVision.stopScan();
     stopMotion();
     transitionTo(OrchestratorState::Stopped);
 }
