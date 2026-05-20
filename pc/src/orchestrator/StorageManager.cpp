@@ -1,6 +1,9 @@
+
 #include "StorageManager.h"
 #include "database.h"
-StorageManager::StorageManager(DataBase& db) : mDatabase(db) {
+#include <iostream>
+
+StorageManager::StorageManager(DataBase& db) : mDatabase(db), slotStates(8, false) {
     sqlite3_exec(mDatabase.getHandle(), "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);//enable foreing keys
 }
 

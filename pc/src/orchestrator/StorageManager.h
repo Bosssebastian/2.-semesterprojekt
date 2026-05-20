@@ -12,10 +12,13 @@ public:
     void occupySlot(int slotIndex, int objectId);
     void freeSlot(int slotIndex);
 
+    std::vector<bool> getSlotStates();
+
     std::vector<bool> getSlotStates() const;
     bool isOccupied(int slotIndex) const;
 
 private:
+
     DataBase& mDatabase; 
     
 
