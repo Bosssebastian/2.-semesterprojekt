@@ -31,6 +31,7 @@ VisionController::VisionController()
 
     // turn off autofocus
     mCam->set(cv::CAP_PROP_AUTOFOCUS, 0);
+    mCam->set(cv::CAP_PROP_FOCUS, 0);
 
     // give the camera time to start correctly
     for (int i = 0; i < 30; i++) {
