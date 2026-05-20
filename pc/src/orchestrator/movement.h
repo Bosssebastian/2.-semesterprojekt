@@ -19,7 +19,7 @@ public:
     void toggleAsync();
     void stop();
     void testScript(int maxIterations = 4, double speed = 0.5, double acc = 0.2);
-    void toOutput(double speed = 0.5, double acc = 0.2);
+    void toOutput(double speed = 0.5, double acc = 0.2, bool test = false);
     ~Movement(){};
 private:
     ur_rtde::RTDEControlInterface rtde_control;
