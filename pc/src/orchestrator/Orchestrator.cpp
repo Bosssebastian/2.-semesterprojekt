@@ -477,6 +477,7 @@ void Orchestrator::handleOutStorStorageMoveToSlot() {
 void Orchestrator::handleOutStorRobotOverStorage() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Storage-to-output move robot over storage.");
+        mMove.stop();
         mMove.moveJStock("storage");
     });
 
