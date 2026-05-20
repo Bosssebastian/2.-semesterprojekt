@@ -180,7 +180,7 @@ void Movement::toOutput(double speed, double acc, bool test){
     if (test){
         outputZone = transform.getMovementVec({{-0.05*2+0.005},{-0.05*15-0.005},{0.325-0.025}},matop.degToRad(22.5),true);
         lastForwardPosition = outputZone;
-        outputZone[2] = 0.1;
+        outputZone[2] = 0.1-0.01;
     }
     else{
         outputZone = transform.getMovementVec({{0.05*5+0.005},{-0.05*5-0.005},{0.325}},matop.degToRad(22.5-90),true);
