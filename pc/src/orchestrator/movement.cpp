@@ -161,17 +161,36 @@ void Movement::stop(){
     rtde_control.stopScript(); // stops script on robot
 }
 
-void Movement::testScript(int maxIterations, double speed, double acc){
-    Transformations testTransform(14.*5.);
-    std::vector<double> point11 = testTransform.getMovementVec({{(0.05*3.)},{-(0.05*10.)},{0.25}},matop.degToRad(22.5),true);
-    std::vector<double> point21 = testTransform.getMovementVec({{(0.05*4.)},{-(0.05*14.)},{0.25}},matop.degToRad(22.5),true);
-    std::vector<double> point12 = point11;
-    point12[2] = 0.12;
-    std::vector<double> point22 = point21;
-    point22[2] = 0.12;
-    std::vector<std::vector<double>> waypoints = {point11, point12, point21, point22};
-    for (size_t i = 0; i < (waypoints.size() * maxIterations); ++i){
-        rtde_control.moveL(waypoints[(i % waypoints.size())],speed,acc);
+void Movement::testScript(int maxIterations, double speed, double acc, int version){
+    if (version == 1){
+        Transformations testTransform(14.*5.);
+        std::vector<double> point11 = testTransform.getMovementVec({{(0.05*3.)},{-(0.05*10.)},{0.25}},matop.degToRad(22.5),true);
+        std::vector<double> point21 = testTransform.getMovementVec({{(0.05*4.)},{-(0.05*14.)},{0.25}},matop.degToRad(22.5),true);
+        std::vector<double> point12 = point11;
+        point12[2] = 0.12;
+        std::vector<double> point22 = point21;
+        point22[2] = 0.12;
+        std::vector<std::vector<double>> waypoints = {point11, point12, point21, point22};
+        for (size_t i = 0; i < (waypoints.size() * maxIterations); ++i){
+            rtde_control.moveL(waypoints[(i % waypoints.size())],speed,acc);
+        }
+    }
+    else if (version == 2){
+        std::vector<double> point1 = transform.getMovementVec({{(0.05*3.)},{-(0.05*10.)},{0.1}},matop.degToRad(22.5-90),true);
+        std::vector<double> point2 = transform.getMovementVec({{(0.05*3.)},{-(0.05*17.)},{0.1}},matop.degToRad(22.5-90),true);
+        std::vector<double> point3 = transform.getMovementVec({{-(0.05*3.)},{-(0.05*16.)},{0.1}},matop.degToRad(22.5),true);
+        std::vector<double> point4 = transform.getMovementVec({{-(0.05*1.)},{-(0.05*12.)},{0.1}},matop.degToRad(22.5),true);
+        std::vector<std::vector<double>> waypoints = {point1, point2, point3, point4};
+        rtde_control.moveL(waypoints[0],speed,acc);
+        rtde_control.moveL(waypoints[1],speed,acc);
+        rtde_control.moveL(waypoints[2],speed,acc);
+        rtde_control.moveL(waypoints[3],speed,acc);
+
+        rtde_control.moveL(waypoints[1],speed+0.2,acc+0.2);
+        rtde_control.moveL(waypoints[2],speed-0.1,acc);
+
+        rtde_control.moveL(waypoints[0],speed,acc);
+        rtde_control.moveL(waypoints[3],speed,acc);
     }
 }
 

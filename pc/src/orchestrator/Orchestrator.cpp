@@ -225,6 +225,9 @@ void Orchestrator::handleIdle() {
         std::cout << "count = " << count << "\n";
         double speed = 0.2;
         double acc = 0.1;
+        int ver = 2;
+        int ite = 1;
+        //mMove.testScript(ite,speed,acc,ver); // for testing planned movement sequence (turn off vision for use)
         mMove.home(speed,acc);
         mVision.scanForObject();
     });
