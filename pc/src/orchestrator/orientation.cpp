@@ -22,7 +22,7 @@ std::vector<std::vector<double>> Orientation::getRotMat(std::vector<double> axis
     return matop.addMat(rotMLHS, rotMRHS);
 }
 
-std::vector<double> Orientation::rotMat2rv(std::vector<std::vector<double>> rotmat) {
+/*std::vector<double> Orientation::rotMat2rv(std::vector<std::vector<double>> rotmat) {
     double angle = acos((matop.trace(rotmat) - 1.) / 2.);
     if (abs(angle) < 0.0001) { // Check for and handle near-zero rotation
         return { 0,0,0 };
@@ -59,7 +59,7 @@ std::vector<double> Orientation::rotMat2rv(std::vector<std::vector<double>> rotm
 
     return rv;
     
-}
+}*/
 
 std::vector<std::vector<double>> Orientation::compose(std::vector<std::vector<double>> A, std::vector<std::vector<double>> B) {
     std::vector<std::vector<double>> C(3, std::vector<double>(3, 0.0));
