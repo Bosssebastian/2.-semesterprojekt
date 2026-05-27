@@ -222,11 +222,23 @@ void Orchestrator::handleStarting() {
 void Orchestrator::handleIdle() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Idle. Waiting for input...");
+        std::cout << "count = " << count << "\n";
         double speed = 0.2;
         double acc = 0.1;
+        int ver = 2;
+        int ite = 1;
+        //mMove.testScript(ite,speed,acc,ver); // for testing planned movement sequence (turn off vision for use)
         mMove.home(speed,acc);
         mVision.scanForObject();
     });
+    if((count % 2) && test){
+        auto current_time = std::chrono::high_resolution_clock::now();
+        auto seed_value = current_time.time_since_epoch().count();
+        mActiveStorageSlot = (seed_value % 8);
+        mActiveObjectId = (seed_value % 8);
+        count ++;
+        transitionTo(OrchestratorState::OutStor_StorageMoveToSlot);
+    }
 
     if (mVision.objectReady()){
         LOG_INFO("Orchestrator: Object found");
@@ -234,6 +246,7 @@ void Orchestrator::handleIdle() {
         mVision.getInfo(mObject, mSize, mColor);
         mActiveObjectId = mDatabase.insertVisionObject(mObject, mSize, mColor);// data input form vision (object type, size, color) 
         transitionTo(OrchestratorState::InStor_GetStorageSlot);
+        count ++;
     }
 
     if (skipRequested()) {
@@ -254,8 +267,8 @@ void Orchestrator::handleInStorGetStorageSlot() {
     }
 
     mActiveStorageSlot = mStorageManager.getFreeSlot();
-    mStorageManager.occupySlot(mActiveStorageSlot, mActiveObjectId);
-    mDatabase.updateStorageSlot(mActiveStorageSlot, mActiveObjectId, true); //(int slotId, int objectId, bool occupied) 0 empty 1 occupied
+    //mStorageManager.occupySlot(mActiveStorageSlot, mActiveObjectId);
+    //mDatabase.updateStorageSlot(mActiveStorageSlot, mActiveObjectId, true); //(int slotId, int objectId, bool occupied) 0 empty 1 occupied
     mDatabase.insertHistory(mActiveObjectId, mActiveStorageSlot, mDatabase.time()); // (int objectId, int slot, double timestamp)
     LOG_INFO("Storage: Using storage slot " + std::to_string(mActiveStorageSlot + 1)); // 0-7 incorrect logic, 1-8
     transitionTo(OrchestratorState::InStor_StorageMoveToSlot);
@@ -337,6 +350,7 @@ void Orchestrator::handleInStorGripperClose() {
 void Orchestrator::handleInStorRobotOverStorage() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Move robot over storage.");
+        //mStorageManager.occupySlot(mActiveStorageSlot, mActiveObjectId);
         mMove.moveUp("base"); // part 2 of movement in handleInStorRobotOverStorage2()
         //mMove.moveUp("home");
     });
@@ -412,7 +426,8 @@ void Orchestrator::handleInStorGripperOpen() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Commanding gripper open...");
         mGripper.sendCommand(CmdType::OPEN);
-        mStorageManager.occupySlot(mActiveStorageSlot);
+        mDatabase.updateStorageSlot(mActiveStorageSlot, mActiveObjectId, true); //(int slotId, int objectId, bool occupied) 0 empty 1 occupied
+        mStorageManager.occupySlot(mActiveStorageSlot, mActiveObjectId);
     });
 
     if (skipRequested()) {
@@ -467,6 +482,7 @@ void Orchestrator::handleOutStorStorageMoveToSlot() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Storage-to-output move storage to slot " + std::to_string(mActiveStorageSlot + 1));
         mStorage.sendCommand(CmdType::GOTO, std::to_string(mActiveStorageSlot + 1));
+        mVision.stopScan();
     });
     transitionTo(OrchestratorState::OutStor_RobotOverStorage);
 }
@@ -474,6 +490,7 @@ void Orchestrator::handleOutStorStorageMoveToSlot() {
 void Orchestrator::handleOutStorRobotOverStorage() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Storage-to-output move robot over storage.");
+        mMove.stop();
         mMove.moveJStock("storage");
     });
 
@@ -578,7 +595,9 @@ void Orchestrator::handleOutStorRobotUpFromSlot() {
 void Orchestrator::handleOutStorRobotOverOutput() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Storage-to-output moving robot to output placeholder.");
-        mMove.toOutput();
+        double acc = 0.2;
+        double speed = 0.5;
+        mMove.toOutput(speed,acc,test);
     });
 
     if (skipRequested()) {
@@ -647,6 +666,7 @@ void Orchestrator::handleStopping() {
     onEnter([this] {
         LOG_INFO("Orchestrator: Stopping system...");
     });
+    mVision.stopScan();
     stopMotion();
     transitionTo(OrchestratorState::Stopped);
 }

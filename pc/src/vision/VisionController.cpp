@@ -31,6 +31,7 @@ VisionController::VisionController()
 
     // turn off autofocus
     mCam->set(cv::CAP_PROP_AUTOFOCUS, 0);
+    mCam->set(cv::CAP_PROP_FOCUS, 0);
 
     // give the camera time to start correctly
     for (int i = 0; i < 30; i++) {
@@ -77,13 +78,13 @@ void VisionController::scanForObject(){
         return;
     }
 
-    cv::Mat OldTransVec = (cv::Mat_<double>(3,1) <<  0, 0, 0);
+    mOldTransVec = (cv::Mat_<double>(3,1) <<  0, 0, 0);
 
     cv::Mat transDiff = mOldTransVec;
     while(true){
         if(!mStatus){
             sameSpot = 0;
-            while(sameSpot < 5 || mData.empty()){
+            while((sameSpot < 5 || mData.empty()) && !mStatus){
                 // take an image and save it as mTempFrame
                 mCam->grab();
                 mCam->retrieve(mTempFrame);
@@ -143,16 +144,19 @@ void VisionController::scanForObject(){
                     continue;
                 }
                 }
-                
-                transDiff = OldTransVec - mTransVec;
 
-                if (inBound() && transDiff.at<double>(0,0) > -mMaxOff && transDiff.at<double>(0,0) < mMaxOff && transDiff.at<double>(1,0) > -mMaxOff && transDiff.at<double>(1,0) < mMaxOff && !mTransVec.empty() && !mData.empty()){
+                transDiff = mOldTransVec - mTransVec;
+
+                if (inBound() && (transDiff.at<double>(0,0) > -mMaxOff) && (transDiff.at<double>(0,0) < mMaxOff) && (transDiff.at<double>(1,0) > -mMaxOff) && (transDiff.at<double>(1,0) < mMaxOff) && !mTransVec.empty() && !mData.empty()){
                     sameSpot++;
+                    std::cout << sameSpot << "\n";
                 }
                 else{
+                    std::cout << "mtrans = " << mTransVec.empty() << " Data = " << mData.empty() << "\n";
+
                     sameSpot = 0;
                 }
-                OldTransVec = mTransVec;
+                mOldTransVec = mTransVec;
             }
             std::cout << "An object was found\n";
             std::cout << mTransVec;
@@ -207,13 +211,11 @@ void VisionController::getObjectRot(double& output){
 }
 
 bool VisionController::inBound(){
-    std::cout << "inbound check\n";
     double x = mTransVec.at<double>(0,0);
     double y = mTransVec.at<double>(1,0);
-    std::cout << "x = " << x << " y = " << y << "\n";
 
-    if (x > -0.24 && x < 0.10){
-        if (y > -0.06 && y < 0.1){
+    if((x > -0.24) && (x < 0.10)){
+        if((y > -0.06) && (y < 0.10)){
             return true;
         }
     }

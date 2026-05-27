@@ -90,6 +90,9 @@ private:
     Movement mMove;
     int mActiveStorageSlot{-1};
     int mActiveObjectId{-1};
+
+    int count = 0;
+    bool test = true;
     
     //Movement move("192.168.1.11", 29998);
 
