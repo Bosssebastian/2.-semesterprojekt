@@ -1,0 +1,16 @@
+\section{Conclusion}
+
+
+%Purpose
+The purpose of this project was to develop an autonomous storage system in which a UR5 robot, rotating storage disk, robot gripper, computer vision system, database, and PC-based control program worked together as one integrated system. The system was intended to move cube shaped objects from a designated input area to the storage system, connect the physical storage position with database information, and later retrieve the object from storage and move it to the output area.
+
+The final system was built around a central PC program that coordinated the different subsystems. The use of a state machine made the workflow explicit and helped ensure that each physical action was completed before the next action was started. This made the system easier to integrate, test, and debug across the different subsystems.
+
+The gripper was able to grasp cube objects and used stall detection to determine when an object or mechanical end stop had been reached. StallGuard was selected as the final detection method because it provided more reliable results than the current-based stall detection. The current measurements were still useful for analysing the motor behaviour, but they were less suitable as the primary control signal because of noise and delayed detection.
+
+The storage disk was able to rotate to requested storage positions and support both storage and retrieval of cube objects. The system still had some inaccuracies and limitations, mainly related to encoder reading, sensor timing, and mechanical alignment. However, the reliability was significantly improved through software changes. The most important improvements were synchronized LDR sampling and expected-position decoding, which allowed the software to reject impossible intermediate encoder states. This showed that the main limitation was not only the sensor hardware, but also how the encoder data was interpreted during movement.
+
+The robot control system was able to use coordinate transformations and angle-axis orientation to facilitate movement of the UR5 robot between the required positions. Although some limitations were encountered, especially when testing certain functions on the Raspberry Pi, the movement system was successfully integrated into the larger system.
+
+Overall, the project demonstrated that a modular architecture could be used to combine several independently developed subsystems into one autonomous storage workflow. While the final prototype still has limitations in robustness, precision, and further automation, it was able to demonstrate the core functionality of detecting, gripping, storing, retrieving, and moving objects through a coordinated control system.
+

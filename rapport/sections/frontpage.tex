@@ -1,0 +1,75 @@
+% One "person" block (name + email + NR)
+\newcommand{\person}[3]{%
+  \parbox[b][2.15cm][b]{\linewidth}{%
+    \centering %
+    {\large #1}\\[1mm]
+    {\footnotesize \emph{#2}}\\
+    {\footnotesize NR: \emph{#3}}
+  }
+}
+
+% SDU front page
+\begin{titlepage}
+  \thispagestyle{empty}
+  \centering
+
+
+  \includegraphics[scale = 0.35]{figures/sdu_logo.png}\\[0.6cm]
+
+  {\huge\scshape University of Southern Denmark\\}
+  \vspace{0.25cm}
+  {\Large\itshape Faculty of Engineering\\}
+
+  \vspace{0.55cm}
+
+  {\huge Group 4\\}
+
+  \vspace{0.55cm}
+
+  Start Date: 16/02-2026\\
+  Due Date: 29/05-2026\\
+
+  \vspace{0.55cm}
+
+  {\Large\scshape Semester project: `AUTONOME ROBOTTER'\\}
+
+  \vspace{0.45cm}
+
+  Supervisor: Jes Hundevadt Jepsen, \\jegj@mmmi.sdu.dk\\
+
+  \vspace{0.55cm}
+
+  \rule{\textwidth}{0.4pt}
+
+  \vspace{0.55cm}
+
+  {\itshape Submitted By:}\\
+
+
+
+  \begin{center}
+    \begin{minipage}{0.49\textwidth}
+      \begin{flushleft}
+        \vspace{1mm}
+        \person{Mathies Stamhus Toftgård}{mtoft24@student.sdu.dk}{4132098}
+        \person{Jakob Friborg Møller}{jakmo25@student.sdu.dk}{233003169}
+        \person{Alexander Kvistgaard Kamuk}{alkam25@student.sdu.dk}{4149474}
+      \end{flushleft}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.49\textwidth}
+      \begin{flushright}
+        \vspace{1mm}
+        \person{Anders Milsgaard}{anmil25@student.sdu.dk}{4152307}
+        \person{Sebastian Yde Junker}{sejun25@student.sdu.dk}{4149221}
+        \person{Per-Kristian Engelbrechtsen}{peeng23@student.sdu.dk}{201550287}
+      \end{flushright}
+    \end{minipage}\\[0.25cm]
+  \end{center}
+
+  \vfill
+
+  {\itshape Number of attachments: 1}\\
+  {\itshape Number of pages: 31}\\
+  {\itshape Number of pages including appendix: 43}
+\end{titlepage}

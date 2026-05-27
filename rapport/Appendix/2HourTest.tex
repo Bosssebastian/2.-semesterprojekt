@@ -1,0 +1,65 @@
+\section{2-hour test results}
+\label{app:2HourResults}
+
+\providecommand{\thickhline}{\noalign{\hrule height 1.2pt}}
+
+\begin{center}
+  \rotatebox{90}{%
+    \resizebox{0.85\textheight}{!}{%
+      \centering
+      \begin{tabular}{|c|c|c|c|c|c|c|c|}
+        \hline
+        \textbf{Subsystem} & \textbf{Error type} & \textbf{0-30min} & \textbf{30-60min} & \textbf{60-90min} & \textbf{90-120min} & \textbf{Error type total} & \textbf{Subsystem total} \\
+        \thickhline
+        \textit{Vision} & Can't read QR & 3 & 2 & 2 & 2 & 9 & 14 \\
+        \hline
+        & Can't find QR & 0 & 0 & 0 & 0 & 0 &  \\
+        \hline
+        & Slow to read QR & 1 & 1 & 0 & 3 & 5 &  \\
+        \hline
+        & Wrong coordinates & 0 & 0 & 0 & 0 & 0 &  \\
+        \hline
+        &  &  &  &  &  &  &  \\
+        %\\
+        \thickhline
+        \textit{Storage} & Wrong slot & 0 & 0 & 1 & 2 & 3 & 15 \\
+        \hline
+        & Cannot find slot & 0 & 3 & 3 & 1 & 7 &  \\
+        \hline
+        & Difficulty finding slot & 0 & 0 & 1 & 0 & 1 &  \\
+        \hline
+        & Offset buildup & 0 & 0 & 1 & 1 & 2 &  \\
+        \hline
+        & Cube displacement & 0 & 1 & 0 & 1 & 2 &  \\
+        \hline
+        &  &  &  &  &  &  &  \\
+        %\\
+        \thickhline
+        \textit{Gripper} & No grip & 0 & 0 & 0 & 0 & 0 & 1 \\
+        \hline
+        & Other & 0 & 1 & 0 & 0 & 1 &  \\
+        \hline
+        &  &  &  &  &  &  &  \\
+        %\\
+        \thickhline
+        \textit{Robot} & No movement & 0 & 0 & 0 & 0 & 0 & 0 \\
+        \hline
+        & Wrong movement & 0 & 0 & 0 & 0 & 0 &  \\
+        \hline
+        &  &  &  &  &  &  &  \\
+        %\\
+        \thickhline
+        \textit{PC} & Stalling & 1 & 0 & 0 & 0 & 1 & 1 \\
+        \hline
+        %&  &  &  &  &  &  &  \\
+        %\\
+        \hline
+        \thickhline
+        \textbf{Cycles} &  & 20 & 21 & 20 & 20 & 81 & 81 \\
+        \hline
+      \end{tabular}
+    }%
+  }
+  \captionof{table}{2-hour test results (errors \& cycles)}
+  \label{tab:2hour-test-results}
+\end{center}

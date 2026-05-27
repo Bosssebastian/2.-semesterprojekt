@@ -1,0 +1,162 @@
+\appendix
+\phantomsection
+\section*{Appendix}
+\addcontentsline{toc}{section}{Appendix}
+\addtocontents{toc}{\protect\setcounter{tocdepth}{1}}
+
+
+\input{Appendix/gripper}
+\clearpage
+
+\input{Appendix/storage}
+\clearpage
+
+\input{Appendix/2HourTest}
+\clearpage
+
+\section{Additional Figures}
+
+\subsection{Test setup of the machine}
+\label{app:test-setup}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Appendix/Images/TestSetup.png}
+    \caption{Physical test setup of the complete machine.}
+    \label{fig:appendix-test-setup}
+\end{figure}
+
+\subsection{Web Interface}
+\label{app:web-interface}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{Appendix/Images/WebInterface.png}
+    \caption{Web interface used for interacting with the system. The top-left panel shows a chart of the gripper current, the bottom-left panel contains the machine controls such as start and stop, and the right side gives an overview of the storage slots with the ability to select a specific slot.}
+    \label{fig:appendix-web-interface}
+\end{figure}
+
+\subsection{Vision test}
+\label{app:Vision-test}
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|c|}
+\hline
+Distance from camera to table & Detailed & Simple \\
+\hline
+50 cm & 100,0\% & 100,0\% \\
+\hline
+55 cm & 100,0\% & 100,0\% \\
+\hline
+60 cm & 99,9\% & 100,0\% \\
+\hline
+65 cm & 99,8\% & 99,9\% \\
+\hline
+70 cm & 94,4\% & 100,0\% \\
+\hline
+\end{tabular}
+\caption{Vision ability to find QR codes at different distances}
+\label{tab:appendix-vision-findability}
+\end{table}
+
+
+\subsection{Charuco Board}
+\label{app:charuco-board}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{figures/charuco_board_8x11.png}
+    \caption{Charuco board for calibration}
+    \label{fig:Charuco_board}
+\end{figure}
+
+\subsection{Gripper PCB}
+\label{app:gripper-pcb}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[t]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Appendix/Images/GripperPCB.png}
+        \caption{Gripper PCB.}
+        \label{fig:gripper-pcb-layout}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Appendix/Images/GripperPCBSchematic.png}
+        \caption{Gripper PCB layout.}
+        \label{fig:gripper-pcb-schematic}
+    \end{subfigure}
+    \caption{Gripper PCB layout and schematic.}
+    \label{fig:gripper-pcb}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Appendix/Images/GripperPCBSchematic_real.png}
+    \caption{Detailed gripper PCB schematic.}
+    \label{fig:gripper-pcb-schematic-detailed}
+\end{figure}
+
+
+\subsection{Ciffer Table for Storage System}
+\label{app:ciffertabel}
+
+\begin{figure}[H]
+    \centering
+    \IfFileExists{figures/CifferTableCarbon02.png}{%
+        \includegraphics[width=\textwidth]{figures/CifferTablecarbon.png}%
+    }{%
+        \fbox{\parbox{0.9\textwidth}{\centering Missing image: \texttt{figures/CifferTableCarbon02.png}}}%
+    }
+    \caption{Ciffer table for the storage system.}
+    \label{fig:ciffer-table}
+\end{figure}
+
+
+\section{Digital Appendix}
+
+%Digitale filer/videoer
+
+
+\subsection{Video Montage}
+Recommended to watch on a bigger sized screen:
+
+\url{https://youtu.be/mFUUK1O942Y}
+
+
+\subsection{Raw video clips}
+\label{videos}
+%Angle front - occupy slot:
+Input-to-Storage cycle:
+\url{https://youtube.com/shorts/VWNK5rI8qNM?feature=share} 
+
+%Angle front - free slots:
+Storage-to-Output cycle:
+\url{https://youtube.com/shorts/XZM1S5uELC4?feature=share} 
+
+%Angle side - occupy + free slots:
+%\url{https://youtu.be/dca0lESVhiIshar} 
+
+%Angle Gripper - occupy + free slots:
+%\url{https://youtu.be/DyexqrI2SlE} 
+
+%Angle Base - occupy + free slots:
+%\url{https://youtu.be/B5A8Hgl0fhc} 
+
+%Web interface - occupy slots:
+%\url{https://youtu.be/RSOOtqHnhEQ}
+
+%Web interface - free slots:
+%\url{https://youtu.be/wZqRQ5LcIEk} 
+
+
+Movement test: \url{https://youtube.com/shorts/uH6EiSdd-Ig}
+
+Whole system test: \url{https://www.youtube.com/shorts/CYDVCI7MAuw}
+
+
+\subsection{Code}
+
+\url{https://github.com/Bosssebastian/2.-semesterprojekt}

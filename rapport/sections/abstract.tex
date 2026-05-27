@@ -1,0 +1,11 @@
+\section{Abstract}
+%This project details the development of an autonomous system, which can detect objects in an input area, command a robotic arm and gripper to move the object into a storage system, from which it can also be retrieved.
+%Through testing and reflection, it has been concluded, that...
+
+
+
+This project presents the development of a prototype autonomous robotic storage and retrieval system. The system combines a UR5 robot arm, computer vision, a custom gripper, a rotating storage disk, a SQLite database, and a PC-based control program. The purpose was to identify cube-shaped objects, move them from an input area to a storage system, register their location in a database, and later retrieve them.
+
+The system was built around a modular architecture, where a central PC program coordinated the subsystems through a state machine. The robot arm used coordinate transformations and angle-axis orientation to perform movement commands, while the vision system used QR codes and OpenCV to locate and identify objects. The gripper used a stepper-driven mechanism, where stall detection was used as the sensor input. The storage disk used a custom LDR-based absolute encoder, where synchronized sampling and expected-position decoding improved reliability.
+
+The final prototype demonstrated the core functionality of detecting, gripping, storing, retrieving, and moving objects. However, testing also showed that vision reliability and storage positioning remained the main limitations of the system.

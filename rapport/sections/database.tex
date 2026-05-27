@@ -1,0 +1,22 @@
+\section{Database}
+Initially, a storage manager program was created to keep track of which slots on the storage disk were occupied and which were free. The storage manager initialized an empty boolean vector, where \texttt{true} represented an occupied slot and \texttt{false} represented a free slot. It also included functions for checking for empty slots, occupying slots, and freeing slots. However, a problem was discovered with this approach: when the program was shut down or the power was turned off, the vector was reset. This meant that the state of the slots was not remembered. To solve this, a database was created. 
+
+%\subsection{SQLite}
+For the database, both MySQL and SQLite were considered. In this project, there was no need for a large server-based database, which made SQLite the obvious choice. SQLite also made it quicker to get the database up and running. %Additionally, SQLite is C-based, which made it easier to implement in a project where most of the code was already written in C++.
+To use SQLite with C++, \texttt{sqlite3} and \texttt{libsqlite3-dev} had to be installed. \texttt{sqlite3} is the program that lets the user write and execute SQLite commands in the terminal. \texttt{libsqlite3-dev} is the developer library that provides header files such as \texttt{<sqlite3.h>}, which enables SQLite to be used in a C++ program.
+
+\subsection{Tables}
+Initially, only one table was needed to make the database capable of doing what the storage manager program could do. This table logged and kept track of the current state of the slots on the storage disk. However, to make the database more useful, two additional tables were created: one table for logging the current object detected by the vision system, and one table for logging the history of everything that had happened.
+
+The table for the current state of the storage disk contains three columns. The first column is a slot ID, which is used to identify the specific slots from 1 to 8. The second column is an object ID, which is used to identify the specific object placed in a specific slot. The object ID is defined in the object table. The third column tracks whether or not a slot is occupied, where 1, or true, represents occupied, and 0, or false, represents free.
+
+The table that describes the current object consists of four columns. The first column is an object ID, which is used in the other tables to identify each object. The second column contains the type of object, such as a cube. The third column stores the size of the object, and the fourth column stores its color. These three object characteristics, type, size, and color, are the exact characteristics output by the QR code from the vision system.
+
+The last table keeps track of the history of the storage system and also consists of four columns. However, this table differs from the other tables because each time new data is logged to the database, it is added to the existing data. In other words, it creates a continuously growing table, unlike the other tables, which have a fixed number of slots or objects that are updated whenever new data is logged.
+
+The history table columns are history ID, object ID, slot, and timestamp. The history ID differentiates between each logged action. Every time the robot runs through a cycle, a new history ID is created. The object ID comes from the object table, and the slot comes from the table that stores the current state of the storage disk. The timestamp column records the time whenever a new history ID is added.
+
+\subsection{Implementation Functions}
+In addition to the basic functions, such as \texttt{updateStorageSlot()}, \texttt{updateObject()}, and \texttt{insertHistory()}, the original storage manager program was updated so that its functions worked with the SQLite database instead of the original boolean vector. These functions could check for free slots, occupy slots, and free specific slots.
+
+The specific functions were \texttt{getFreeSlot()}, which selects all slots from the current storage state table where \texttt{occupied} is 0, or false; \texttt{occupySlot()}, which sets the occupied state of a specific slot to 1, or true; and \texttt{freeSlot()}, which does the opposite by setting the occupied state to 0, or false.

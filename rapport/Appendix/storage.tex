@@ -1,0 +1,142 @@
+
+
+\section{Storage System Test Data}
+\label{app:extra-data-collection}
+
+
+Default configuration: 100 ms \texttt{sleep\_ms}, read bits synced, read expected.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|c|c|c|}
+\hline
+Configuration & Average task time [s] & Irregularity rate & Standard deviation \\
+\hline
+UR Moving & 3.3 & 10\%& 4\% \\
+UR Off & 3.3 & 10\% & 4\% \\
+
+\hline
+\end{tabular}
+\caption{Encoder performance with and without UR movement to asses the effect of EMI.}
+\label{tab:encoder-performance-ur}
+\end{table}
+
+Without light the encoder does not work at all! The point is however to determine if extra lighting had a noticeable effect.
+
+Extra lighting also did not improve the result beyond statistical uncertainty  Table \ref{tab:encoder-performance-lighting}. %Appendix~\ref{app:extra-data-collection} 
+
+
+
+Default configuration: 0 ms \texttt{sleep\_ms}, read bits synced, read expected.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|c|c|c|}
+\hline
+Configuration & Average task time [s] & Irregularity rate & Standard deviation \\
+\hline
+Default lighting & 3.3 & 13\%& 5\% \\
+Extra lighting & 3.3 & 13\% & 6\% \\
+
+\hline
+\end{tabular}
+\caption{Encoder performance with default and extra lighting.}
+\label{tab:encoder-performance-lighting}
+\end{table}
+
+The following test was to determine the system reliability at different PWM-levels.
+
+Default configuration: 100 ms \texttt{sleep\_ms}, read bits synced, read expected.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|c|c|c|}
+\hline
+Configuration & Average task time [s] & Irregularity rate & Standard deviation \\
+\hline
+100\% & 3.3 & 13\%& 5\% \\
+50\% & 3.6 & 16\% & 7\% \\
+5\% & 4.9 & 10\%& 3\% \\
+
+\hline
+\end{tabular}
+\caption{Encoder performance with different PWM-levels}
+\label{tab:encoder-performance-pwm}
+\end{table}
+
+
+
+
+\clearpage
+\section{Encoder Speed and Timing Calculations}
+\label{app:encoder-speed-calculations}
+
+The relative encoder lane was not used in the final implementation because reliable relative encoding would require every transition to be detected while the disk is moving. The following calculations clarify this design choice and display limitations of the LDR based encoder.
+
+The selected LDR has a rise time of approximately 30 ms\cite{gl5528_datasheet}. At the encoder radius of 225 mm to the furthest encoder lane housing the relative encoder lane, the circumference of the encoder path is
+
+\[
+C = 2 \pi r = 2 \pi \cdot 225 = 1413.7 \text{ mm}
+\]
+
+%Each storage position covers \(45^\circ\), \(360^\circ\) / 8 slots and 
+
+The relative encoder marking width was approximately \(4.5^\circ\). The physical length of one encoder marking is therefore
+
+\[
+L = C \cdot \frac{4.5}{360}
+\]
+
+\[
+L = 1413.7 \cdot \frac{4.5}{360} = 17.7 \text{ mm}
+\]
+
+This is the distance that the LDR has to detect at least 2 measurements to be sure of at least one of them recording the engraved section
+
+This gives a maximum travel distance per sample of
+
+\[
+s = \frac{17.7}{2} = 8.85 \text{ mm}
+\]
+
+Using the LDR rise time of 30 ms \cite{gl5528_datasheet}, the maximum theoretical encoder speed becomes
+
+\[
+v = \frac{8.85}{0.030} = 295 \text{ mm/s}
+\]
+
+Converted to rotational speed:
+
+\[
+n = \frac{v}{C} \cdot 60
+\]
+
+\[
+n = \frac{295}{1413.7} \cdot 60 = 12.5 \text{ RPM}
+\]
+
+This means that, based only on the LDR rise time, the encoder should rotate below approximately 12.5 RPM to reliably detect the relative encoder markings.
+
+%This does not take software lootime, I2C communication delay or averaging of value into consideration.
+
+The motor speed at 100\% PWM was measured to be slightly above 15 RPM, which is close to the datasheet value of 14.5 RPM for the selected geared motor \cite{nidec_hg37_datasheet}. With the 1:3 belt reduction, the disk speed was reduced to approximately
+
+\[
+n_\text{disk} = \frac{15}{3} = 5 \text{ RPM}
+\]
+
+This suggests that the disk speed should be within the theoretical limit set by the LDR rise time. However, practical testing showed that the LDR rise time was not the main limiting factor.
+
+When only raw LDR values were read, the average interval between readings was approximately 38 ms after subtracting the intentional \texttt{sleep\_ms} delay. Using the same two-sample requirement, this gives a practical speed estimate of
+
+\[
+v = \frac{8.85}{0.038} = 232.9 \text{ mm/s}
+\]
+
+\[
+n = \frac{232.9}{1413.7} \cdot 60 = 9.9 \text{ RPM}
+\]
+
+This estimate does not include the additional delay from averaging several ADC samples during normal operation. Therefore, the practical reading speed was lower than the theoretical LDR response time alone suggested.
+
+The calculations show why the absolute encoder was preferred over the relative encoder lane. The absolute encoder does not require every transition to be detected. Instead, each valid encoder reading directly identifies the current storage position. This made the system more tolerant of missed or rejected intermediate readings.

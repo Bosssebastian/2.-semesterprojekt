@@ -1,0 +1,98 @@
+\documentclass[a4paper,10pt]{article}
+
+\usepackage{amsmath} 
+\usepackage{amssymb}
+\usepackage{subcaption}              % sub figures 
+\usepackage{caption}
+\usepackage[utf8]{inputenc}          % allow utf-8 input
+\usepackage[T1]{fontenc}             % better font encoding (more shapes)
+\usepackage{tgschola}                % TeX Gyre Schola, Century Schoolbook equivalent
+\usepackage[top=3cm,bottom=3cm,left=3.5cm,right=2.5cm]{geometry}   % set page margins
+%\usepackage[toc,page]{appendix}      % create table of contents
+%\usepackage{siunitx}                 % create and use SI-units
+%\usepackage{fancyhdr}                % header and footer package
+\usepackage[hidelinks]{hyperref}     % references are hyperlinks
+\usepackage{cleveref}                % better reference command, very useful
+
+\usepackage{wrapfig}
+
+\usepackage{graphicx}
+\usepackage{rotating}
+\usepackage[table]{xcolor}
+\usepackage{float}
+\usepackage{tikz-cd}
+\usepackage{multicol}
+\usepackage{setspace}
+
+\usepackage[backend=biber,sorting=none]{biblatex}  % Imports biblatex package
+\addbibresource{sources.bib}         % Import the bibliography file
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{8pt}
+\setstretch{1.52}
+\setcounter{tocdepth}{2}
+
+% Custom command for sections with assigned people
+% USAGE: \assignedsection{Section Title}{Assigned Person/People}
+\newcommand{\assignedsection}[2]{\section{#1} \vspace{-5mm} \hphantom{\Large \thesection \hspace{1em}} \emph{\small #2}}
+
+
+\begin{document}
+
+\hypersetup{pageanchor=false}
+\input{sections/frontpage}
+\clearpage
+\hypersetup{pageanchor=true}
+
+\input{sections/abstract}
+\clearpage
+
+\tableofcontents % generate table of contents
+\clearpage
+
+\section{Declarations}
+
+\input{sections/AI declaration}
+\clearpage
+
+\input{sections/contributions}
+\clearpage
+
+\input{sections/introduction}
+%\clearpage
+
+% Rapport contents goes here
+
+\input{sections/systemArchitecture}
+%\clearpage
+
+\input{sections/robotArm}
+%\clearpage
+
+\input{sections/vision}
+%\clearpage
+
+\input{sections/gripper}
+%\clearpage
+
+\input{sections/storage}
+\clearpage
+
+\input{sections/database}
+\clearpage
+
+\input{sections/discussion}
+\clearpage
+
+\input{sections/conclusion}
+\clearpage
+
+\printbibliography[heading=bibnumbered] % generate bibliography
+\clearpage
+
+%\input{sections/sideTest}
+%\clearpage
+
+\input{Appendix/appendix}
+
+\end{document}
