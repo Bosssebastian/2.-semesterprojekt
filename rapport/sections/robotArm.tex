@@ -1,6 +1,6 @@
 \section{Robot Arm Control}
 A UR5 robot arm was provided for the project. The UR5 robot arm is controlled using the URCap \texttt{External Control}, which allows for external devices to send program nodes for the robot to execute. The URCap requires a host IP and a port from which, it will receive its commands.
-To enable easier communication with the robot, the \texttt{ur\_rtde} (Real Time Data Exchange) library\cite{10871000} has been utilized. Provided the robot IP and port, this allows for high-level control of the UR5 robot through e.g. C++. Using this library enables the user to move the robot end effector using e.g. \texttt{moveL()}, which moves linearly to a provided point in robot base frame and an orientation given using angle-axis representation, and the \texttt{moveJ()} functions, which moves joint angles to achieve a provided joint configuration.
+To enable easier communication with the robot, the \texttt{ur\_rtde} (Real Time Data Exchange) library\cite{10871000} has been utilized. Provided the robot IP and port, this allows for high-level control of the UR5 robot through e.g. C++. Using this library enables the user to move the robot end effector using e.g. \texttt{moveL()}, which moves linearly to a provided point in robot base frame and an orientation given using angle-axis representation, and \texttt{moveJ()}, which moves joint angles to achieve a provided joint configuration.
 
 \subsection{Robot Communication}
 
@@ -55,7 +55,7 @@ As seen in \cref{eqt:transformationsmatrix}, a transformation matrix is composed
 Additionally, the bottom row is filled with 3 $0$'s followed by a single $1$. These are shearing and scaling factors, which are not used in this application. For now all that is important, is that they will allow for standard matrix operations when applying the transformation matrix as seen in \cref{eqt:transformation} or linking together multiple transformation matrices.
 
 
-Due to the angular alignment of the robot, the robot base frame is slightly offset from the world by $22.5^{\circ}$ as seen in \cref{fig:angularOffset}. Additionally, the robot base frame is also transposed approximately $32mm$ along the world frame Z-axis. Constructing a simple transformation matrix from these values, allows for simple transformation of coordinates.
+Due to the angular alignment of the robot, the robot base frame is slightly offset from the world by $22.5^{\circ}$ as seen in \cref{fig:angularOffset}. Additionally, the robot base frame is also poitioned approximately $32mm$ along the world frame Z-axis. Constructing a simple transformation matrix from these values, allows for simple transformation of coordinates.
 
 \begin{figure}[ht]
     \centering
@@ -92,7 +92,7 @@ In order to describe orientation when using \texttt{moveL()} from \texttt{ur\_rt
     \end{minipage}
 \end{figure}
 
-Since both angle-axis and rotation matrices are different forms of orientation representations, one can be converted into the other and vice versa. But since angle-axis is only used in the \texttt{moveL()} function, only a one way conversion is required for the scope of this project.\\
+Since both angle-axis and rotation matrices are different forms of orientation representations, one can be converted into the other and vice versa. But since angle-axis is only used in the \texttt{moveL()} function, only conversion into angle-axis is required for the scope of this project.\\
 Assuming a rotation matrix as seen in \cref{eqt:rotationK},
 
 \begin{equation}
@@ -130,7 +130,7 @@ an angle can be determined through \cref{eqt:angleK} using the sum of diagonal e
     \end{minipage}
 \end{figure}
 
-Using this angle and the rest of the elements in the rotation matrix, the parameters of a unit vector can be calculated as described in \cref{eqt:unitK}, which in the end leaves an angle and a unit vector that, when multiplied, leaves the combined angle-axis vector, see \cref{eqt:combinedAngleAxis}.
+Using this angle and the rest of the elements in the rotation matrix, the parameters of a unit vector can be calculated as shown in \cref{eqt:unitK}, which in the end leaves an angle and a unit vector that, when multiplied, leaves the combined angle-axis vector, see \cref{eqt:combinedAngleAxis}.
 
 
 \subsection{Implementation}

@@ -7,7 +7,7 @@ Computer vision is used to detect and locate objects that the robot can collect.
 \subsection{Getting the Object's Location}
 To pick up an object, its location relative to the robot arm must be determined. This process can be split into smaller parts, such as finding the object and calculating its position from the camera perspective.
 
-When trying to find an object in a picture, people look for features that make the object easy to identify. This is often something like the outline of the object. However, if only the edge of an object is used, the detected point can be placed anywhere along that edge. A corner is therefore more useful, because if it is moved slightly, it is easier to see that it is no longer in the correct place. \cite{opencv_features}
+When trying to find an object in a picture, people look for features that make the object easy to identify. This is often something like the outline of the object. However, if only the edge of an object is used, the detected point can be placed anywhere along that edge. A corner is therefore more useful, because if it is moved slightly, it is easier to see that it is no longer correctly placed \cite{opencv_features}.
 For the computer to find the object, simple features must therefore be present in the image. For this project, QR codes were chosen.
 
 
@@ -71,7 +71,7 @@ From the data in \cref{tab:vision-readability}, it is clear that the vision setu
 \subsection{Perspective-n-Point (PnP)}
 After the object has been found in the image, the QR code can be used to calculate its position. Because all the QR codes are the same size, their known dimensions make it possible to calculate the object's location relative to the camera, which can then be converted into coordinates for the robot arm to move to.
 
-For the \texttt{PnPsolve} function from \texttt{OpenCV} to calculate an accurate position, the function must be calibrated to the camera. All cameras distort or warp the images they take in some way, so the camera distortion must be determined. This calibration only has to be done once for the camera when the height is set. 
+For the \texttt{PnPsolve} function from \texttt{OpenCV} to calculate an accurate position, the function must be calibrated to the camera. All cameras distort or warp the images in some way, so the camera distortion must be determined. This calibration only has to be done once for the camera when the height is set. 
 The calibration was made with a Charuco board; see Appendix~\ref{app:charuco-board}.
 
 

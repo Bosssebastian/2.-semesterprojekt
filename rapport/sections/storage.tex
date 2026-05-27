@@ -1,6 +1,6 @@
 \section{Storage System}
 
-The purpose of the storage system is to rotate a disk with 8 storage positions to a requested location, so that objects can be delivered to or retrieved by the UR robot arm. The storage disk is divided into eight positions, where each position corresponds to one storage slot.
+The purpose of the storage system is to rotate a disk with 8 storage positions, corresponding to 8 storage slots, to a requested location, so that objects can be delivered to or retrieved by the UR robot arm.
 
 The system consists of a circular disk, a geared DC motor, a laser-engraved encoder pattern, four light dependent resistors (LDRs), an external ADC, and a Raspberry Pi Pico for local control. The Pico receives target-position commands from the main PC and controls the motor until the requested storage position has been reached.
 
@@ -40,7 +40,7 @@ An extra outer lane was originally included as a relative encoder lane, but it w
 %The storage system is controlled by a Raspberry Pi Pico. 
 The Raspberry Pi Pico handles the local control, including encoder readings, position decoding, path calculation and motor control. The LDR signals are read through an external ADS7830 ADC\cite{ads7830_datasheet}, since four analog channels are required for the encoder.
 
-At system level, the PC only sends target-position commands, \texttt{CMD GOTO <position>},to the Pico over UART, while the Pico performs the local movement and returns a response when the requested position has been reached. This follows the same general command-response structure as the gripper interface described in Section~\ref{sec:gripper-software}.
+At system level, the PC only sends target-position commands, \texttt{CMD GOTO <position>} to the Pico over UART, while the Pico performs the local movement and returns a response when the requested position has been reached. This follows the same general command-response structure as the gripper interface described in Section~\ref{sec:gripper-software}.
 
 %locally while listening for commands over UART by the same logic as described in Section~\ref{sec:system-architecture} and as described in Section~\ref{sec:gripper-software}.
 
@@ -179,7 +179,7 @@ The test results show that encoder reliability was improved by the added softwar
 
 The irregularity rate of 99\% in the original implementation does not mean that 99\% of storage operations failed. Instead, it means that skipped or unexpected encoder transitions occurred frequently during movement.
 
-The best result was achieved when both implementations were used together, decrease irregularity rate from 99\% to 13\% and generated more consistent result, decrease standart deviation of irregularity rate from 25\% to 5\% , see table \ref{tab:encoder-software-performance}
+The best result was achieved when both implementations were used together, decreasing irregularity rate from 99\% to 13\% and generated more consistent result, decreasing standard deviation of irregularity rate from 25\% to 5\% , see table \ref{tab:encoder-software-performance}
 
 Expected-position decoding had the most noticeable individual effect. This indicates that many of the encoder errors were not caused by the sensor readings alone, but by the interpretation of the measured bit patterns during movement.
 
