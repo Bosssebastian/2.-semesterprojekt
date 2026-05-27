@@ -22,44 +22,6 @@ std::vector<std::vector<double>> Orientation::getRotMat(std::vector<double> axis
     return matop.addMat(rotMLHS, rotMRHS);
 }
 
-/*std::vector<double> Orientation::rotMat2rv(std::vector<std::vector<double>> rotmat) {
-    double angle = acos((matop.trace(rotmat) - 1.) / 2.);
-    if (abs(angle) < 0.0001) { // Check for and handle near-zero rotation
-        return { 0,0,0 };
-    }
-    std::vector<std::vector<double>> axis;
-    if (abs(angle - matop.PI) < 0.0001) { // Check for and handle near-180 degrees (alternative extraction)
-        // extract axis from symmetric part of R
-        std::vector<std::vector<double>> B = matop.factorMult(matop.addMat(rotmat, matop.transposeMatrix(rotmat)), 1. / 2.); // (R+R')/2
-        std::vector<std::vector<double>> BRHS = matop.factorMult(matop.rot0, -cos(angle)); // -eye(3)*cos(angle)
-        B = matop.addMat(B, BRHS);
-        B = matop.factorMult(B, 1. / (1. - cos(angle))); // B/(1-cos(angle))
-
-        // diagonal gives squared axis components
-        axis = matop.powerMat(matop.maxMat(matop.diag(B), 0), 0.5);
-
-        // recover signs from off-diagonal
-        axis[0][0] *= matop.sign((rotmat[2][1] - rotmat[1][2]));
-        axis[1][0] *= matop.sign((rotmat[0][2] - rotmat[2][0]));
-        axis[2][0] *= matop.sign((rotmat[1][0] - rotmat[0][1]));
-
-    }
-    else {
-        std::vector<std::vector<double>> B = { {rotmat[2][1] - rotmat[1][2]}, {rotmat[0][2] - rotmat[2][0]}, {rotmat[1][0] - rotmat[0][1]} };
-        axis = matop.factorMult(B, 1. / (2. * sin(angle)));
-    }
-    double n = sqrt(pow(axis[0][0], 2) + pow(axis[1][0], 2) + pow(axis[2][0], 2));
-
-    std::vector<double> rv = { (axis[0][0] / n * angle), (axis[1][0] / n * angle), (axis[2][0] / n * angle) };
-    for (unsigned int i = 0; i < rv.size(); i++) {
-        rv[i] = abs(rv[i]);
-    }
-    // sign(rv[0]) == sign(rv[0]) => rotate clockwise
-    // sign(rv[0]) != sign(rv[0]) => rotate counter-clockwise
-
-    return rv;
-    
-}*/
 
 std::vector<std::vector<double>> Orientation::compose(std::vector<std::vector<double>> A, std::vector<std::vector<double>> B) {
     std::vector<std::vector<double>> C(3, std::vector<double>(3, 0.0));
