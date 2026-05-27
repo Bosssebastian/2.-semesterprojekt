@@ -172,7 +172,7 @@ bool VisionController::objectReady(){
 }
 
 void VisionController::getObjectPosition(std::vector<std::vector<double>>& outputPos){
-    //just in case the output vector is not intialzed correct
+    // just in case the output vector is not intialzed correct
     if (outputPos.size() < 2) {
         outputPos.assign(2, std::vector<double>(1));
     }
@@ -199,7 +199,7 @@ void VisionController::setState(bool newState){
 }
 
 void VisionController::getObjectRot(double& output){
-    output = fmod(mRotVec.at<double>(2,0), (M_PI/2.)); //mRotVec.at<double>(2,0);
+    output = fmod(mRotVec.at<double>(2,0), (M_PI/2.));
     std::cout << output << "\n";
     if (output < -M_PI/4.){
         output += M_PI/2.;
