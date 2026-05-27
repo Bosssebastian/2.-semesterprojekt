@@ -289,7 +289,7 @@ void Orchestrator::handleInStorRobotOverInput() {
         double speed = 0.3;
         double acc = 0.2;
         double customZ = 0.18;
-        double rotZ = matop.degToRad(22.5) - mRot;
+        double rotZ = matop.degToRad(22.5) - mRot; // mRot is rotation of the object
         mMove.stop();
         mMove.move({mInputFromVision[0],mInputFromVision[1],{0.24}},speed,acc,customZ,rotZ); // Move to coordinates provided by vision
     });
